@@ -71,10 +71,12 @@
 			<el-table :data="tableData" border stripe style="width: 100%">
 				<el-table-column type="index" label="序号" width="60" align="center" />
 				<el-table-column prop="name" label="姓名" min-width="80" />
-				<el-table-column prop="phone" label="手机" min-width="120" />
+				<el-table-column prop="phone" label="手机" min-width="120">
+					<template #default="{ row }">{{ maskPhone(row.phone) }}</template>
+				</el-table-column>
 				<el-table-column prop="idCard" label="身份证" min-width="160">
 					<template #default="{ row }">
-						<span class="font-mono text-xs">{{ row.idCard }}</span>
+						<span class="font-mono text-xs">{{ maskIdCard(row.idCard) }}</span>
 					</template>
 				</el-table-column>
 				<el-table-column prop="groupType" label="成团方式" min-width="100" align="center">
@@ -86,7 +88,7 @@
 				<el-table-column prop="attachment" label="附件" min-width="130">
 					<template #default="{ row }">
 						<span v-if="row.attachment !== '-'">
-							<el-link type="primary" :underline="false">{{ row.attachment }}</el-link>
+							<el-link type="primary" underline="never">{{ row.attachment }}</el-link>
 						</span>
 						<span v-else class="text-slate-400">-</span>
 					</template>
@@ -142,13 +144,26 @@ const statusMap: Record<BookingStatus, { label: string; type: '' | 'warning' | '
 	expired: { label: '已过期', type: 'info' }
 };
 
+/** 手机号脱敏：前3后4，中间 **** */
+function maskPhone(phone: string): string {
+	if (phone.length !== 11) return phone;
+	return `${phone.slice(0, 3)}****${phone.slice(7)}`;
+}
+
+/** 身份证脱敏：前3后4，中间 *********** */
+function maskIdCard(idCard: string): string {
+	if (idCard.length < 8) return idCard;
+	const starCount = idCard.length - 7;
+	return `${idCard.slice(0, 3)}${'*'.repeat(starCount)}${idCard.slice(-4)}`;
+}
+
 /** 原始数据源（模拟接口返回） */
 const rawData: BookingRow[] = [
 	{
 		id: 1,
 		name: '张三',
-		phone: '138****1234',
-		idCard: '310***********1234',
+		phone: '13812341234',
+		idCard: '310101199001011234',
 		groupType: '团队预约',
 		groupCount: 15,
 		attachment: '身份证.pdf',
@@ -161,8 +176,8 @@ const rawData: BookingRow[] = [
 	{
 		id: 2,
 		name: '李四',
-		phone: '139****5678',
-		idCard: '320***********5678',
+		phone: '13987655678',
+		idCard: '320203198503205678',
 		groupType: '个人预约',
 		groupCount: 3,
 		attachment: '-',
@@ -175,8 +190,8 @@ const rawData: BookingRow[] = [
 	{
 		id: 3,
 		name: '王五',
-		phone: '137****9012',
-		idCard: '330***********9012',
+		phone: '13765439012',
+		idCard: '330282197811089012',
 		groupType: '团队预约',
 		groupCount: 25,
 		attachment: '团队名单.xlsx',
@@ -189,8 +204,8 @@ const rawData: BookingRow[] = [
 	{
 		id: 4,
 		name: '赵六',
-		phone: '136****3456',
-		idCard: '440***********3456',
+		phone: '13698763456',
+		idCard: '440305199201023456',
 		groupType: '个人预约',
 		groupCount: 2,
 		attachment: '-',
@@ -203,8 +218,8 @@ const rawData: BookingRow[] = [
 	{
 		id: 5,
 		name: '孙七',
-		phone: '135****7890',
-		idCard: '510***********7890',
+		phone: '13543217890',
+		idCard: '510104198806157890',
 		groupType: '团队预约',
 		groupCount: 30,
 		attachment: '团体预约表.docx',
@@ -217,8 +232,8 @@ const rawData: BookingRow[] = [
 	{
 		id: 6,
 		name: '周八',
-		phone: '133****2345',
-		idCard: '420***********2345',
+		phone: '13387652345',
+		idCard: '420117199505122345',
 		groupType: '个人预约',
 		groupCount: 1,
 		attachment: '-',
