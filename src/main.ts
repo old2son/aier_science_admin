@@ -1,16 +1,19 @@
-import { createApp } from 'vue'
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
-import './styles/index.css'
+import { createApp } from 'vue';
+import ElementPlus from 'element-plus';
+import zhCn from 'element-plus/es/locale/lang/zh-cn';
+import 'element-plus/dist/index.css';
+import './styles/index.css';
 
-import App from './App.vue'
-import router from './router'
-import { setupStore } from './stores'
+import App from './App.vue';
+import router from './router';
+import { setupStore } from './stores';
 
-const app = createApp(App)
+const app = createApp(App);
 
-setupStore(app)
+setupStore(app);
 
-app.use(router)
-app.use(ElementPlus)
-app.mount('#app')
+app.use(router);
+app.use(ElementPlus, {
+	locale: zhCn
+});
+app.mount('#app');
