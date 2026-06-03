@@ -1,7 +1,9 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
-interface UserInfo {
+import { loginApi } from '@/api/auth';
+
+export interface UserInfo {
 	id: number;
 	name: string;
 	role: string;
@@ -21,20 +23,17 @@ export const useUserStore = defineStore('user', () => {
 
 	const isLoggedIn = computed(() => Boolean(token.value));
 
-	function login(username: string, password: string) {
+	async function login(username: string, password: string) {
 		if (!username || !password) {
 			return Promise.reject(new Error('请输入账号和密码'));
 		}
 
-		token.value = `mock-token-${Date.now()}`;
-		userInfo.value = {
-			id: 1,
-			name: username,
-			role: username === 'admin' ? '系统管理员' : '运营人员',
-			avatar: ''
-		};
+		const data = await loginApi({ username, password });
+
+		token.value = data.token;
+		userInfo.value = data.userInfo;
 		localStorage.setItem(TOKEN_KEY, token.value);
-		return Promise.resolve(userInfo.value);
+		return userInfo.value;
 	}
 
 	function logout() {

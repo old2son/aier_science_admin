@@ -68,7 +68,7 @@
 			</el-form>
 
 			<!-- 预约表格 -->
-			<el-table :data="tableData" border stripe style="width: 100%">
+			<el-table v-loading="tableLoading" :data="tableData" border stripe style="width: 100%">
 				<el-table-column type="index" label="序号" width="60" align="center" />
 				<el-table-column prop="name" label="姓名" min-width="80" />
 				<el-table-column prop="phone" label="手机" min-width="120">
@@ -118,7 +118,9 @@
 
 <script setup lang="ts">
 import { Search } from '@element-plus/icons-vue';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
+
+import { getBookingList } from '@/api/science';
 
 type BookingStatus = 'pending' | 'verified' | 'expired';
 
@@ -279,26 +281,21 @@ const statusOptions = [
 
 /** 表格展示数据（默认全部，查询后为过滤结果） */
 const tableData = ref<BookingRow[]>([...rawData]);
+const tableLoading = ref(false);
+
+async function fetchBookings(params = queryForm.value) {
+	tableLoading.value = true;
+
+	try {
+		tableData.value = await getBookingList(params);
+	} finally {
+		tableLoading.value = false;
+	}
+}
 
 /** 点击查询：多条件组合过滤 */
 function handleSearch() {
-	const { startDate, endDate, timeSlot, name, phone, groupType, status } = queryForm.value;
-
-	tableData.value = rawData.filter((row) => {
-		if (startDate && row.date < startDate) return false;
-		if (endDate && row.date > endDate) return false;
-		if (timeSlot) {
-			const [slotStart, slotEnd] = timeSlot.split('-');
-			const rowTimeRange = `${row.startTime}-${row.endTime}`;
-			if (rowTimeRange !== `${slotStart}-${slotEnd}`) return false;
-		}
-		if (name && !row.name.includes(name)) return false;
-		if (phone && !row.phone.includes(phone)) return false;
-		if (groupType && row.groupType !== groupType) return false;
-		if (status && row.status !== status) return false;
-
-		return true;
-	});
+	fetchBookings();
 }
 
 /** 重置查询条件与数据 */
@@ -312,10 +309,14 @@ function handleReset() {
 		groupType: '',
 		status: ''
 	};
-	tableData.value = [...rawData];
+	fetchBookings();
 }
 
 function getStatusInfo(status: BookingStatus) {
 	return statusMap[status];
 }
+
+onMounted(() => {
+	fetchBookings();
+});
 </script>

@@ -36,7 +36,7 @@
 			</el-form>
 
 			<!-- 场次表格 -->
-			<el-table :data="tableData" border stripe style="width: 100%">
+			<el-table v-loading="tableLoading" :data="tableData" border stripe style="width: 100%">
 				<el-table-column type="index" label="序号" width="60" align="center" />
 				<el-table-column prop="date" label="日期" min-width="120" />
 				<el-table-column prop="startTime" label="开始时间" min-width="100" align="center" />
@@ -112,82 +112,11 @@
 <script setup lang="ts">
 import { Plus, Search } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
-import { computed, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 
-interface SessionRow {
-	id: number;
-	date: string;
-	startTime: string;
-	endTime: string;
-	totalCount: number;
-	remainCount: number;
-	createdAt: string;
-	operator: string;
-}
+import { getSessionList, type SessionQuery, type SessionRow } from '@/api/science';
 
-/** 原始数据源（模拟接口返回） */
-const rawData: SessionRow[] = [
-	{
-		id: 1,
-		date: '2026-06-01',
-		startTime: '09:00',
-		endTime: '10:30',
-		totalCount: 50,
-		remainCount: 0,
-		createdAt: '2026-05-28 14:22:00',
-		operator: '张三'
-	},
-	{
-		id: 2,
-		date: '2026-06-02',
-		startTime: '10:00',
-		endTime: '11:30',
-		totalCount: 40,
-		remainCount: 15,
-		createdAt: '2026-05-29 09:00:00',
-		operator: '李四'
-	},
-	{
-		id: 3,
-		date: '2026-06-03',
-		startTime: '09:00',
-		endTime: '10:30',
-		totalCount: 50,
-		remainCount: 20,
-		createdAt: '2026-05-28 14:22:00',
-		operator: '张三'
-	},
-	{
-		id: 4,
-		date: '2026-06-03',
-		startTime: '14:00',
-		endTime: '15:30',
-		totalCount: 50,
-		remainCount: 35,
-		createdAt: '2026-05-28 14:25:00',
-		operator: '张三'
-	},
-	{
-		id: 5,
-		date: '2026-06-04',
-		startTime: '09:00',
-		endTime: '10:30',
-		totalCount: 50,
-		remainCount: 50,
-		createdAt: '2026-05-29 09:10:00',
-		operator: '李四'
-	},
-	{
-		id: 6,
-		date: '2026-06-05',
-		startTime: '13:00',
-		endTime: '14:30',
-		totalCount: 40,
-		remainCount: 8,
-		createdAt: '2026-05-30 11:00:00',
-		operator: '王五'
-	}
-];
+let rawData: SessionRow[] = [];
 
 /* 查询条件 */
 const queryForm = ref({
@@ -196,7 +125,20 @@ const queryForm = ref({
 });
 
 /** 表格展示数据（默认全部，查询后为过滤结果） */
-const tableData = ref<SessionRow[]>([...rawData]);
+const tableData = ref<SessionRow[]>([]);
+const tableLoading = ref(false);
+
+async function fetchSessions(params?: SessionQuery) {
+	tableLoading.value = true;
+
+	try {
+		const list = await getSessionList(params);
+		rawData = list;
+		tableData.value = [...list];
+	} finally {
+		tableLoading.value = false;
+	}
+}
 
 /* ========== 添加场次弹窗 ========== */
 
@@ -306,36 +248,22 @@ async function handleSubmit() {
 }
 
 /** 点击查询：按日期范围过滤 */
-function handleSearch() {
+async function handleSearch() {
 	const { startDate, endDate } = queryForm.value;
 
 	if (!startDate && !endDate) {
-		tableData.value = [...rawData];
+		await fetchSessions();
 		return;
 	}
 
-	tableData.value = rawData.filter((row) => {
-		const rowDate = row.date;
-
-		if (startDate && endDate) {
-			return rowDate >= startDate && rowDate <= endDate;
-		}
-		if (startDate) {
-			return rowDate >= startDate;
-		}
-		if (endDate) {
-			return rowDate <= endDate;
-		}
-
-		return true;
-	});
+	await fetchSessions({ startDate, endDate });
 }
 
 /** 重置查询条件与数据 */
 function handleReset() {
 	queryForm.value.startDate = '';
 	queryForm.value.endDate = '';
-	tableData.value = [...rawData];
+	fetchSessions();
 }
 
 /** 删除场次 */
@@ -358,4 +286,8 @@ async function handleDelete(row: SessionRow) {
 		// 用户取消，不做操作
 	}
 }
+
+onMounted(() => {
+	fetchSessions();
+});
 </script>

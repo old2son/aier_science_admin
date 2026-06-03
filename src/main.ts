@@ -8,12 +8,30 @@ import App from './App.vue';
 import router from './router';
 import { setupStore } from './stores';
 
-const app = createApp(App);
+async function enableMocking() {
+	const { worker } = await import('./mocks/browser');
+	return worker.start({
+		onUnhandledRequest: 'bypass',
+		serviceWorker: {
+			url: '/mockServiceWorker.js'
+		}
+	});
+}
 
-setupStore(app);
+async function bootstrap() {
+	if (import.meta.env.DEV) {
+		await enableMocking();
+	}
 
-app.use(router);
-app.use(ElementPlus, {
-	locale: zhCn
-});
-app.mount('#app');
+	const app = createApp(App);
+
+	setupStore(app);
+
+	app.use(router);
+	app.use(ElementPlus, {
+		locale: zhCn
+	});
+	app.mount('#app');
+}
+
+bootstrap();

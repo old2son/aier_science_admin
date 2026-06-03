@@ -73,7 +73,7 @@ async function handleLogin() {
 	try {
 		await userStore.login(form.username, form.password);
 		ElMessage.success('登录成功');
-		router.replace((route.query.redirect as string) || '/dashboard');
+		router.replace((route.query.redirect as string) || '/session-config');
 	} finally {
 		loading.value = false;
 	}
