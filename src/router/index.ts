@@ -15,15 +15,15 @@ const routes: RouteRecordRaw[] = [
 	{
 		path: '/',
 		component: () => import('@/layouts/AdminLayout.vue'),
-		redirect: '/dashboard',
+		redirect: '/session-config',
 		children: [
 			{
-				path: 'dashboard',
-				name: 'Dashboard',
-				component: () => import('@/views/dashboard/index.vue'),
+				path: 'session-config',
+				name: 'SessionConfig',
+				component: () => import('@/views/session-config/index.vue'),
 				meta: {
-					title: '工作台',
-					icon: 'DataLine'
+					title: '科普馆场次配置',
+					icon: 'Calendar'
 				}
 			},
 			{
@@ -48,7 +48,7 @@ const routes: RouteRecordRaw[] = [
 	},
 	{
 		path: '/:pathMatch(.*)*',
-		redirect: '/dashboard'
+		redirect: '/session-config'
 	}
 ];
 

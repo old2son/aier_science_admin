@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DataLine, Fold, Menu as MenuIcon, Setting, SwitchButton, User } from '@element-plus/icons-vue';
+import { Calendar, Fold, Menu as MenuIcon, Setting, SwitchButton, User } from '@element-plus/icons-vue';
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -14,7 +14,7 @@ const collapsed = ref(false);
 const menuRoutes = computed(() => routes.find((item) => item.path === '/')?.children ?? []);
 
 const iconMap = {
-	DataLine,
+	Calendar,
 	User,
 	Setting
 };
@@ -47,7 +47,7 @@ function handleLogout() {
 			<el-menu :collapse="collapsed" :default-active="route.path" :router="true" class="admin-menu border-0">
 				<el-menu-item v-for="item in menuRoutes" :key="item.path" :index="`/${item.path}`">
 					<el-icon>
-						<component :is="iconMap[item.meta?.icon as keyof typeof iconMap] ?? DataLine" />
+						<component :is="iconMap[item.meta?.icon as keyof typeof iconMap] ?? Calendar" />
 					</el-icon>
 					<span>{{ item.meta?.title }}</span>
 				</el-menu-item>
