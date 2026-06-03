@@ -13,6 +13,19 @@ const collapsed = ref(false);
 
 const menuRoutes = computed(() => routes.find((item) => item.path === '/')?.children ?? []);
 
+/** 面包屑数据：[控制面板, 当前页面] */
+const breadcrumbs = computed(() => {
+	const items: { title: string; path?: string }[] = [
+		{ title: '控制面板', path: '/' }
+	];
+
+	if (route.meta.title && route.meta.title !== '控制面板') {
+		items.push({ title: String(route.meta.title), path: route.path });
+	}
+
+	return items;
+});
+
 const iconMap = {
 	Calendar,
 	User,
@@ -55,12 +68,16 @@ function handleLogout() {
 		</aside>
 
 		<section class="flex min-w-0 flex-1 flex-col">
-			<header class="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6">
-				<div class="flex items-center gap-3">
+			<header class="flex items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6" style="height: 64px">
+				<div class="flex min-w-0 flex-1 items-center gap-3">
 					<el-button :icon="collapsed ? MenuIcon : Fold" circle @click="toggleCollapse" />
-					<div>
-						<h1 class="text-lg font-semibold leading-6 text-slate-900">{{ route.meta.title }}</h1>
-						<p class="hidden text-xs text-slate-500 sm:block">后台管理系统</p>
+					<div class="min-w-0">
+						<el-breadcrumb separator="/">
+							<el-breadcrumb-item v-for="(item, idx) in breadcrumbs" :key="idx" :to="idx === 0 ? item.path : undefined">
+								{{ item.title }}
+							</el-breadcrumb-item>
+						</el-breadcrumb>
+						<p class="mt-1 hidden text-xs text-slate-500 sm:block">后台管理系统</p>
 					</div>
 				</div>
 
