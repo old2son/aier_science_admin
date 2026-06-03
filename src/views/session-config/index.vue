@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Plus, Search } from '@element-plus/icons-vue';
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 
 interface SessionRow {
 	id: number;
@@ -83,33 +83,40 @@ const queryForm = ref({
 	endDate: '' as string
 });
 
-/** 根据日期范围过滤后的表格数据 */
-const tableData = computed(() => {
-	if (!queryForm.value.startDate && !queryForm.value.endDate) {
-		return rawData;
+/** 表格展示数据（默认全部，查询后为过滤结果） */
+const tableData = ref<SessionRow[]>([...rawData]);
+
+/** 点击查询：按日期范围过滤 */
+function handleSearch() {
+	const { startDate, endDate } = queryForm.value;
+
+	if (!startDate && !endDate) {
+		tableData.value = [...rawData];
+		return;
 	}
 
-	return rawData.filter((row) => {
+	tableData.value = rawData.filter((row) => {
 		const rowDate = row.date;
 
-		if (queryForm.value.startDate && queryForm.value.endDate) {
-			return rowDate >= queryForm.value.startDate && rowDate <= queryForm.value.endDate;
+		if (startDate && endDate) {
+			return rowDate >= startDate && rowDate <= endDate;
 		}
-		if (queryForm.value.startDate) {
-			return rowDate >= queryForm.value.startDate;
+		if (startDate) {
+			return rowDate >= startDate;
 		}
-		if (queryForm.value.endDate) {
-			return rowDate <= queryForm.value.endDate;
+		if (endDate) {
+			return rowDate <= endDate;
 		}
 
 		return true;
 	});
-});
+}
 
-/** 重置查询 */
+/** 重置查询条件与数据 */
 function handleReset() {
 	queryForm.value.startDate = '';
 	queryForm.value.endDate = '';
+	tableData.value = [...rawData];
 }
 </script>
 
@@ -139,7 +146,7 @@ function handleReset() {
 					/>
 				</el-form-item>
 				<el-form-item>
-					<el-button type="primary" :icon="Search">查询</el-button>
+					<el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
 					<el-button @click="handleReset">重置</el-button>
 				</el-form-item>
 			</el-form>
