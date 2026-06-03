@@ -9,7 +9,7 @@
 | 类别 | 技术 / 版本 |
 |------|------------|
 | 前端框架 | Vue 3.5（Composition API + `<script setup>`） |
-| 构建工具 | Vite 6 |
+| 构建工具 | **Vite 8**（基于 Rolldown 统一打包引擎） |
 | 开发语言 | TypeScript 5.6（严格模式） |
 | 路由 | Vue Router 4（Web History 模式） |
 | 状态管理 | Pinia 2（Composition API 风格） |
@@ -24,7 +24,7 @@
 
 ### 环境要求
 
-- Node.js ≥ 18
+- **Node.js ≥ 20.19**（或 ≥ 22.12），Vite 8 要求原生支持 `require(esm)` 的版本
 - npm / pnpm / yarn
 
 ### 安装依赖
@@ -68,7 +68,7 @@ npm run typecheck
 ```
 aier-science-admin/
 ├── index.html                  # HTML 入口，挂载点 #app，标题 Aier Admin
-├── vite.config.ts              # Vite 配置（@ 别名、Dev Server）
+├── vite.config.ts              # Vite 8 配置（@ 别名、Dev Server，Rolldown 引擎）
 ├── tailwind.config.js          # Tailwind 主题配置（brand 品牌色）
 ├── postcss.config.js           # PostCSS 配置
 ├── tsconfig.json               # TypeScript 项目引用入口
@@ -94,8 +94,8 @@ aier-science-admin/
     └── views/
         ├── login/
         │   └── index.vue       # 登录页
-        ├── dashboard/
-        │   └── index.vue       # 工作台（数据看板）
+        ├── session-config/
+        │   └── index.vue       # 科普馆场次配置（默认首页）
         ├── users/
         │   └── index.vue       # 用户管理
         └── settings/
@@ -109,10 +109,10 @@ aier-science-admin/
 | 路径 | 名称 | 说明 | 是否需要登录 |
 |------|------|------|:-----------:|
 | `/login` | Login | 登录页 | ✗ |
-| `/dashboard` | Dashboard | 工作台 / 数据看板 | ✔ |
+| `/session-config` | SessionConfig | 科普馆场次配置 | ✔ |
 | `/users` | Users | 用户管理 | ✔ |
 | `/settings` | Settings | 系统设置 | ✔ |
-| `/*` | — | 未匹配路由，重定向至 `/dashboard` | — |
+| `/*` | — | 未匹配路由，重定向至 `/session-config` | — |
 
 **路由鉴权逻辑**：全局 `beforeEach` 守卫检查 `meta.public`。未标记 `public` 的路由要求用户已登录（`userStore.isLoggedIn`），否则重定向至 `/login?redirect=<原路径>`，登录成功后自动跳回原页面。
 
@@ -129,7 +129,7 @@ aier-science-admin/
 │              │                                           │
 │  Sidebar     │   主内容区 <RouterView />                  │
 │  （可折叠）   │                                           │
-│  - 工作台    │                                           │
+│  - 科普馆场次配置  │                                           │
 │  - 用户管理  │                                           │
 │  - 系统设置  │                                           │
 │              │                                           │
@@ -208,11 +208,11 @@ VITE_API_BASE_URL=https://api.example.com
 
 ## 当前页面功能
 
-### 工作台 `/dashboard`
+### 科普馆场次配置 `/session-config`
 
-- 顶部 4 个统计指标卡：今日访问、活跃用户、成交金额、待办事项
-- 业务趋势柱状图（纯 CSS 实现）
-- 待办事项列表
+- 顶部「添加场次」按钮
+- 表格展示场次列表：日期 / 开始时间 / 结束时间 / 总号数 / 余号（颜色 Tag） / 创建时间 / 操作人 / 操作
+- 操作列包含：团队预约 / 编辑 / 删除
 
 ### 用户管理 `/users`
 
@@ -241,9 +241,9 @@ VITE_API_BASE_URL=https://api.example.com
 ## 后续开发计划
 
 - [ ] 对接真实登录接口，替换 Mock 实现
+- [ ] 科普馆场次配置页接入 CRUD 接口
 - [ ] 用户管理页接入 CRUD 接口
 - [ ] 系统设置页接入保存接口
-- [ ] 工作台数据看板接入真实统计数据
 - [ ] 按需引入 Element Plus（减小包体积）
 - [ ] 添加权限控制（按钮级别 / 菜单级别）
 - [ ] 路由过渡动画
