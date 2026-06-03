@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Calendar, Fold, Menu as MenuIcon, Setting, SwitchButton, User } from '@element-plus/icons-vue';
+import { Calendar, Document, Fold, Menu as MenuIcon, Setting, SwitchButton } from '@element-plus/icons-vue';
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -28,7 +28,7 @@ const breadcrumbs = computed(() => {
 
 const iconMap = {
 	Calendar,
-	User,
+	Document,
 	Setting
 };
 

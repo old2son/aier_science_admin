@@ -96,10 +96,9 @@ aier-science-admin/
         │   └── index.vue       # 登录页
         ├── session-config/
         │   └── index.vue       # 科普馆场次配置（默认首页）
-        ├── users/
         │   └── index.vue       # 用户管理
-        └── settings/
-            └── index.vue       # 系统设置
+        └── users/
+          └── index.vue       # 用户管理
 ```
 
 ---
@@ -111,7 +110,6 @@ aier-science-admin/
 | `/login` | Login | 登录页 | ✗ |
 | `/session-config` | SessionConfig | 科普馆场次配置 | ✔ |
 | `/users` | Users | 用户管理 | ✔ |
-| `/settings` | Settings | 系统设置 | ✔ |
 | `/*` | — | 未匹配路由，重定向至 `/session-config` | — |
 
 **路由鉴权逻辑**：全局 `beforeEach` 守卫检查 `meta.public`。未标记 `public` 的路由要求用户已登录（`userStore.isLoggedIn`），否则重定向至 `/login?redirect=<原路径>`，登录成功后自动跳回原页面。
@@ -219,11 +217,6 @@ VITE_API_BASE_URL=https://api.example.com
 - 搜索框 + 新增按钮
 - 表格展示用户列表（ID / 姓名 / 部门 / 角色 / 状态 / 操作）
 - 状态用 `el-tag` 区分启用 / 停用
-
-### 系统设置 `/settings`
-
-- 系统名称、审计日志开关、分页数量、系统公告等配置项
-- 保存 / 重置操作
 
 ---
 

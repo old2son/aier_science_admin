@@ -27,21 +27,12 @@ const routes: RouteRecordRaw[] = [
 				}
 			},
 			{
-				path: 'users',
-				name: 'Users',
-				component: () => import('@/views/users/index.vue'),
+				path: 'booking-query',
+				name: 'BookingQuery',
+				component: () => import('@/views/booking-query/index.vue'),
 				meta: {
-					title: '用户管理',
-					icon: 'User'
-				}
-			},
-			{
-				path: 'settings',
-				name: 'Settings',
-				component: () => import('@/views/settings/index.vue'),
-				meta: {
-					title: '系统设置',
-					icon: 'Setting'
+					title: '科普馆预约查询',
+					icon: 'Document'
 				}
 			}
 		]
