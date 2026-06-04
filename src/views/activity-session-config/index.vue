@@ -34,6 +34,7 @@
 					<el-form-item>
 						<el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
 						<el-button @click="handleReset">重置</el-button>
+						<el-button type="success" :icon="Download" @click="handleExport">导出 Excel</el-button>
 					</el-form-item>
 				</div>
 			</el-form>
@@ -194,7 +195,11 @@
 				<!-- 预览 -->
 				<el-form-item label="预览" v-if="batchPreview.length > 0">
 					<div class="max-h-48 overflow-y-auto rounded border border-slate-200 p-3">
-						<div v-for="(item, idx) in batchPreview" :key="idx" class="flex items-center justify-between py-1 text-sm">
+						<div
+							v-for="(item, idx) in batchPreview"
+							:key="idx"
+							class="flex items-center justify-between py-1 text-sm"
+						>
 							<span class="text-slate-600">{{ item.date }} {{ item.timeLabel }}</span>
 							<el-tag size="small">{{ item.totalCount }} 号</el-tag>
 						</div>
@@ -206,14 +211,16 @@
 			</el-form>
 			<template #footer>
 				<el-button @click="batchDialogVisible = false">取消</el-button>
-				<el-button type="primary" :loading="batchSubmitLoading" @click="handleBatchSubmit">确认添加 ({{ batchPreview.length }})</el-button>
+				<el-button type="primary" :loading="batchSubmitLoading" @click="handleBatchSubmit"
+					>确认添加 ({{ batchPreview.length }})</el-button
+				>
 			</template>
 		</el-dialog>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { Plus, Search } from '@element-plus/icons-vue';
+import { Plus, Download, Search } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 
@@ -608,6 +615,14 @@ async function handleBatchSubmit() {
 	} finally {
 		batchSubmitLoading.value = false;
 	}
+}
+
+/** 导出 Excel（敬请期待） */
+function handleExport() {
+	ElMessageBox.alert('敬请期待！', '提示', {
+		confirmButtonText: '我知道了',
+		type: 'info'
+	});
 }
 
 onMounted(() => {
