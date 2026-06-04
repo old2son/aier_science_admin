@@ -7,11 +7,10 @@
 			<div class="max-w-xl">
 				<h1 class="text-5xl font-semibold leading-tight text-slate-950">高效、清晰、可扩展的后台管理体验</h1>
 				<p class="mt-5 text-lg leading-8 text-slate-600">
-					内置 Vue3、TypeScript、Pinia、Vue Router、Element Plus、Axios 和 Tailwind
-					CSS，适合快速开展业务模块开发。
+					业务流程的可视化和管理,让你的后台管理更加简单、高效
 				</p>
 			</div>
-			<div class="text-sm text-slate-500">Vue3 Admin Starter</div>
+			<div class="text-sm text-slate-500">Admin Starter</div>
 		</section>
 
 		<section class="flex items-center justify-center bg-white px-5">
