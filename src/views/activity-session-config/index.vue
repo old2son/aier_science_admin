@@ -242,7 +242,9 @@ async function fetchSessions(params?: ActivitySessionQuery) {
 	tableLoading.value = true;
 
 	try {
-		tableData.value = await getActivitySessionList(params);
+		const list = await getActivitySessionList(params);
+		rawData = list;
+		tableData.value = [...list];
 	} finally {
 		tableLoading.value = false;
 	}
