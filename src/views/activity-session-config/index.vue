@@ -9,7 +9,7 @@
 
 		<div class="page-panel">
 			<!-- 查询区域 -->
-			<el-form :model="queryForm" inline label-width="auto">
+			<el-form :model="queryForm" inline>
 				<el-form-item label="开始日期">
 					<el-date-picker
 						v-model="queryForm.startDate"

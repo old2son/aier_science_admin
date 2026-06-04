@@ -43,6 +43,15 @@ const routes: RouteRecordRaw[] = [
 					title: '活动场次配置',
 					icon: 'Tickets'
 				}
+			},
+			{
+				path: 'users',
+				name: 'Users',
+				component: () => import('@/views/users/index.vue'),
+				meta: {
+					title: '用户管理',
+					icon: 'User'
+				}
 			}
 		]
 	},
