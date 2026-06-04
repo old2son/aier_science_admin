@@ -150,6 +150,51 @@ const bookingRows = [
 	}
 ];
 
+const activityRows = [
+	{
+		id: 1,
+		title: '2026年爱尔眼科公众开放日',
+		background: '为提升公众爱眼护眼意识，开展眼健康科普宣传活动',
+		location: '爱尔眼科医院一楼大厅',
+		startDate: '2026-06-15',
+		endDate: '2026-06-15',
+		startTime: '09:00',
+		endTime: '10:00',
+		totalCount: 30,
+		remainCount: 12,
+		createdAt: '2026-06-01 10:00:00',
+		operator: '管理员'
+	},
+	{
+		id: 2,
+		title: '全国爱眼日特别活动',
+		background: '配合全国爱眼日开展系列科普活动',
+		location: '爱尔眼科医院三楼报告厅',
+		startDate: '2026-06-06',
+		endDate: '2026-06-06',
+		startTime: '14:30',
+		endTime: '15:30',
+		totalCount: 50,
+		remainCount: 0,
+		createdAt: '2026-05-20 09:30:00',
+		operator: '张医生'
+	},
+	{
+		id: 3,
+		title: '青少年近视防控讲座',
+		background: '针对中小学生开展近视防控科普讲座，提高防控意识',
+		location: '爱尔眼科医院二楼会议室',
+		startDate: '2026-06-20',
+		endDate: '2026-06-20',
+		startTime: '10:30',
+		endTime: '11:30',
+		totalCount: 40,
+		remainCount: 25,
+		createdAt: '2026-06-05 14:00:00',
+		operator: '李医生'
+	}
+];
+
 function inRange(date: string, startDate: string, endDate: string) {
 	if (startDate && date < startDate) return false;
 	if (endDate && date > endDate) return false;
@@ -213,7 +258,6 @@ export const handlers = [
 		const phone = url.searchParams.get('phone') ?? '';
 		const groupType = url.searchParams.get('groupType') ?? '';
 		const status = url.searchParams.get('status') ?? '';
-
 		const list = bookingRows.filter((row) => {
 			if (!inRange(row.date, startDate, endDate)) return false;
 			if (timeSlot && `${row.startTime}-${row.endTime}` !== timeSlot) return false;
@@ -221,6 +265,23 @@ export const handlers = [
 			if (phone && !row.phone.includes(phone)) return false;
 			if (groupType && row.groupType !== groupType) return false;
 			if (status && row.status !== status) return false;
+			return true;
+		});
+
+		return HttpResponse.json({
+			code: 0,
+			message: 'success',
+			data: list
+		});
+	}),
+
+	http.get('/api/activity/sessions', ({ request }) => {
+		const url = new URL(request.url);
+		const startDate = url.searchParams.get('startDate') ?? '';
+		const endDate = url.searchParams.get('endDate') ?? '';
+		const list = activityRows.filter((row) => {
+			if (startDate && row.startDate < startDate) return false;
+			if (endDate && row.endDate > endDate) return false;
 			return true;
 		});
 

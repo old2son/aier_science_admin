@@ -242,63 +242,7 @@ async function fetchSessions(params?: ActivitySessionQuery) {
 	tableLoading.value = true;
 
 	try {
-		// 模拟数据（实际对接接口时替换）
-		const mockData: ActivitySessionRow[] = [
-			{
-				id: 1,
-				title: '2024年爱尔眼科公众开放日',
-				background: '为提升公众爱眼护眼意识，开展眼健康科普宣传活动',
-				location: '爱尔眼科医院一楼大厅',
-				startDate: '2024-06-15',
-				endDate: '2024-06-15',
-				startTime: '09:00',
-				endTime: '10:00',
-				totalCount: 30,
-				remainCount: 12,
-				createdAt: '2024-06-01 10:00:00',
-				operator: '管理员'
-			},
-			{
-				id: 2,
-				title: '全国爱眼日特别活动',
-				background: '配合全国爱眼日开展系列科普活动',
-				location: '爱尔眼科医院三楼报告厅',
-				startDate: '2024-06-06',
-				endDate: '2024-06-06',
-				startTime: '14:30',
-				endTime: '15:30',
-				totalCount: 50,
-				remainCount: 0,
-				createdAt: '2024-05-20 09:30:00',
-				operator: '张医生'
-			},
-			{
-				id: 3,
-				title: '青少年近视防控讲座',
-				background: '针对中小学生开展近视防控科普讲座，提高防控意识',
-				location: '爱尔眼科医院二楼会议室',
-				startDate: '2024-06-20',
-				endDate: '2024-06-20',
-				startTime: '10:30',
-				endTime: '11:30',
-				totalCount: 40,
-				remainCount: 25,
-				createdAt: '2024-06-05 14:00:00',
-				operator: '李医生'
-			}
-		];
-
-		// 简单日期过滤模拟（按开始日期过滤）
-		let list = mockData;
-		if (params?.startDate) {
-			list = list.filter((r) => r.startDate >= params.startDate!);
-		}
-		if (params?.endDate) {
-			list = list.filter((r) => r.startDate <= params.endDate!);
-		}
-
-		rawData = list;
-		tableData.value = [...list];
+		tableData.value = await getActivitySessionList(params);
 	} finally {
 		tableLoading.value = false;
 	}
