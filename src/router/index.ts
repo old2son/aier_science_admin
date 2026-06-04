@@ -34,6 +34,15 @@ const routes: RouteRecordRaw[] = [
 					title: '科普馆预约查询',
 					icon: 'Document'
 				}
+			},
+			{
+				path: 'activity-session-config',
+				name: 'ActivitySessionConfig',
+				component: () => import('@/views/activity-session-config/index.vue'),
+				meta: {
+					title: '活动场次配置',
+					icon: 'Tickets'
+				}
 			}
 		]
 	},

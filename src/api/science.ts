@@ -41,10 +41,35 @@ export interface BookingQuery extends SessionQuery {
 	status?: string;
 }
 
+/** 活动场次行数据（日期拆分为开始日期/结束日期） */
+export interface ActivitySessionRow {
+	id: number;
+	title: string;
+	background: string;
+	location: string;
+	startDate: string;
+	endDate: string;
+	startTime: string;
+	endTime: string;
+	totalCount: number;
+	remainCount: number;
+	createdAt: string;
+	operator: string;
+}
+
+export interface ActivitySessionQuery {
+	startDate?: string;
+	endDate?: string;
+}
+
 export function getSessionList(params?: SessionQuery) {
 	return request.get<unknown, SessionRow[]>('/science/sessions', { params });
 }
 
 export function getBookingList(params?: BookingQuery) {
 	return request.get<unknown, BookingRow[]>('/science/bookings', { params });
+}
+
+export function getActivitySessionList(params?: ActivitySessionQuery) {
+	return request.get<unknown, ActivitySessionRow[]>('/activity/sessions', { params });
 }

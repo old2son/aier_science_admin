@@ -63,6 +63,7 @@
 					<el-form-item>
 						<el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
 						<el-button @click="handleReset">重置</el-button>
+						<el-button type="success" :icon="Download" @click="handleExport">导出 Excel</el-button>
 					</el-form-item>
 				</div>
 			</el-form>
@@ -117,7 +118,8 @@
 </template>
 
 <script setup lang="ts">
-import { Search } from '@element-plus/icons-vue';
+import { Download, Search } from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { onMounted, ref } from 'vue';
 
 import { getBookingList } from '@/api/science';
@@ -310,6 +312,14 @@ function handleReset() {
 		status: ''
 	};
 	fetchBookings();
+}
+
+/** 导出 Excel（敬请期待） */
+function handleExport() {
+	ElMessageBox.alert('敬请期待！', '提示', {
+		confirmButtonText: '我知道了',
+		type: 'info'
+	});
 }
 
 function getStatusInfo(status: BookingStatus) {

@@ -38,10 +38,14 @@
 				</div>
 			</el-form>
 
-			<!-- 场次表格 -->
+			<!-- 活动场次表格 -->
 			<el-table v-loading="tableLoading" :data="tableData" border stripe style="width: 100%">
 				<el-table-column type="index" label="序号" width="60" align="center" />
-				<el-table-column prop="date" label="日期" min-width="120" />
+				<el-table-column prop="title" label="活动标题" min-width="160" show-overflow-tooltip />
+				<el-table-column prop="background" label="活动背景" min-width="180" show-overflow-tooltip />
+				<el-table-column prop="location" label="活动地点" min-width="140" show-overflow-tooltip />
+				<el-table-column prop="startDate" label="开始日期" min-width="120" />
+				<el-table-column prop="endDate" label="结束日期" min-width="120" />
 				<el-table-column prop="startTime" label="开始时间" min-width="100" align="center" />
 				<el-table-column prop="endTime" label="结束时间" min-width="100" align="center" />
 				<el-table-column prop="totalCount" label="总号数" min-width="90" align="center" />
@@ -54,10 +58,8 @@
 				</el-table-column>
 				<el-table-column prop="createdAt" label="创建时间" min-width="160" />
 				<el-table-column prop="operator" label="操作人" min-width="90" align="center" />
-				<el-table-column label="操作" min-width="200" align="center" fixed="right">
+				<el-table-column label="操作" min-width="160" align="center" fixed="right">
 					<template #default="{ row }">
-						<el-button type="primary" link size="small">团队预约</el-button>
-						<el-divider direction="vertical" />
 						<el-button type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
 						<el-divider direction="vertical" />
 						<el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
@@ -66,20 +68,43 @@
 			</el-table>
 		</div>
 
-		<!-- 添加场次弹窗 -->
+		<!-- 添加/编辑场次弹窗 -->
 		<el-dialog
 			v-model="dialogVisible"
 			:title="dialogTitle"
-			width="520px"
+			width="560px"
 			destroy-on-close
 			@close="handleDialogClose"
 		>
 			<el-form ref="formRef" :model="formData" :rules="rules" label-width="90px" class="pt-2">
-				<el-form-item label="日期" prop="date">
+				<el-form-item label="活动标题" prop="title">
+					<el-input v-model="formData.title" placeholder="请输入活动标题" clearable />
+				</el-form-item>
+				<el-form-item label="活动背景" prop="background">
+					<el-input
+						v-model="formData.background"
+						type="textarea"
+						:rows="3"
+						placeholder="请输入活动背景介绍"
+					/>
+				</el-form-item>
+				<el-form-item label="活动地点" prop="location">
+					<el-input v-model="formData.location" placeholder="请输入活动地点" clearable />
+				</el-form-item>
+				<el-form-item label="开始日期" prop="startDate">
 					<el-date-picker
-						v-model="formData.date"
+						v-model="formData.startDate"
 						type="date"
-						placeholder="选择日期"
+						placeholder="选择开始日期"
+						value-format="YYYY-MM-DD"
+						style="width: 100%"
+					/>
+				</el-form-item>
+				<el-form-item label="结束日期" prop="endDate">
+					<el-date-picker
+						v-model="formData.endDate"
+						type="date"
+						placeholder="选择结束日期"
 						value-format="YYYY-MM-DD"
 						style="width: 100%"
 					/>
@@ -114,11 +139,25 @@
 		<el-dialog
 			v-model="batchDialogVisible"
 			title="批量添加场次"
-			width="560px"
+			width="600px"
 			destroy-on-close
 			@close="handleBatchDialogClose"
 		>
 			<el-form ref="batchFormRef" :model="batchFormData" :rules="batchRules" label-width="90px" class="pt-2">
+				<el-form-item label="活动标题" prop="title">
+					<el-input v-model="batchFormData.title" placeholder="请输入活动标题" clearable />
+				</el-form-item>
+				<el-form-item label="活动背景" prop="background">
+					<el-input
+						v-model="batchFormData.background"
+						type="textarea"
+						:rows="3"
+						placeholder="请输入活动背景介绍"
+					/>
+				</el-form-item>
+				<el-form-item label="活动地点" prop="location">
+					<el-input v-model="batchFormData.location" placeholder="请输入活动地点" clearable />
+				</el-form-item>
 				<el-form-item label="日期范围" prop="dateRange">
 					<el-date-picker
 						v-model="batchFormData.dateRange"
@@ -178,9 +217,9 @@ import { Plus, Search } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 
-import { getSessionList, type SessionQuery, type SessionRow } from '@/api/science';
+import { getActivitySessionList, type ActivitySessionQuery, type ActivitySessionRow } from '@/api/science';
 
-let rawData: SessionRow[] = [];
+let rawData: ActivitySessionRow[] = [];
 
 /* 查询条件 */
 const queryForm = ref({
@@ -189,14 +228,68 @@ const queryForm = ref({
 });
 
 /** 表格展示数据（默认全部，查询后为过滤结果） */
-const tableData = ref<SessionRow[]>([]);
+const tableData = ref<ActivitySessionRow[]>([]);
 const tableLoading = ref(false);
 
-async function fetchSessions(params?: SessionQuery) {
+async function fetchSessions(params?: ActivitySessionQuery) {
 	tableLoading.value = true;
 
 	try {
-		const list = await getSessionList(params);
+		// 模拟数据（实际对接接口时替换）
+		const mockData: ActivitySessionRow[] = [
+			{
+				id: 1,
+				title: '2024年爱尔眼科公众开放日',
+				background: '为提升公众爱眼护眼意识，开展眼健康科普宣传活动',
+				location: '爱尔眼科医院一楼大厅',
+				startDate: '2024-06-15',
+				endDate: '2024-06-15',
+				startTime: '09:00',
+				endTime: '10:00',
+				totalCount: 30,
+				remainCount: 12,
+				createdAt: '2024-06-01 10:00:00',
+				operator: '管理员'
+			},
+			{
+				id: 2,
+				title: '全国爱眼日特别活动',
+				background: '配合全国爱眼日开展系列科普活动',
+				location: '爱尔眼科医院三楼报告厅',
+				startDate: '2024-06-06',
+				endDate: '2024-06-06',
+				startTime: '14:30',
+				endTime: '15:30',
+				totalCount: 50,
+				remainCount: 0,
+				createdAt: '2024-05-20 09:30:00',
+				operator: '张医生'
+			},
+			{
+				id: 3,
+				title: '青少年近视防控讲座',
+				background: '针对中小学生开展近视防控科普讲座，提高防控意识',
+				location: '爱尔眼科医院二楼会议室',
+				startDate: '2024-06-20',
+				endDate: '2024-06-20',
+				startTime: '10:30',
+				endTime: '11:30',
+				totalCount: 40,
+				remainCount: 25,
+				createdAt: '2024-06-05 14:00:00',
+				operator: '李医生'
+			}
+		];
+
+		// 简单日期过滤模拟（按开始日期过滤）
+		let list = mockData;
+		if (params?.startDate) {
+			list = list.filter((r) => r.startDate >= params.startDate!);
+		}
+		if (params?.endDate) {
+			list = list.filter((r) => r.startDate <= params.endDate!);
+		}
+
 		rawData = list;
 		tableData.value = [...list];
 	} finally {
@@ -204,7 +297,7 @@ async function fetchSessions(params?: SessionQuery) {
 	}
 }
 
-/* ========== 添加场次弹窗 ========== */
+/* ========== 添加/编辑场次弹窗 ========== */
 
 const dialogVisible = ref(false);
 const formRef = ref<FormInstance>();
@@ -221,14 +314,22 @@ const timeSlotOptions = [
 
 /** 表单数据 */
 const formData = reactive({
-	date: '',
+	title: '',
+	background: '',
+	location: '',
+	startDate: '' as string,
+	endDate: '' as string,
 	timeSlot: '' as string,
 	totalCount: undefined as number | undefined
 });
 
 /** 表单校验规则 */
 const rules = reactive<FormRules>({
-	date: [{ required: true, message: '请选择日期', trigger: 'change' }],
+	title: [{ required: true, message: '请输入活动标题', trigger: 'blur' }],
+	background: [{ required: true, message: '请输入活动背景', trigger: 'blur' }],
+	location: [{ required: true, message: '请输入活动地点', trigger: 'blur' }],
+	startDate: [{ required: true, message: '请选择开始日期', trigger: 'change' }],
+	endDate: [{ required: true, message: '请选择结束日期', trigger: 'change' }],
 	timeSlot: [{ required: true, message: '请选择时间段', trigger: 'change' }],
 	totalCount: [
 		{ required: true, message: '请输入总号数', trigger: 'blur' },
@@ -246,9 +347,13 @@ function handleAdd() {
 }
 
 /** 打开编辑弹窗，回填数据 */
-function handleEdit(row: SessionRow) {
+function handleEdit(row: ActivitySessionRow) {
 	editId.value = row.id;
-	formData.date = row.date;
+	formData.title = row.title;
+	formData.background = row.background;
+	formData.location = row.location;
+	formData.startDate = row.startDate;
+	formData.endDate = row.endDate;
 	formData.timeSlot = `${row.startTime}-${row.endTime}`;
 	formData.totalCount = row.totalCount;
 	dialogVisible.value = true;
@@ -274,7 +379,11 @@ async function handleSubmit() {
 		if (editId.value) {
 			const target = rawData.find((r) => r.id === editId.value);
 			if (target) {
-				target.date = formData.date;
+				target.title = formData.title;
+				target.background = formData.background;
+				target.location = formData.location;
+				target.startDate = formData.startDate;
+				target.endDate = formData.endDate;
 				target.startTime = startTime;
 				target.endTime = endTime;
 				target.totalCount = formData.totalCount!;
@@ -290,9 +399,13 @@ async function handleSubmit() {
 		const pad = (n: number) => String(n).padStart(2, '0');
 		const timeStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
-		const newSession: SessionRow = {
+		const newSession: ActivitySessionRow = {
 			id: Math.max(...rawData.map((r) => r.id), 0) + 1,
-			date: formData.date,
+			title: formData.title,
+			background: formData.background,
+			location: formData.location,
+			startDate: formData.startDate,
+			endDate: formData.endDate,
 			startTime,
 			endTime,
 			totalCount: formData.totalCount!,
@@ -331,14 +444,18 @@ function handleReset() {
 }
 
 /** 删除场次 */
-async function handleDelete(row: SessionRow) {
+async function handleDelete(row: ActivitySessionRow) {
 	try {
-		await ElMessageBox.confirm(`确认删除 ${row.date} ${row.startTime}-${row.endTime} 的场次吗？`, '删除确认', {
-			confirmButtonText: '确定删除',
-			cancelButtonText: '取消',
-			type: 'warning',
-			confirmButtonClass: 'el-button--danger'
-		});
+		await ElMessageBox.confirm(
+			`确认删除「${row.title}」${row.startDate}~${row.endDate} ${row.startTime}-${row.endTime} 的场次吗？`,
+			'删除确认',
+			{
+				confirmButtonText: '确定删除',
+				cancelButtonText: '取消',
+				type: 'warning',
+				confirmButtonClass: 'el-button--danger'
+			}
+		);
 
 		const idx = rawData.findIndex((r) => r.id === row.id);
 		if (idx > -1) {
@@ -359,6 +476,9 @@ const batchSubmitLoading = ref(false);
 
 /** 批量表单数据 */
 const batchFormData = reactive({
+	title: '',
+	background: '',
+	location: '',
 	dateRange: [] as string[],
 	timeSlots: [] as string[],
 	totalCount: undefined as number | undefined
@@ -366,6 +486,9 @@ const batchFormData = reactive({
 
 /** 批量表单校验规则 */
 const batchRules = reactive<FormRules>({
+	title: [{ required: true, message: '请输入活动标题', trigger: 'blur' }],
+	background: [{ required: true, message: '请输入活动背景', trigger: 'blur' }],
+	location: [{ required: true, message: '请输入活动地点', trigger: 'blur' }],
 	dateRange: [{ required: true, message: '请选择日期范围', trigger: 'change' }],
 	timeSlots: [{ type: 'array', required: true, min: 1, message: '请至少选择一个时间段', trigger: 'change' }],
 	totalCount: [
@@ -456,13 +579,18 @@ async function handleBatchSubmit() {
 
 		let maxId = rawData.length > 0 ? Math.max(...rawData.map((r) => r.id)) : 0;
 
-		const newSessions: SessionRow[] = [];
+		const newSessions: ActivitySessionRow[] = [];
 		for (const item of batchPreview.value) {
 			const [startTime, endTime] = item.timeSlot.split('-');
 			maxId += 1;
-			const session: SessionRow = {
+			// 批量生成的活动，开始日期=结束日期=该场次日期
+			const session: ActivitySessionRow = {
 				id: maxId,
-				date: item.date,
+				title: batchFormData.title,
+				background: batchFormData.background,
+				location: batchFormData.location,
+				startDate: item.date,
+				endDate: item.date,
 				startTime,
 				endTime,
 				totalCount: item.totalCount,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Calendar, Document, Fold, Menu as MenuIcon, Setting, SwitchButton } from '@element-plus/icons-vue';
+import { Calendar, Document, Fold, Menu as MenuIcon, Setting, SwitchButton, Tickets } from '@element-plus/icons-vue';
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -29,7 +29,8 @@ const breadcrumbs = computed(() => {
 const iconMap = {
 	Calendar,
 	Document,
-	Setting
+	Setting,
+	Tickets
 };
 
 function toggleCollapse() {
