@@ -119,7 +119,7 @@
 
 <script setup lang="ts">
 import { Download, Search } from '@element-plus/icons-vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessageBox } from 'element-plus';
 import { onMounted, ref } from 'vue';
 
 import { getBookingList } from '@/api/science';

@@ -56,8 +56,6 @@
 				<el-table-column prop="operator" label="操作人" min-width="90" align="center" />
 				<el-table-column label="操作" min-width="200" align="center" fixed="right">
 					<template #default="{ row }">
-						<el-button type="primary" link size="small">团队预约</el-button>
-						<el-divider direction="vertical" />
 						<el-button type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
 						<el-divider direction="vertical" />
 						<el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
