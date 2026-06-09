@@ -7,19 +7,20 @@ import './styles/index.css';
 import App from './App.vue';
 import router from './router';
 import { setupStore } from './stores';
+import { getMockServiceWorkerUrl, isMockEnabled } from './utils/mock';
 
 async function enableMocking() {
 	const { worker } = await import('./mocks/browser');
 	return worker.start({
 		onUnhandledRequest: 'bypass',
 		serviceWorker: {
-			url: '/mockServiceWorker.js'
+			url: getMockServiceWorkerUrl()
 		}
 	});
 }
 
 async function bootstrap() {
-	if (import.meta.env.DEV) {
+	if (isMockEnabled()) {
 		await enableMocking();
 	}
 
