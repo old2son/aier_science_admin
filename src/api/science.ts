@@ -46,7 +46,8 @@ export interface ActivitySessionRow {
 	id: number;
 	title: string;
 	background: string;
-	location: string;
+	location?: string;
+	coverKey?: string;
 	startDate: string;
 	endDate: string;
 	startTime: string;

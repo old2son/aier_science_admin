@@ -77,59 +77,84 @@
 			destroy-on-close
 			@close="handleDialogClose"
 		>
-			<el-form ref="formRef" :model="formData" :rules="rules" label-width="90px" class="pt-2">
-				<el-form-item label="活动标题" prop="title">
-					<el-input v-model="formData.title" placeholder="请输入活动标题" clearable />
-				</el-form-item>
-				<el-form-item label="活动背景" prop="background">
-					<el-input
-						v-model="formData.background"
-						type="textarea"
-						:rows="3"
-						placeholder="请输入活动背景介绍"
-					/>
-				</el-form-item>
-				<el-form-item label="活动地点" prop="location">
-					<el-input v-model="formData.location" placeholder="请输入活动地点" clearable />
-				</el-form-item>
-				<el-form-item label="开始日期" prop="startDate">
-					<el-date-picker
-						v-model="formData.startDate"
-						type="date"
-						placeholder="选择开始日期"
-						value-format="YYYY-MM-DD"
-						style="width: 100%"
-					/>
-				</el-form-item>
-				<el-form-item label="结束日期" prop="endDate">
-					<el-date-picker
-						v-model="formData.endDate"
-						type="date"
-						placeholder="选择结束日期"
-						value-format="YYYY-MM-DD"
-						style="width: 100%"
-					/>
-				</el-form-item>
-				<el-form-item label="时间段" prop="timeSlot">
-					<el-select v-model="formData.timeSlot" placeholder="请选择时间段" style="width: 100%">
-						<el-option
-							v-for="opt in timeSlotOptions"
-							:key="opt.value"
-							:label="opt.label"
-							:value="opt.value"
-						/>
-					</el-select>
-				</el-form-item>
-				<el-form-item label="总号数" prop="totalCount">
-					<el-input-number
-						v-model="formData.totalCount"
-						:min="1"
-						:max="9999"
-						placeholder="请输入总号数"
-						style="width: 100%"
-					/>
-				</el-form-item>
-			</el-form>
+		<el-form ref="formRef" :model="formData" :rules="rules" label-width="90px" class="pt-2">
+			<el-form-item label="活动标题" prop="title">
+				<el-input v-model="formData.title" placeholder="请输入活动标题" clearable />
+			</el-form-item>
+			<el-form-item label="活动背景" prop="background">
+				<el-input
+					v-model="formData.background"
+					type="textarea"
+					:rows="3"
+					placeholder="请输入活动背景介绍"
+				/>
+			</el-form-item>
+			<el-form-item label="活动 KV">
+				<el-upload
+					class="kv-uploader"
+					action="#"
+					:show-file-list="false"
+					:before-upload="handleBeforeUpload"
+					:http-request="handleUploadKV"
+					accept="image/*"
+				>
+					<img v-if="formData.coverUrl" :src="formData.coverUrl" class="kv-preview" />
+					<div v-else class="kv-placeholder">
+						<el-icon class="text-2xl text-slate-400"><Plus /></el-icon>
+						<span class="mt-1 text-xs text-slate-400">上传活动 KV</span>
+					</div>
+				</el-upload>
+				<div class="mt-1 text-xs text-slate-400">建议尺寸 750×420，JPG/PNG，≤2MB</div>
+			</el-form-item>
+			<el-form-item label="活动地点">
+				<el-input v-model="formData.location" placeholder="请输入活动地点（选填）" clearable />
+			</el-form-item>
+			<el-form-item label="开始日期" prop="startDate">
+				<el-date-picker
+					v-model="formData.startDate"
+					type="date"
+					placeholder="选择开始日期"
+					value-format="YYYY-MM-DD"
+					style="width: 100%"
+				/>
+			</el-form-item>
+			<el-form-item label="结束日期" prop="endDate">
+				<el-date-picker
+					v-model="formData.endDate"
+					type="date"
+					placeholder="选择结束日期"
+					value-format="YYYY-MM-DD"
+					style="width: 100%"
+				/>
+			</el-form-item>
+			<el-form-item label="开始时间" prop="startTime">
+				<el-time-picker
+					v-model="formData.startTime"
+					placeholder="选择开始时间"
+					format="HH:mm"
+					value-format="HH:mm"
+					style="width: 100%"
+				/>
+			</el-form-item>
+			<el-form-item label="结束时间" prop="endTime">
+				<el-time-picker
+					v-model="formData.endTime"
+					placeholder="选择结束时间"
+					format="HH:mm"
+					value-format="HH:mm"
+					style="width: 100%"
+				/>
+			</el-form-item>
+			<el-form-item label="总号数" prop="totalCount">
+				<el-input-number
+					v-model="formData.totalCount"
+					:min="1"
+					:max="9999"
+					placeholder="请输入总号数"
+					style="width: 100%"
+				/>
+			</el-form-item>
+		</el-form>
 			<template #footer>
 				<el-button @click="dialogVisible = false">取消</el-button>
 				<el-button type="primary" :loading="submitLoading" @click="handleSubmit">确定</el-button>
@@ -148,17 +173,34 @@
 				<el-form-item label="活动标题" prop="title">
 					<el-input v-model="batchFormData.title" placeholder="请输入活动标题" clearable />
 				</el-form-item>
-				<el-form-item label="活动背景" prop="background">
-					<el-input
-						v-model="batchFormData.background"
-						type="textarea"
-						:rows="3"
-						placeholder="请输入活动背景介绍"
-					/>
-				</el-form-item>
-				<el-form-item label="活动地点" prop="location">
-					<el-input v-model="batchFormData.location" placeholder="请输入活动地点" clearable />
-				</el-form-item>
+			<el-form-item label="活动背景" prop="background">
+				<el-input
+					v-model="batchFormData.background"
+					type="textarea"
+					:rows="3"
+					placeholder="请输入活动背景介绍"
+				/>
+			</el-form-item>
+			<el-form-item label="活动 KV">
+				<el-upload
+					class="kv-uploader"
+					action="#"
+					:show-file-list="false"
+					:before-upload="handleBeforeUpload"
+					:http-request="handleBatchUploadKV"
+					accept="image/*"
+				>
+					<img v-if="batchFormData.coverUrl" :src="batchFormData.coverUrl" class="kv-preview" />
+					<div v-else class="kv-placeholder">
+						<el-icon class="text-2xl text-slate-400"><Plus /></el-icon>
+						<span class="mt-1 text-xs text-slate-400">上传活动 KV</span>
+					</div>
+				</el-upload>
+				<div class="mt-1 text-xs text-slate-400">建议尺寸 750×420，JPG/PNG，≤2MB</div>
+			</el-form-item>
+		<el-form-item label="活动地点">
+				<el-input v-model="batchFormData.location" placeholder="请输入活动地点（选填）" clearable />
+			</el-form-item>
 				<el-form-item label="日期范围" prop="dateRange">
 					<el-date-picker
 						v-model="batchFormData.dateRange"
@@ -170,19 +212,24 @@
 						style="width: 100%"
 					/>
 				</el-form-item>
-				<el-form-item label="时间段" prop="timeSlots">
-					<el-checkbox-group v-model="batchFormData.timeSlots">
-						<el-checkbox
-							v-for="opt in timeSlotOptions"
-							:key="opt.value"
-							:label="opt.value"
-							:value="opt.value"
-						>
-							{{ opt.label }}
-						</el-checkbox>
-					</el-checkbox-group>
-					<div class="mt-1 text-xs text-slate-400">可多选，每个选中日期 × 选中时间段 = 生成场次数</div>
-				</el-form-item>
+			<el-form-item label="开始时间" prop="startTime">
+				<el-time-picker
+					v-model="batchFormData.startTime"
+					placeholder="选择开始时间"
+					format="HH:mm"
+					value-format="HH:mm"
+					style="width: 100%"
+				/>
+			</el-form-item>
+			<el-form-item label="结束时间" prop="endTime">
+				<el-time-picker
+					v-model="batchFormData.endTime"
+					placeholder="选择结束时间"
+					format="HH:mm"
+					value-format="HH:mm"
+					style="width: 100%"
+				/>
+			</el-form-item>
 				<el-form-item label="总号数" prop="totalCount">
 					<el-input-number
 						v-model="batchFormData.totalCount"
@@ -220,8 +267,8 @@
 </template>
 
 <script setup lang="ts">
-import { Plus, Download, Search } from '@element-plus/icons-vue';
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
+import { Download, Plus, Search } from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadRequestOptions } from 'element-plus';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 
 import { getActivitySessionList, type ActivitySessionQuery, type ActivitySessionRow } from '@/api/science';
@@ -257,22 +304,17 @@ const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
 const editId = ref<number | null>(null);
 
-/** 固定时间段选项 */
-const timeSlotOptions = [
-	{ label: '09:00 - 10:00', value: '09:00-10:00' },
-	{ label: '10:30 - 11:30', value: '10:30-11:30' },
-	{ label: '14:30 - 15:30', value: '14:30-15:30' },
-	{ label: '16:00 - 17:00', value: '16:00-17:00' }
-];
-
 /** 表单数据 */
 const formData = reactive({
 	title: '',
 	background: '',
 	location: '',
+	coverKey: '',
+	coverUrl: '',
 	startDate: '' as string,
 	endDate: '' as string,
-	timeSlot: '' as string,
+	startTime: '' as string,
+	endTime: '' as string,
 	totalCount: undefined as number | undefined
 });
 
@@ -280,15 +322,40 @@ const formData = reactive({
 const rules = reactive<FormRules>({
 	title: [{ required: true, message: '请输入活动标题', trigger: 'blur' }],
 	background: [{ required: true, message: '请输入活动背景', trigger: 'blur' }],
-	location: [{ required: true, message: '请输入活动地点', trigger: 'blur' }],
 	startDate: [{ required: true, message: '请选择开始日期', trigger: 'change' }],
 	endDate: [{ required: true, message: '请选择结束日期', trigger: 'change' }],
-	timeSlot: [{ required: true, message: '请选择时间段', trigger: 'change' }],
+	startTime: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
+	endTime: [{ required: true, message: '请选择结束时间', trigger: 'change' }],
 	totalCount: [
 		{ required: true, message: '请输入总号数', trigger: 'blur' },
 		{ type: 'number', min: 1, message: '总号数必须大于 0', trigger: 'blur' }
 	]
 });
+
+/** 上传前校验 */
+function handleBeforeUpload(file: File) {
+	const isImage = file.type.startsWith('image/');
+	const isLt5M = file.size / 1024 / 1024 < 2;
+	if (!isImage) {
+		ElMessage.error('只能上传图片文件！');
+		return false;
+	}
+	if (!isLt5M) {
+		ElMessage.error('图片大小不能超过 2MB！');
+		return false;
+	}
+	return true;
+}
+
+/** 自定义上传：本地预览，实际项目替换为真实上传接口 */
+function handleUploadKV(options: UploadRequestOptions) {
+	const file = options.file;
+	// 本地预览
+	formData.coverUrl = URL.createObjectURL(file);
+	// 模拟返回 key（真实项目中替换为接口返回的 key）
+	formData.coverKey = `activity/kv/${Date.now()}_${file.name}`;
+	ElMessage.success('图片上传成功（本地预览）');
+}
 
 /** 弹窗标题（新增 / 编辑） */
 const dialogTitle = computed(() => (editId.value ? '编辑场次' : '添加场次'));
@@ -304,10 +371,13 @@ function handleEdit(row: ActivitySessionRow) {
 	editId.value = row.id;
 	formData.title = row.title;
 	formData.background = row.background;
-	formData.location = row.location;
+	formData.location = row.location ?? '';
+	formData.coverKey = row.coverKey ?? '';
+	formData.coverUrl = '';
 	formData.startDate = row.startDate;
 	formData.endDate = row.endDate;
-	formData.timeSlot = `${row.startTime}-${row.endTime}`;
+	formData.startTime = row.startTime;
+	formData.endTime = row.endTime;
 	formData.totalCount = row.totalCount;
 	dialogVisible.value = true;
 }
@@ -315,6 +385,8 @@ function handleEdit(row: ActivitySessionRow) {
 /** 关闭弹窗时重置表单 */
 function handleDialogClose() {
 	formRef.value?.resetFields();
+	formData.coverKey = '';
+	formData.coverUrl = '';
 	editId.value = null;
 }
 
@@ -326,8 +398,6 @@ async function handleSubmit() {
 	submitLoading.value = true;
 
 	try {
-		const [startTime, endTime] = formData.timeSlot.split('-');
-
 		/* 编辑模式：更新已有数据 */
 		if (editId.value) {
 			const target = rawData.find((r) => r.id === editId.value);
@@ -335,10 +405,11 @@ async function handleSubmit() {
 				target.title = formData.title;
 				target.background = formData.background;
 				target.location = formData.location;
+				target.coverKey = formData.coverKey || undefined;
 				target.startDate = formData.startDate;
 				target.endDate = formData.endDate;
-				target.startTime = startTime;
-				target.endTime = endTime;
+				target.startTime = formData.startTime;
+				target.endTime = formData.endTime;
 				target.totalCount = formData.totalCount!;
 				tableData.value = [...rawData];
 				ElMessage.success('编辑成功');
@@ -356,11 +427,12 @@ async function handleSubmit() {
 			id: Math.max(...rawData.map((r) => r.id), 0) + 1,
 			title: formData.title,
 			background: formData.background,
-			location: formData.location,
+			location: formData.location || undefined,
+			coverKey: formData.coverKey || undefined,
 			startDate: formData.startDate,
 			endDate: formData.endDate,
-			startTime,
-			endTime,
+			startTime: formData.startTime,
+			endTime: formData.endTime,
 			totalCount: formData.totalCount!,
 			remainCount: formData.totalCount!,
 			createdAt: timeStr,
@@ -432,8 +504,11 @@ const batchFormData = reactive({
 	title: '',
 	background: '',
 	location: '',
+	coverKey: '',
+	coverUrl: '',
 	dateRange: [] as string[],
-	timeSlots: [] as string[],
+	startTime: '' as string,
+	endTime: '' as string,
 	totalCount: undefined as number | undefined
 });
 
@@ -441,19 +516,18 @@ const batchFormData = reactive({
 const batchRules = reactive<FormRules>({
 	title: [{ required: true, message: '请输入活动标题', trigger: 'blur' }],
 	background: [{ required: true, message: '请输入活动背景', trigger: 'blur' }],
-	location: [{ required: true, message: '请输入活动地点', trigger: 'blur' }],
 	dateRange: [{ required: true, message: '请选择日期范围', trigger: 'change' }],
-	timeSlots: [{ type: 'array', required: true, min: 1, message: '请至少选择一个时间段', trigger: 'change' }],
+	startTime: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
+	endTime: [{ required: true, message: '请选择结束时间', trigger: 'change' }],
 	totalCount: [
 		{ required: true, message: '请输入总号数', trigger: 'blur' },
 		{ type: 'number', min: 1, message: '总号数必须大于 0', trigger: 'blur' }
 	]
 });
 
-/** 预览列表：根据日期范围 × 时间段生成预览数据 */
+/** 预览列表：根据日期范围生成预览数据 */
 interface BatchPreviewItem {
 	date: string;
-	timeSlot: string;
 	timeLabel: string;
 	totalCount: number;
 }
@@ -462,7 +536,7 @@ const batchPreview = ref<BatchPreviewItem[]>([]);
 
 /** 监听批量表单变化，实时更新预览 */
 watch(
-	() => [batchFormData.dateRange, batchFormData.timeSlots, batchFormData.totalCount],
+	() => [batchFormData.dateRange, batchFormData.startTime, batchFormData.endTime, batchFormData.totalCount],
 	() => {
 		batchPreview.value = generateBatchPreview();
 	},
@@ -470,9 +544,9 @@ watch(
 );
 
 function generateBatchPreview(): BatchPreviewItem[] {
-	const { dateRange, timeSlots, totalCount } = batchFormData;
+	const { dateRange, startTime, endTime, totalCount } = batchFormData;
 
-	if (!dateRange || dateRange.length !== 2 || !timeSlots || timeSlots.length === 0 || !totalCount) {
+	if (!dateRange || dateRange.length !== 2 || !startTime || !endTime || !totalCount) {
 		return [];
 	}
 
@@ -487,10 +561,7 @@ function generateBatchPreview(): BatchPreviewItem[] {
 
 	while (current <= end) {
 		const dateStr = formatDate(current);
-		for (const slot of timeSlots) {
-			const label = timeSlotOptions.find((o) => o.value === slot)?.label ?? slot;
-			result.push({ date: dateStr, timeSlot: slot, timeLabel: label, totalCount });
-		}
+		result.push({ date: dateStr, timeLabel: `${startTime}-${endTime}`, totalCount });
 		current.setDate(current.getDate() + 1);
 	}
 
@@ -510,9 +581,19 @@ function handleBatchAdd() {
 	batchDialogVisible.value = true;
 }
 
+/** 批量弹窗 KV 上传 */
+function handleBatchUploadKV(options: UploadRequestOptions) {
+	const file = options.file;
+	batchFormData.coverUrl = URL.createObjectURL(file);
+	batchFormData.coverKey = `activity/kv/${Date.now()}_${file.name}`;
+	ElMessage.success('图片上传成功（本地预览）');
+}
+
 /** 关闭批量添加弹窗时重置 */
 function handleBatchDialogClose() {
 	batchFormRef.value?.resetFields();
+	batchFormData.coverKey = '';
+	batchFormData.coverUrl = '';
 	batchPreview.value = [];
 }
 
@@ -534,18 +615,18 @@ async function handleBatchSubmit() {
 
 		const newSessions: ActivitySessionRow[] = [];
 		for (const item of batchPreview.value) {
-			const [startTime, endTime] = item.timeSlot.split('-');
 			maxId += 1;
 			// 批量生成的活动，开始日期=结束日期=该场次日期
 			const session: ActivitySessionRow = {
 				id: maxId,
 				title: batchFormData.title,
 				background: batchFormData.background,
-				location: batchFormData.location,
+				location: batchFormData.location || undefined,
+				coverKey: batchFormData.coverKey || undefined,
 				startDate: item.date,
 				endDate: item.date,
-				startTime,
-				endTime,
+				startTime: batchFormData.startTime,
+				endTime: batchFormData.endTime,
 				totalCount: item.totalCount,
 				remainCount: item.totalCount,
 				createdAt: timeStr,
@@ -575,3 +656,33 @@ onMounted(() => {
 	fetchSessions();
 });
 </script>
+
+<style scoped>
+.kv-uploader :deep(.el-upload) {
+	border: 1px dashed var(--el-border-color);
+	border-radius: 6px;
+	cursor: pointer;
+	overflow: hidden;
+	transition: border-color 0.2s;
+}
+
+.kv-uploader :deep(.el-upload:hover) {
+	border-color: var(--el-color-primary);
+}
+
+.kv-preview {
+	width: 280px;
+	height: 157px;
+	display: block;
+	object-fit: cover;
+}
+
+.kv-placeholder {
+	width: 280px;
+	height: 157px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+</style>
