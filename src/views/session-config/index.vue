@@ -351,7 +351,6 @@ async function handleResetCount(row: SessionRow) {
 	}
 }
 
-
 /** 删除场次 */
 async function handleDelete(row: SessionRow) {
 	try {
