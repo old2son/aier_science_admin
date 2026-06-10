@@ -56,6 +56,8 @@
 				<el-table-column prop="operator" label="操作人" min-width="90" align="center" />
 				<el-table-column label="操作" min-width="200" align="center" fixed="right">
 					<template #default="{ row }">
+						<el-button type="primary" link size="small" @click="handleResetCount(row)">余号清零</el-button>
+						<el-divider direction="vertical" />
 						<el-button type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
 						<el-divider direction="vertical" />
 						<el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
@@ -327,6 +329,28 @@ function handleReset() {
 	queryForm.value.endDate = '';
 	fetchSessions();
 }
+
+/** 余号清零 */
+async function handleResetCount(row: SessionRow) {
+	try {
+		await ElMessageBox.confirm(`确认清零 ${row.date} ${row.startTime}-${row.endTime} 的场次吗？`, '清零确认', {
+			confirmButtonText: '确定清零',
+			cancelButtonText: '取消',
+			type: 'warning',
+			confirmButtonClass: 'el-button--danger'
+		});
+
+		const idx = rawData.findIndex((r) => r.id === row.id);
+		if (idx > -1) {
+			rawData[idx].remainCount = 0;
+			tableData.value = [...rawData];
+			ElMessage.success('清零成功');
+		}
+	} catch {
+		// 用户取消，不做操作
+	}
+}
+
 
 /** 删除场次 */
 async function handleDelete(row: SessionRow) {
