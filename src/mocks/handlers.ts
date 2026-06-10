@@ -8,6 +8,7 @@ const sessionRows = [
 		endTime: '10:00',
 		totalCount: 50,
 		remainCount: 0,
+		guideCount: 2,
 		createdAt: '2026-05-28 14:22:00',
 		operator: '张三'
 	},
@@ -18,6 +19,7 @@ const sessionRows = [
 		endTime: '11:30',
 		totalCount: 40,
 		remainCount: 15,
+		guideCount: 1,
 		createdAt: '2026-05-29 09:00:00',
 		operator: '李四'
 	},
@@ -28,6 +30,7 @@ const sessionRows = [
 		endTime: '10:00',
 		totalCount: 50,
 		remainCount: 20,
+		guideCount: 3,
 		createdAt: '2026-05-28 14:22:00',
 		operator: '张三'
 	},
@@ -38,6 +41,7 @@ const sessionRows = [
 		endTime: '15:30',
 		totalCount: 50,
 		remainCount: 35,
+		guideCount: 2,
 		createdAt: '2026-05-28 14:25:00',
 		operator: '张三'
 	},
@@ -48,6 +52,7 @@ const sessionRows = [
 		endTime: '10:00',
 		totalCount: 50,
 		remainCount: 50,
+		guideCount: 0,
 		createdAt: '2026-05-29 09:10:00',
 		operator: '李四'
 	},
@@ -58,6 +63,7 @@ const sessionRows = [
 		endTime: '17:00',
 		totalCount: 40,
 		remainCount: 8,
+		guideCount: 1,
 		createdAt: '2026-05-30 11:00:00',
 		operator: '王五'
 	}

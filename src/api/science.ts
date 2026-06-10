@@ -7,6 +7,7 @@ export interface SessionRow {
 	endTime: string;
 	totalCount: number;
 	remainCount: number;
+	guideCount?: number;
 	createdAt: string;
 	operator: string;
 }
