@@ -341,6 +341,12 @@ async function handleResetCount(row: SessionRow) {
 		});
 
 		const idx = rawData.findIndex((r) => r.id === row.id);
+
+		if (rawData[idx].remainCount === 0) {
+			ElMessage.warning('余号已清零');
+			return;
+		}
+		
 		if (idx > -1) {
 			rawData[idx].remainCount = 0;
 			tableData.value = [...rawData];
