@@ -1,0 +1,43 @@
+<template>
+	<!-- <el-table v-loading="tableLoading" :data="tableData" border stripe style="width: 100%">
+		<el-table-column
+			v-for="col in columns"
+			:key="col.prop"
+			:label="col.label"
+			:prop="col.prop"
+			:min-width="col.minWidth"
+			:align="col.align"
+		>
+			<template v-if="col.slot" #default="scope">
+				<slot :name="col.slot" v-bind="scope" />
+			</template>
+
+			<template v-else #default="{ row }">
+				{{ row[col.prop] }}
+			</template>
+		</el-table-column>
+	</el-table> -->
+
+	
+	<el-table v-loading="loading" :data="data" border stripe style="width: 100%">
+		<el-table-column v-for="col in columns" :key="col.prop || col.type" v-bind="col">
+			<template v-if="col.slot" #default="scope">
+				<slot :name="col.prop" v-bind="scope" />
+			</template>
+
+			<template v-else #default="{ row, $index }">
+				{{ col.type === 'index' ? $index + 1 : row[col.prop] }}
+			</template>
+		</el-table-column>
+	</el-table>
+</template>
+
+<script setup lang="ts">
+import { TableColumn } from './types';
+
+defineProps<{
+	loading?: boolean;
+	data: any[];
+	columns: TableColumn[];
+}>();
+</script>

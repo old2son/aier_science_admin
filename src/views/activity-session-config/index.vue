@@ -69,6 +69,22 @@
 					</template>
 				</el-table-column>
 			</el-table>
+
+			<my-table v-loading="tableLoading" :data="tableData" :columns="columns">
+				<template #remainCount="{ row }">
+					<el-tag :type="row.remainCount === 0 ? 'danger' : row.remainCount < 10 ? 'warning' : 'success'">
+						{{ row.remainCount }}
+					</el-tag>
+				</template>
+
+				<template #action="{ row }">
+					<el-button type="primary" link size="small" @click="handleResetCount(row)">余号清零</el-button>
+					<el-divider direction="vertical" />
+					<el-button type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
+					<el-divider direction="vertical" />
+					<el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
+				</template>
+			</my-table>
 		</div>
 
 		<!-- 添加/编辑场次弹窗 -->
@@ -79,84 +95,84 @@
 			destroy-on-close
 			@close="handleDialogClose"
 		>
-		<el-form ref="formRef" :model="formData" :rules="rules" label-width="90px" class="pt-2">
-			<el-form-item label="活动标题" prop="title">
-				<el-input v-model="formData.title" placeholder="请输入活动标题" clearable />
-			</el-form-item>
-			<el-form-item label="活动背景" prop="background">
-				<el-input
-					v-model="formData.background"
-					type="textarea"
-					:rows="3"
-					placeholder="请输入活动背景介绍"
-				/>
-			</el-form-item>
-			<el-form-item label="活动 KV">
-				<el-upload
-					class="kv-uploader"
-					action="#"
-					:show-file-list="false"
-					:before-upload="handleBeforeUpload"
-					:http-request="handleUploadKV"
-					accept="image/*"
-				>
-					<img v-if="formData.coverUrl" :src="formData.coverUrl" class="kv-preview" />
-					<div v-else class="kv-placeholder">
-						<el-icon class="text-2xl text-slate-400"><Plus /></el-icon>
-						<span class="mt-1 text-xs text-slate-400">上传活动 KV</span>
-					</div>
-				</el-upload>
-				<div class="mt-1 text-xs text-slate-400">建议尺寸 750×420，JPG/PNG，≤2MB</div>
-			</el-form-item>
-			<el-form-item label="活动地点">
-				<el-input v-model="formData.location" placeholder="请输入活动地点（选填）" clearable />
-			</el-form-item>
-			<el-form-item label="开始日期" prop="startDate">
-				<el-date-picker
-					v-model="formData.startDate"
-					type="date"
-					placeholder="选择开始日期"
-					value-format="YYYY-MM-DD"
-					style="width: 100%"
-				/>
-			</el-form-item>
-			<el-form-item label="结束日期" prop="endDate">
-				<el-date-picker
-					v-model="formData.endDate"
-					type="date"
-					placeholder="选择结束日期"
-					value-format="YYYY-MM-DD"
-					style="width: 100%"
-				/>
-			</el-form-item>
-			<el-form-item label="开始时间" prop="startTime">
-				<el-time-picker
-					v-model="formData.startTime"
-					placeholder="选择开始时间"
-					format="HH:mm"
-					value-format="HH:mm"
-					style="width: 100%"
-				/>
-			</el-form-item>
-			<el-form-item label="结束时间" prop="endTime">
-				<el-time-picker
-					v-model="formData.endTime"
-					placeholder="选择结束时间"
-					format="HH:mm"
-					value-format="HH:mm"
-					style="width: 100%"
-				/>
-			</el-form-item>
-			<el-form-item label="总号数" prop="totalCount">
-				<el-input-number
-					v-model="formData.totalCount"
-					:min="1"
-					:max="9999"
-					placeholder="请输入总号数"
-					style="width: 100%"
-				/>
-			</el-form-item>
-		</el-form>
+			<el-form ref="formRef" :model="formData" :rules="rules" label-width="90px" class="pt-2">
+				<el-form-item label="活动标题" prop="title">
+					<el-input v-model="formData.title" placeholder="请输入活动标题" clearable />
+				</el-form-item>
+				<el-form-item label="活动背景" prop="background">
+					<el-input
+						v-model="formData.background"
+						type="textarea"
+						:rows="3"
+						placeholder="请输入活动背景介绍"
+					/>
+				</el-form-item>
+				<el-form-item label="活动 KV">
+					<el-upload
+						class="kv-uploader"
+						action="#"
+						:show-file-list="false"
+						:before-upload="handleBeforeUpload"
+						:http-request="handleUploadKV"
+						accept="image/*"
+					>
+						<img v-if="formData.coverUrl" :src="formData.coverUrl" class="kv-preview" />
+						<div v-else class="kv-placeholder">
+							<el-icon class="text-2xl text-slate-400"><Plus /></el-icon>
+							<span class="mt-1 text-xs text-slate-400">上传活动 KV</span>
+						</div>
+					</el-upload>
+					<div class="mt-1 text-xs text-slate-400">建议尺寸 750×420，JPG/PNG，≤2MB</div>
+				</el-form-item>
+				<el-form-item label="活动地点">
+					<el-input v-model="formData.location" placeholder="请输入活动地点（选填）" clearable />
+				</el-form-item>
+				<el-form-item label="开始日期" prop="startDate">
+					<el-date-picker
+						v-model="formData.startDate"
+						type="date"
+						placeholder="选择开始日期"
+						value-format="YYYY-MM-DD"
+						style="width: 100%"
+					/>
+				</el-form-item>
+				<el-form-item label="结束日期" prop="endDate">
+					<el-date-picker
+						v-model="formData.endDate"
+						type="date"
+						placeholder="选择结束日期"
+						value-format="YYYY-MM-DD"
+						style="width: 100%"
+					/>
+				</el-form-item>
+				<el-form-item label="开始时间" prop="startTime">
+					<el-time-picker
+						v-model="formData.startTime"
+						placeholder="选择开始时间"
+						format="HH:mm"
+						value-format="HH:mm"
+						style="width: 100%"
+					/>
+				</el-form-item>
+				<el-form-item label="结束时间" prop="endTime">
+					<el-time-picker
+						v-model="formData.endTime"
+						placeholder="选择结束时间"
+						format="HH:mm"
+						value-format="HH:mm"
+						style="width: 100%"
+					/>
+				</el-form-item>
+				<el-form-item label="总号数" prop="totalCount">
+					<el-input-number
+						v-model="formData.totalCount"
+						:min="1"
+						:max="9999"
+						placeholder="请输入总号数"
+						style="width: 100%"
+					/>
+				</el-form-item>
+			</el-form>
 			<template #footer>
 				<el-button @click="dialogVisible = false">取消</el-button>
 				<el-button type="primary" :loading="submitLoading" @click="handleSubmit">确定</el-button>
@@ -175,34 +191,34 @@
 				<el-form-item label="活动标题" prop="title">
 					<el-input v-model="batchFormData.title" placeholder="请输入活动标题" clearable />
 				</el-form-item>
-			<el-form-item label="活动背景" prop="background">
-				<el-input
-					v-model="batchFormData.background"
-					type="textarea"
-					:rows="3"
-					placeholder="请输入活动背景介绍"
-				/>
-			</el-form-item>
-			<el-form-item label="活动 KV">
-				<el-upload
-					class="kv-uploader"
-					action="#"
-					:show-file-list="false"
-					:before-upload="handleBeforeUpload"
-					:http-request="handleBatchUploadKV"
-					accept="image/*"
-				>
-					<img v-if="batchFormData.coverUrl" :src="batchFormData.coverUrl" class="kv-preview" />
-					<div v-else class="kv-placeholder">
-						<el-icon class="text-2xl text-slate-400"><Plus /></el-icon>
-						<span class="mt-1 text-xs text-slate-400">上传活动 KV</span>
-					</div>
-				</el-upload>
-				<div class="mt-1 text-xs text-slate-400">建议尺寸 750×420，JPG/PNG，≤2MB</div>
-			</el-form-item>
-		<el-form-item label="活动地点">
-				<el-input v-model="batchFormData.location" placeholder="请输入活动地点（选填）" clearable />
-			</el-form-item>
+				<el-form-item label="活动背景" prop="background">
+					<el-input
+						v-model="batchFormData.background"
+						type="textarea"
+						:rows="3"
+						placeholder="请输入活动背景介绍"
+					/>
+				</el-form-item>
+				<el-form-item label="活动 KV">
+					<el-upload
+						class="kv-uploader"
+						action="#"
+						:show-file-list="false"
+						:before-upload="handleBeforeUpload"
+						:http-request="handleBatchUploadKV"
+						accept="image/*"
+					>
+						<img v-if="batchFormData.coverUrl" :src="batchFormData.coverUrl" class="kv-preview" />
+						<div v-else class="kv-placeholder">
+							<el-icon class="text-2xl text-slate-400"><Plus /></el-icon>
+							<span class="mt-1 text-xs text-slate-400">上传活动 KV</span>
+						</div>
+					</el-upload>
+					<div class="mt-1 text-xs text-slate-400">建议尺寸 750×420，JPG/PNG，≤2MB</div>
+				</el-form-item>
+				<el-form-item label="活动地点">
+					<el-input v-model="batchFormData.location" placeholder="请输入活动地点（选填）" clearable />
+				</el-form-item>
 				<el-form-item label="日期范围" prop="dateRange">
 					<el-date-picker
 						v-model="batchFormData.dateRange"
@@ -214,24 +230,24 @@
 						style="width: 100%"
 					/>
 				</el-form-item>
-			<el-form-item label="开始时间" prop="startTime">
-				<el-time-picker
-					v-model="batchFormData.startTime"
-					placeholder="选择开始时间"
-					format="HH:mm"
-					value-format="HH:mm"
-					style="width: 100%"
-				/>
-			</el-form-item>
-			<el-form-item label="结束时间" prop="endTime">
-				<el-time-picker
-					v-model="batchFormData.endTime"
-					placeholder="选择结束时间"
-					format="HH:mm"
-					value-format="HH:mm"
-					style="width: 100%"
-				/>
-			</el-form-item>
+				<el-form-item label="开始时间" prop="startTime">
+					<el-time-picker
+						v-model="batchFormData.startTime"
+						placeholder="选择开始时间"
+						format="HH:mm"
+						value-format="HH:mm"
+						style="width: 100%"
+					/>
+				</el-form-item>
+				<el-form-item label="结束时间" prop="endTime">
+					<el-time-picker
+						v-model="batchFormData.endTime"
+						placeholder="选择结束时间"
+						format="HH:mm"
+						value-format="HH:mm"
+						style="width: 100%"
+					/>
+				</el-form-item>
 				<el-form-item label="总号数" prop="totalCount">
 					<el-input-number
 						v-model="batchFormData.totalCount"
@@ -272,10 +288,105 @@
 import { Download, Plus, Search } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadRequestOptions } from 'element-plus';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
+import MyTable from '@/components/MyTable/index.vue';
+import type { TableColumn } from '@/components/MyTable/types.ts';
 
-import { getActivitySessionList, type ActivitySessionQuery, type ActivitySessionRow } from '@/api/science';
+import { getActivitySessionList, type ActivitySessionQuery, type ActivitySessionRow } from '@/api/science.ts';
 
 let rawData: ActivitySessionRow[] = [];
+
+const columns: TableColumn[] = [
+	{
+		type: 'index',
+		label: '序号',
+		slot: false,
+		width: 60,
+		align: 'center'
+	},
+	{
+		label: '活动标题',
+		prop: 'title',
+		slot: false,
+		minWidth: 160,
+		showOverflowTooltip: true
+	},
+	{
+		label: '活动背景',
+		prop: 'background',
+		slot: false,
+		minWidth: 180,
+		align: 'center',
+		showOverflowTooltip: true
+	},
+	{
+		label: '活动地点',
+		prop: 'location',
+		slot: false,
+		minWidth: 140,
+		showOverflowTooltip: true
+	},
+	{
+		label: '开始日期',
+		prop: 'startDate',
+		slot: false,
+		minWidth: 100
+	},
+	{
+		label: '结束日期',
+		prop: 'endDate',
+		slot: false,
+		minWidth: 100
+	},
+	{
+		label: '开始时间',
+		prop: 'startTime',
+		slot: false,
+		minWidth: 100,
+		align: 'center'
+	},
+	{
+		label: '结束时间',
+		prop: 'endTime',
+		slot: false,
+		minWidth: 100,
+		align: 'center'
+	},
+	{
+		label: '总号数',
+		prop: 'totalCount',
+		slot: false,
+		minWidth: 80,
+		align: 'center'
+	},
+	{
+		label: '余号',
+		prop: 'remainCount',
+		slot: true,
+		minWidth: 80,
+		align: 'center'
+	},
+	{
+		label: '创建时间',
+		prop: 'createdAt',
+		slot: false,
+		minWidth: 160
+	},
+	{
+		label: '操作人',
+		prop: 'operator',
+		slot: false,
+		minWidth: 90,
+		align: 'center'
+	},
+	{
+		label: '操作',
+		prop: 'action',
+		slot: true,
+		minWidth: 180,
+		align: 'center',
+		fixed: 'right'
+	}
+];
 
 /* 查询条件 */
 const queryForm = ref({
@@ -486,7 +597,7 @@ async function handleResetCount(row: ActivitySessionRow) {
 			ElMessage.warning('余号已清零');
 			return;
 		}
-		
+
 		if (idx > -1) {
 			rawData[idx].remainCount = 0;
 			tableData.value = [...rawData];

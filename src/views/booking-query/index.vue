@@ -69,7 +69,7 @@
 			</el-form>
 
 			<!-- 预约表格 -->
-			<el-table v-loading="tableLoading" :data="tableData" border stripe style="width: 100%">
+			<!-- <el-table v-loading="tableLoading" :data="tableData" border stripe style="width: 100%">
 				<el-table-column type="index" label="序号" width="60" align="center" />
 				<el-table-column prop="name" label="姓名" min-width="80" />
 				<el-table-column prop="phone" label="手机" min-width="120">
@@ -112,7 +112,40 @@
 						<el-button type="danger" link size="small">取消参观</el-button>
 					</template>
 				</el-table-column>
-			</el-table>
+			</el-table> -->
+
+			<my-table v-loading="tableLoading" :data="tableData" :columns="columns">
+				<template #phone="{ row }">
+					{{ maskPhone(row.phone) }}
+				</template>
+
+				<template #idCard="{ row }">
+					{{ row.groupType.includes('团队预约') ? '' : maskIdCard(row.idCard) }}
+				</template>
+
+				<template #groupType="{ row }">
+					<el-tag size="small">{{ row.groupType }}</el-tag>
+				</template>
+
+				<template #attachment="{ row }">
+					<span v-if="row.attachment !== '-'">
+						<el-link type="primary" underline="never">{{ row.attachment }}</el-link>
+					</span>
+					<span v-else class="text-slate-400">-</span>
+				</template>
+
+				<template #status="{ row }">
+					<el-tag :type="getStatusInfo(row.status)?.type">
+						{{ getStatusInfo(row.status)?.label }}
+					</el-tag>
+				</template>
+
+				<template #action>
+					<el-button type="primary" link> 确认参观 </el-button>
+					<el-divider direction="vertical" />
+					<el-button type="danger" link> 取消参观 </el-button>
+				</template>
+			</my-table>
 		</div>
 	</div>
 </template>
@@ -121,8 +154,10 @@
 import { Download, Search } from '@element-plus/icons-vue';
 import { ElMessageBox } from 'element-plus';
 import { onMounted, ref } from 'vue';
+import MyTable from '@/components/MyTable/index.vue';
+import type { TableColumn } from '@/components/MyTable/types.ts';
 
-import { getBookingList } from '@/api/science';
+import { getBookingList } from '@/api/science.ts';
 
 type BookingStatus = 'pending' | 'verified' | 'expired';
 
@@ -140,6 +175,95 @@ interface BookingRow {
 	status: BookingStatus;
 	createdAt: string;
 }
+
+const columns: TableColumn[] = [
+	{
+		type: 'index',
+		label: '序号',
+		slot: false,
+		width: 60,
+		align: 'center'
+	},
+	{
+		label: '姓名',
+		prop: 'name',
+		slot: false,
+		minWidth: 80
+	},
+	{
+		label: '手机',
+		prop: 'phone',
+		slot: true,
+		minWidth: 120
+	},
+	{
+		label: '身份证',
+		prop: 'idCard',
+		slot: true,
+		minWidth: 160
+	},
+	{
+		label: '成团方式',
+		prop: 'groupType',
+		slot: true,
+		minWidth: 100,
+		align: 'center'
+	},
+	{
+		label: '团队人数',
+		prop: 'groupCount',
+		slot: false,
+		minWidth: 90,
+		align: 'center'
+	},
+	{
+		label: '附件',
+		prop: 'attachment',
+		slot: true,
+		minWidth: 130
+	},
+	{
+		label: '日期',
+		prop: 'date',
+		slot: false,
+		minWidth: 110
+	},
+	{
+		label: '开始时间',
+		prop: 'startTime',
+		slot: false,
+		minWidth: 95,
+		align: 'center'
+	},
+	{
+		label: '结束时间',
+		prop: 'endTime',
+		slot: false,
+		minWidth: 95,
+		align: 'center'
+	},
+	{
+		label: '状态',
+		prop: 'status',
+		slot: true,
+		minWidth: 100,
+		align: 'center'
+	},
+	{
+		label: '创建时间',
+		prop: 'createdAt',
+		slot: false,
+		minWidth: 160
+	},
+	{
+		label: '操作',
+		prop: 'action',
+		slot: true,
+		minWidth: 180,
+		align: 'center',
+		fixed: 'right'
+	}
+];
 
 /** 状态映射 */
 const statusMap: Record<BookingStatus, { label: string; type: '' | 'warning' | 'success' | 'info' }> = {

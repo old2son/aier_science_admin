@@ -54,7 +54,7 @@ import { ElMessage } from 'element-plus';
 import { reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { useUserStore } from '@/stores/modules/user';
+import { useUserStore } from '@/stores/modules/user.ts';
 
 const router = useRouter();
 const route = useRoute();

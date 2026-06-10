@@ -39,7 +39,7 @@
 			</el-form>
 
 			<!-- 场次表格 -->
-			<el-table v-loading="tableLoading" :data="tableData" border stripe style="width: 100%">
+			<!-- <el-table v-loading="tableLoading" :data="tableData" border stripe style="width: 100%">
 				<el-table-column type="index" label="序号" width="60" align="center" />
 				<el-table-column prop="date" label="日期" min-width="120" />
 				<el-table-column prop="startTime" label="开始时间" min-width="100" align="center" />
@@ -68,7 +68,27 @@
 						<el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
 					</template>
 				</el-table-column>
-			</el-table>
+			</el-table> -->
+
+			<my-table v-loading="tableLoading" :data="tableData" :columns="columns">
+				<template #guideCount="{ row }">
+					<span>{{ row.guideCount ?? '-' }}</span>
+				</template>
+
+				<template #remainCount="{ row }">
+					<el-tag :type="row.remainCount === 0 ? 'danger' : row.remainCount < 10 ? 'warning' : 'success'">
+						{{ row.remainCount }}
+					</el-tag>
+				</template>
+
+				<template #action="{ row }">
+					<el-button type="primary" link size="small" @click="handleResetCount(row)">余号清零</el-button>
+					<el-divider direction="vertical" />
+					<el-button type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
+					<el-divider direction="vertical" />
+					<el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
+				</template>
+			</my-table>
 		</div>
 
 		<!-- 添加场次弹窗 -->
@@ -99,25 +119,25 @@
 						/>
 					</el-select>
 				</el-form-item>
-			<el-form-item label="总号数" prop="totalCount">
-				<el-input-number
-					v-model="formData.totalCount"
-					:min="1"
-					:max="9999"
-					placeholder="请输入总号数"
-					style="width: 100%"
-				/>
-			</el-form-item>
-			<el-form-item label="讲解人数">
-				<el-input-number
-					v-model="formData.guideCount"
-					:min="0"
-					:max="999"
-					placeholder="请输入讲解服务人数（选填）"
-					style="width: 100%"
-				/>
-				<div class="mt-1 text-xs text-slate-400">讲解服务人数，可选填</div>
-			</el-form-item>
+				<el-form-item label="总号数" prop="totalCount">
+					<el-input-number
+						v-model="formData.totalCount"
+						:min="1"
+						:max="9999"
+						placeholder="请输入总号数"
+						style="width: 100%"
+					/>
+				</el-form-item>
+				<el-form-item label="讲解人数">
+					<el-input-number
+						v-model="formData.guideCount"
+						:min="0"
+						:max="999"
+						placeholder="请输入讲解服务人数（选填）"
+						style="width: 100%"
+					/>
+					<div class="mt-1 text-xs text-slate-400">讲解服务人数，可选填</div>
+				</el-form-item>
 			</el-form>
 			<template #footer>
 				<el-button @click="dialogVisible = false">取消</el-button>
@@ -158,28 +178,32 @@
 					</el-checkbox-group>
 					<div class="mt-1 text-xs text-slate-400">可多选，每个选中日期 × 选中时间段 = 生成场次数</div>
 				</el-form-item>
-			<el-form-item label="总号数" prop="totalCount">
-				<el-input-number
-					v-model="batchFormData.totalCount"
-					:min="1"
-					:max="9999"
-					placeholder="请输入总号数"
-					style="width: 100%"
-				/>
-			</el-form-item>
-			<el-form-item label="讲解人数">
-				<el-input-number
-					v-model="batchFormData.guideCount"
-					:min="0"
-					:max="999"
-					placeholder="请输入讲解服务人数（选填）"
-					style="width: 100%"
-				/>
-			</el-form-item>
+				<el-form-item label="总号数" prop="totalCount">
+					<el-input-number
+						v-model="batchFormData.totalCount"
+						:min="1"
+						:max="9999"
+						placeholder="请输入总号数"
+						style="width: 100%"
+					/>
+				</el-form-item>
+				<el-form-item label="讲解人数">
+					<el-input-number
+						v-model="batchFormData.guideCount"
+						:min="0"
+						:max="999"
+						placeholder="请输入讲解服务人数（选填）"
+						style="width: 100%"
+					/>
+				</el-form-item>
 				<!-- 预览 -->
 				<el-form-item label="预览" v-if="batchPreview.length > 0">
 					<div class="max-h-48 overflow-y-auto rounded border border-slate-200 p-3">
-						<div v-for="(item, idx) in batchPreview" :key="idx" class="flex items-center justify-between py-1 text-sm">
+						<div
+							v-for="(item, idx) in batchPreview"
+							:key="idx"
+							class="flex items-center justify-between py-1 text-sm"
+						>
 							<span class="text-slate-600">{{ item.date }} {{ item.timeLabel }}</span>
 							<el-tag size="small">{{ item.totalCount }} 号</el-tag>
 						</div>
@@ -191,7 +215,9 @@
 			</el-form>
 			<template #footer>
 				<el-button @click="batchDialogVisible = false">取消</el-button>
-				<el-button type="primary" :loading="batchSubmitLoading" @click="handleBatchSubmit">确认添加 ({{ batchPreview.length }})</el-button>
+				<el-button type="primary" :loading="batchSubmitLoading" @click="handleBatchSubmit"
+					>确认添加 ({{ batchPreview.length }})</el-button
+				>
 			</template>
 		</el-dialog>
 	</div>
@@ -201,10 +227,84 @@
 import { Plus, Search } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
+import MyTable from '@/components/MyTable/index.vue';
+import type { TableColumn } from '@/components/MyTable/types.ts';
 
-import { getSessionList, type SessionQuery, type SessionRow } from '@/api/science';
+import { getSessionList, type SessionQuery, type SessionRow } from '@/api/science.ts';
 
 let rawData: SessionRow[] = [];
+
+const columns: TableColumn[] = [
+	{
+		type: 'index',
+		label: '序号',
+		slot: false,
+		width: 60,
+		align: 'center'
+	},
+	{
+		label: '日期',
+		prop: 'date',
+		slot: false,
+		minWidth: 120
+	},
+	{
+		label: '开始时间',
+		prop: 'startTime',
+		slot: false,
+		minWidth: 100,
+		align: 'center'
+	},
+	{
+		label: '结束时间',
+		prop: 'endTime',
+		slot: false,
+		minWidth: 100,
+		align: 'center'
+	},
+	{
+		label: '总号数',
+		prop: 'totalCount',
+		slot: false,
+		minWidth: 90,
+		align: 'center'
+	},
+	{
+		label: '需要讲解服务人数',
+		prop: 'guideCount',
+		slot: true,
+		minWidth: 120,
+		align: 'center'
+	},
+	{
+		label: '余号',
+		prop: 'remainCount',
+		slot: true,
+		minWidth: 90,
+		align: 'center'
+	},
+	{
+		label: '创建时间',
+		prop: 'createdAt',
+		slot: false,
+		minWidth: 160
+	},
+	{
+		label: '操作人',
+		prop: 'operator',
+		slot: false,
+		minWidth: 90,
+		align: 'center'
+	},
+	{
+		label: '操作',
+		prop: 'action',
+		slot: true,
+		minWidth: 200,
+		align: 'center',
+		fixed: 'right'
+	}
+];
 
 /* 查询条件 */
 const queryForm = ref({
@@ -237,9 +337,9 @@ const editId = ref<number | null>(null);
 
 /** 固定时间段选项 */
 const timeSlotOptions = [
-	{ label: '09:00 - 10:00', value: '09:00-10:00' },
-	{ label: '10:30 - 11:30', value: '10:30-11:30' },
-	{ label: '14:30 - 15:30', value: '14:30-15:30' },
+	{ label: '09:00 - 10:30', value: '09:00-10:30' },
+	{ label: '10:30 - 12:00', value: '10:30-12:00' },
+	{ label: '14:30 - 16:00', value: '14:30-16:00' },
 	{ label: '16:00 - 17:00', value: '16:00-17:00' }
 ];
 
@@ -374,7 +474,7 @@ async function handleResetCount(row: SessionRow) {
 			ElMessage.warning('余号已清零');
 			return;
 		}
-		
+
 		if (idx > -1) {
 			rawData[idx].remainCount = 0;
 			tableData.value = [...rawData];
