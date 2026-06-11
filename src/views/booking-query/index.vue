@@ -115,8 +115,56 @@
 			</el-table> -->
 
 			<my-table v-loading="tableLoading" :data="tableData" :columns="columns">
+				<template #name="{ row }">
+					{{ getBookingDisplayName(row) }}
+				</template>
+
+				<template #phone="{ row }">
+					{{ maskPhone(getBookingDisplayPhone(row)) }}
+				</template>
+
+				<template #idCard="{ row }">
+					{{ row.groupType.includes('团队预约') ? '-' : maskIdCard(getBookingDisplayIdCard(row)) }}
+				</template>
+
 				<template #groupType="{ row }">
 					<el-tag size="small">{{ row.groupType }}</el-tag>
+				</template>
+
+				<template #groupCount="{ row }">
+					<el-popover
+						v-if="row.groupType === '个人预约' && row.companions?.length"
+						placement="left"
+						trigger="click"
+						width="360"
+						popper-class="companion-popover"
+					>
+						<template #reference>
+							<el-button type="primary" link>
+								{{ getBookingMemberCount(row) }}
+							</el-button>
+						</template>
+
+						<div class="companion-list">
+							<div
+								v-for="(companion, index) in row.companions"
+								:key="companion.reId || `${row.reId || row.id}-${index}`"
+								class="companion-card"
+							>
+								<div class="companion-card__header">
+									<span class="companion-card__name">{{ companion.userName }}</span>
+									<el-tag size="small" effect="plain">第{{ Number(index) + 1 }}人</el-tag>
+								</div>
+								<div class="companion-card__meta">
+									<span>{{ companion.documentType }}</span>
+									<span>{{ companion.idNumber }}</span>
+									<span>{{ companion.userAge }}岁</span>
+								</div>
+								<div class="companion-card__phone">{{ companion.userPhone }}</div>
+							</div>
+						</div>
+					</el-popover>
+					<span v-else>{{ getBookingMemberCount(row) }}</span>
 				</template>
 
 				<template #attachment="{ row }">
@@ -151,25 +199,8 @@ import { onMounted, ref } from 'vue';
 import MyTable from '@/components/MyTable/index.vue';
 import type { TableColumn } from '@/components/MyTable/types.ts';
 
-import { getBookingList } from '@/api/science.ts';
+import { getBookingList, type BookingRow, type BookingStatus } from '@/api/science.ts';
 import { exportExcel } from '@/utils/excel.ts';
-
-type BookingStatus = 'pending' | 'verified' | 'expired';
-
-interface BookingRow {
-	id: number;
-	name: string;
-	phone: string;
-	idCard: string;
-	groupType: string;
-	groupCount: number;
-	attachment: string;
-	date: string;
-	startTime: string;
-	endTime: string;
-	status: BookingStatus;
-	createdAt: string;
-}
 
 const columns: TableColumn[] = [
 	{
@@ -180,22 +211,29 @@ const columns: TableColumn[] = [
 		align: 'center'
 	},
 	{
+		label: '单号',
+		prop: 'reId',
+		slot: false,
+		minWidth: 90,
+		align: 'center'
+	},
+	{
 		label: '姓名',
 		prop: 'name',
-		slot: false,
-		minWidth: 80
+		slot: true,
+		minWidth: 70
 	},
 	{
 		label: '手机',
 		prop: 'phone',
-		slot: false,
+		slot: true,
 		minWidth: 120
 	},
 	{
-		label: '身份证',
+		label: '证件',
 		prop: 'idCard',
-		slot: false,
-		minWidth: 160
+		slot: true,
+		minWidth: 180
 	},
 	{
 		label: '成团方式',
@@ -205,9 +243,9 @@ const columns: TableColumn[] = [
 		align: 'center'
 	},
 	{
-		label: '团队人数',
+		label: '人数',
 		prop: 'groupCount',
-		slot: false,
+		slot: true,
 		minWidth: 80,
 		align: 'center'
 	},
@@ -221,20 +259,20 @@ const columns: TableColumn[] = [
 		label: '日期',
 		prop: 'date',
 		slot: false,
-		minWidth: 110
+		minWidth: 100
 	},
 	{
 		label: '开始时间',
 		prop: 'startTime',
 		slot: false,
-		minWidth: 95,
+		minWidth: 85,
 		align: 'center'
 	},
 	{
 		label: '结束时间',
 		prop: 'endTime',
 		slot: false,
-		minWidth: 95,
+		minWidth: 85,
 		align: 'center'
 	},
 	{
@@ -281,13 +319,76 @@ function maskIdCard(idCard: string): string {
 	return `${idCard.slice(0, 3)}${'*'.repeat(starCount)}${idCard.slice(-4)}`;
 }
 
+function getPrimaryCompanion(row: BookingRow) {
+	return row.companions?.[0];
+}
+
+function getBookingMemberCount(row: BookingRow) {
+	return row.companions?.length || row.groupCount || 0;
+}
+
+function getBookingDisplayName(row: BookingRow) {
+	return row.name || getPrimaryCompanion(row)?.userName || '-';
+}
+
+function getBookingDisplayPhone(row: BookingRow) {
+	return row.phone || getPrimaryCompanion(row)?.userPhone || '-';
+}
+
+function getBookingDisplayIdCard(row: BookingRow) {
+	return row.idCard || getPrimaryCompanion(row)?.idNumber || '-';
+}
+
+function getExportRows(row: BookingRow) {
+	if (row.groupType !== '个人预约' || !row.companions?.length) {
+		return [
+			{
+				...row,
+				name: getBookingDisplayName(row),
+				phone: getBookingDisplayPhone(row),
+				idCard: row.groupType.includes('团队预约') ? '-' : getBookingDisplayIdCard(row),
+				groupCount: getBookingMemberCount(row)
+			}
+		];
+	}
+
+	return row.companions.map((companion) => ({
+		...row,
+		reId: companion.reId || row.reId,
+		name: companion.userName,
+		phone: companion.userPhone,
+		idCard: companion.idNumber,
+		groupCount: 1
+	}));
+}
+
+function normalizeBookingRow(row: BookingRow): BookingRow {
+	const primaryCompanion = getPrimaryCompanion(row);
+
+	if (row.groupType !== '个人预约' || !primaryCompanion) {
+		return {
+			...row,
+			reId: row.reId || row.id
+		};
+	}
+
+	return {
+		...row,
+		reId: row.reId || primaryCompanion.reId || row.id,
+		name: row.name || primaryCompanion.userName,
+		phone: row.phone || primaryCompanion.userPhone,
+		idCard: row.idCard || primaryCompanion.idNumber
+	};
+}
+
 /** 原始数据源（模拟接口返回） */
-const rawData: BookingRow[] = [
+const rawDataOld: BookingRow[] = [
 	{
 		id: 1,
+		reId: 1001,
 		name: '张三',
 		phone: '13812341234',
-		idCard: '310101199001011234',
+		idCard: '',
 		groupType: '团队预约',
 		groupCount: 15,
 		attachment: 'https://picsum.photos/seed/booking-attachment-1/1200/800',
@@ -299,12 +400,38 @@ const rawData: BookingRow[] = [
 	},
 	{
 		id: 2,
-		name: '李四',
-		phone: '13987655678',
-		idCard: '320203198503205678',
 		groupType: '个人预约',
 		groupCount: 3,
 		attachment: '-',
+		companions: [
+			{
+				activityId: 0,
+				documentType: '身份证',
+				idNumber: '320203198503205678',
+				reId: 169,
+				userAge: 41,
+				userName: '李四',
+				userPhone: '13987655678'
+			},
+			{
+				activityId: 0,
+				documentType: '军官证',
+				idNumber: '军21',
+				reId: 169,
+				userAge: 66,
+				userName: '椰子鞋',
+				userPhone: '16666666666'
+			},
+			{
+				activityId: 0,
+				documentType: '身份证',
+				idNumber: '320203201512126521',
+				reId: 169,
+				userAge: 10,
+				userName: '李小北',
+				userPhone: '13987655678'
+			}
+		],
 		date: '2026-06-04',
 		startTime: '14:30',
 		endTime: '15:30',
@@ -313,9 +440,10 @@ const rawData: BookingRow[] = [
 	},
 	{
 		id: 3,
+		reId: 1003,
 		name: '王五',
 		phone: '13765439012',
-		idCard: '330282197811089012',
+		idCard: '',
 		groupType: '团队预约',
 		groupCount: 25,
 		attachment: 'https://picsum.photos/seed/booking-attachment-3/1200/800',
@@ -327,12 +455,29 @@ const rawData: BookingRow[] = [
 	},
 	{
 		id: 4,
-		name: '赵六',
-		phone: '13698763456',
-		idCard: '440305199201023456',
 		groupType: '个人预约',
 		groupCount: 2,
 		attachment: '-',
+		companions: [
+			{
+				activityId: 0,
+				documentType: '身份证',
+				idNumber: '440305199201023456',
+				reId: 172,
+				userAge: 34,
+				userName: '赵六',
+				userPhone: '13698763456'
+			},
+			{
+				activityId: 0,
+				documentType: '护照',
+				idNumber: 'EJ9088771',
+				reId: 172,
+				userAge: 29,
+				userName: '林南',
+				userPhone: '13511112222'
+			}
+		],
 		date: '2026-06-05',
 		startTime: '09:00',
 		endTime: '10:00',
@@ -341,9 +486,10 @@ const rawData: BookingRow[] = [
 	},
 	{
 		id: 5,
+		reId: 1005,
 		name: '孙七',
 		phone: '13543217890',
-		idCard: '510104198806157890',
+		idCard: '',
 		groupType: '团队预约',
 		groupCount: 30,
 		attachment: 'https://picsum.photos/seed/booking-attachment-5/1200/800',
@@ -355,12 +501,20 @@ const rawData: BookingRow[] = [
 	},
 	{
 		id: 6,
-		name: '周八',
-		phone: '13387652345',
-		idCard: '420117199505122345',
 		groupType: '个人预约',
 		groupCount: 1,
 		attachment: '-',
+		companions: [
+			{
+				activityId: 0,
+				documentType: '身份证',
+				idNumber: '420117199505122345',
+				reId: 174,
+				userAge: 31,
+				userName: '周八',
+				userPhone: '13387652345'
+			}
+		],
 		date: '2026-06-02',
 		startTime: '14:30',
 		endTime: '15:30',
@@ -368,6 +522,7 @@ const rawData: BookingRow[] = [
 		createdAt: '2026-05-30 14:55:00'
 	}
 ];
+const rawData = rawDataOld.map(normalizeBookingRow);
 
 /* 查询条件 */
 const queryForm = ref({
@@ -409,7 +564,7 @@ async function fetchBookings(params = queryForm.value) {
 	tableLoading.value = true;
 
 	try {
-		tableData.value = await getBookingList(params);
+		tableData.value = (await getBookingList(params)).map(normalizeBookingRow);
 	} finally {
 		tableLoading.value = false;
 	}
@@ -444,7 +599,9 @@ function handleExport() {
 			exportFormatter: item.exportFormatter
 		}));
 
-	exportExcel(exportColumns, tableData.value, '科普馆预约查询');
+	const exportData = tableData.value.flatMap((row) => getExportRows(row));
+
+	exportExcel(exportColumns, exportData, '科普馆预约查询');
 
 	// 导出 Excel 时，弹出下载提示
 	ElMessageBox.alert('导出成功', '提示', {
@@ -461,3 +618,47 @@ onMounted(() => {
 	fetchBookings();
 });
 </script>
+
+<style scoped>
+.companion-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	max-height: 320px;
+	overflow-y: auto;
+}
+
+.companion-card {
+	padding: 10px 12px;
+	border: 1px solid var(--el-border-color-lighter);
+	border-radius: 8px;
+	background: var(--el-fill-color-blank);
+}
+
+.companion-card__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 6px;
+}
+
+.companion-card__name {
+	font-weight: 600;
+	color: var(--el-text-color-primary);
+}
+
+.companion-card__meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 12px;
+	font-size: 12px;
+	color: var(--el-text-color-regular);
+}
+
+.companion-card__phone {
+	margin-top: 6px;
+	font-size: 12px;
+	color: var(--el-text-color-secondary);
+}
+</style>

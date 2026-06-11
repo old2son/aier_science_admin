@@ -14,17 +14,29 @@ export interface SessionRow {
 
 export type BookingStatus = 'pending' | 'verified' | 'expired';
 
+export interface BookingCompanion {
+	activityId: number;
+	documentType: string;
+	idNumber: string;
+	reId: number;
+	userAge: number;
+	userName: string;
+	userPhone: string;
+}
+
 export interface BookingRow {
-	id: number;
-	name: string;
-	phone: string;
-	idCard: string;
+	id?: number;
+	reId?: number;
+	name?: string;
+	phone?: string;
+	idCard?: string;
 	groupType: string;
 	groupCount: number;
 	attachment: string;
 	date: string;
 	startTime: string;
 	endTime: string;
+	companions?: BookingCompanion[];
 	status: BookingStatus;
 	createdAt: string;
 }

@@ -72,9 +72,10 @@ const sessionRows = [
 const bookingRows = [
 	{
 		id: 1,
+		reId: 1001,
 		name: '张三',
 		phone: '13812341234',
-		idCard: '310101199001011234',
+		idCard: '',
 		groupType: '团队预约',
 		groupCount: 15,
 		attachment: 'https://picsum.photos/seed/booking-attachment-1/1200/800',
@@ -86,23 +87,50 @@ const bookingRows = [
 	},
 	{
 		id: 2,
-		name: '李四',
-		phone: '13987655678',
-		idCard: '320203198503205678',
 		groupType: '个人预约',
 		groupCount: 3,
 		attachment: '-',
 		date: '2026-06-04',
 		startTime: '14:30',
 		endTime: '15:30',
+		companions: [
+			{
+				activityId: 0,
+				documentType: '身份证',
+				idNumber: '320203198503205678',
+				reId: 169,
+				userAge: 41,
+				userName: '李四',
+				userPhone: '13987655678'
+			},
+			{
+				activityId: 0,
+				documentType: '军官证',
+				idNumber: '军21',
+				reId: 169,
+				userAge: 66,
+				userName: '椰子鞋',
+				userPhone: '16666666666'
+			},
+			{
+				activityId: 0,
+				documentType: '身份证',
+				idNumber: '320203201512126521',
+				reId: 169,
+				userAge: 10,
+				userName: '李小北',
+				userPhone: '13987655678'
+			}
+		],
 		status: 'pending',
 		createdAt: '2026-06-02 09:15:00'
 	},
 	{
 		id: 3,
+		reId: 1003,
 		name: '王五',
 		phone: '13765439012',
-		idCard: '330282197811089012',
+		idCard: '',
 		groupType: '团队预约',
 		groupCount: 25,
 		attachment: 'https://picsum.photos/seed/booking-attachment-3/1200/800',
@@ -114,23 +142,41 @@ const bookingRows = [
 	},
 	{
 		id: 4,
-		name: '赵六',
-		phone: '13698763456',
-		idCard: '440305199201023456',
 		groupType: '个人预约',
 		groupCount: 2,
 		attachment: '-',
 		date: '2026-06-05',
 		startTime: '09:00',
 		endTime: '10:00',
+		companions: [
+			{
+				activityId: 0,
+				documentType: '身份证',
+				idNumber: '440305199201023456',
+				reId: 172,
+				userAge: 34,
+				userName: '赵六',
+				userPhone: '13698763456'
+			},
+			{
+				activityId: 0,
+				documentType: '护照',
+				idNumber: 'EJ9088771',
+				reId: 172,
+				userAge: 29,
+				userName: '林南',
+				userPhone: '13511112222'
+			}
+		],
 		status: 'pending',
 		createdAt: '2026-06-03 08:45:00'
 	},
 	{
 		id: 5,
+		reId: 1005,
 		name: '孙七',
 		phone: '13543217890',
-		idCard: '510104198806157890',
+		idCard: '',
 		groupType: '团队预约',
 		groupCount: 30,
 		attachment: 'https://picsum.photos/seed/booking-attachment-5/1200/800',
@@ -142,15 +188,23 @@ const bookingRows = [
 	},
 	{
 		id: 6,
-		name: '周八',
-		phone: '13387652345',
-		idCard: '420117199505122345',
 		groupType: '个人预约',
 		groupCount: 1,
 		attachment: '-',
 		date: '2026-06-02',
 		startTime: '14:30',
 		endTime: '15:30',
+		companions: [
+			{
+				activityId: 0,
+				documentType: '身份证',
+				idNumber: '420117199505122345',
+				reId: 174,
+				userAge: 31,
+				userName: '周八',
+				userPhone: '13387652345'
+			}
+		],
 		status: 'verified',
 		createdAt: '2026-05-30 14:55:00'
 	}
@@ -267,8 +321,8 @@ export const handlers = [
 		const list = bookingRows.filter((row) => {
 			if (!inRange(row.date, startDate, endDate)) return false;
 			if (timeSlot && `${row.startTime}-${row.endTime}` !== timeSlot) return false;
-			if (name && !row.name.includes(name)) return false;
-			if (phone && !row.phone.includes(phone)) return false;
+			if (name && !row?.name?.includes(name)) return false;
+			if (phone && !row?.phone?.includes(phone)) return false;
 			if (groupType && row.groupType !== groupType) return false;
 			if (status && row.status !== status) return false;
 			return true;
