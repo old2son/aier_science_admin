@@ -8,4 +8,5 @@ export interface TableColumn {
 	fixed?: boolean | 'left' | 'right';
 	showOverflowTooltip?: boolean;
 	slot?: boolean;
+	exportFormatter?: (value: any) => any;
 }

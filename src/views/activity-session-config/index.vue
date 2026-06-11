@@ -40,7 +40,7 @@
 			</el-form>
 
 			<!-- 活动场次表格 -->
-			<el-table v-loading="tableLoading" :data="tableData" border stripe style="width: 100%">
+			<!-- <el-table v-loading="tableLoading" :data="tableData" border stripe style="width: 100%">
 				<el-table-column type="index" label="序号" width="60" align="center" />
 				<el-table-column prop="title" label="活动标题" min-width="160" show-overflow-tooltip />
 				<el-table-column prop="background" label="活动背景" min-width="180" show-overflow-tooltip />
@@ -68,7 +68,7 @@
 						<el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
 					</template>
 				</el-table-column>
-			</el-table>
+			</el-table> -->
 
 			<my-table v-loading="tableLoading" :data="tableData" :columns="columns">
 				<template #remainCount="{ row }">
@@ -799,11 +799,14 @@ onMounted(() => {
 
 <style scoped>
 .kv-uploader :deep(.el-upload) {
+	width: 280px;
+	height: 157px;
 	border: 1px dashed var(--el-border-color);
 	border-radius: 6px;
 	cursor: pointer;
 	overflow: hidden;
 	transition: border-color 0.2s;
+	
 }
 
 .kv-uploader :deep(.el-upload:hover) {
@@ -811,18 +814,18 @@ onMounted(() => {
 }
 
 .kv-preview {
-	width: 280px;
-	height: 157px;
 	display: block;
-	object-fit: cover;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
 }
 
 .kv-placeholder {
-	width: 280px;
-	height: 157px;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
+	width: 100%;
+	height: 100%;
 }
 </style>

@@ -115,21 +115,15 @@
 			</el-table> -->
 
 			<my-table v-loading="tableLoading" :data="tableData" :columns="columns">
-				<template #phone="{ row }">
-					{{ maskPhone(row.phone) }}
-				</template>
-
-				<template #idCard="{ row }">
-					{{ row.groupType.includes('团队预约') ? '' : maskIdCard(row.idCard) }}
-				</template>
-
 				<template #groupType="{ row }">
 					<el-tag size="small">{{ row.groupType }}</el-tag>
 				</template>
 
 				<template #attachment="{ row }">
 					<span v-if="row.attachment !== '-'">
-						<el-link type="primary" underline="never">{{ row.attachment }}</el-link>
+						<el-link :href="row.attachment" target="_blank" type="primary" underline="never">
+							查看附件
+						</el-link>
 					</span>
 					<span v-else class="text-slate-400">-</span>
 				</template>
@@ -158,6 +152,7 @@ import MyTable from '@/components/MyTable/index.vue';
 import type { TableColumn } from '@/components/MyTable/types.ts';
 
 import { getBookingList } from '@/api/science.ts';
+import { exportExcel } from '@/utils/excel.ts';
 
 type BookingStatus = 'pending' | 'verified' | 'expired';
 
@@ -193,13 +188,13 @@ const columns: TableColumn[] = [
 	{
 		label: '手机',
 		prop: 'phone',
-		slot: true,
+		slot: false,
 		minWidth: 120
 	},
 	{
 		label: '身份证',
 		prop: 'idCard',
-		slot: true,
+		slot: false,
 		minWidth: 160
 	},
 	{
@@ -213,14 +208,14 @@ const columns: TableColumn[] = [
 		label: '团队人数',
 		prop: 'groupCount',
 		slot: false,
-		minWidth: 90,
+		minWidth: 80,
 		align: 'center'
 	},
 	{
 		label: '附件',
 		prop: 'attachment',
 		slot: true,
-		minWidth: 130
+		minWidth: 80
 	},
 	{
 		label: '日期',
@@ -247,7 +242,8 @@ const columns: TableColumn[] = [
 		prop: 'status',
 		slot: true,
 		minWidth: 100,
-		align: 'center'
+		align: 'center',
+		exportFormatter: (value: BookingStatus) => statusMap[value]?.label ?? value
 	},
 	{
 		label: '创建时间',
@@ -294,7 +290,7 @@ const rawData: BookingRow[] = [
 		idCard: '310101199001011234',
 		groupType: '团队预约',
 		groupCount: 15,
-		attachment: '身份证.pdf',
+		attachment: 'https://picsum.photos/seed/booking-attachment-1/1200/800',
 		date: '2026-06-03',
 		startTime: '09:00',
 		endTime: '10:00',
@@ -322,7 +318,7 @@ const rawData: BookingRow[] = [
 		idCard: '330282197811089012',
 		groupType: '团队预约',
 		groupCount: 25,
-		attachment: '团队名单.xlsx',
+		attachment: 'https://picsum.photos/seed/booking-attachment-3/1200/800',
 		date: '2026-06-01',
 		startTime: '10:30',
 		endTime: '11:30',
@@ -350,7 +346,7 @@ const rawData: BookingRow[] = [
 		idCard: '510104198806157890',
 		groupType: '团队预约',
 		groupCount: 30,
-		attachment: '团体预约表.docx',
+		attachment: 'https://picsum.photos/seed/booking-attachment-5/1200/800',
 		date: '2026-06-05',
 		startTime: '16:00',
 		endTime: '17:00',
@@ -440,7 +436,18 @@ function handleReset() {
 
 /** 导出 Excel（敬请期待） */
 function handleExport() {
-	ElMessageBox.alert('敬请期待！', '提示', {
+	const exportColumns = columns
+		.filter((item) => item.prop && item.prop !== 'action')
+		.map((item) => ({
+			label: item.label as string,
+			prop: item.prop as string,
+			exportFormatter: item.exportFormatter
+		}));
+
+	exportExcel(exportColumns, tableData.value, '科普馆预约查询');
+
+	// 导出 Excel 时，弹出下载提示
+	ElMessageBox.alert('导出成功', '提示', {
 		confirmButtonText: '我知道了',
 		type: 'info'
 	});
