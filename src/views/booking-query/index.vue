@@ -195,11 +195,15 @@
 <script setup lang="ts">
 import { Download, Search } from '@element-plus/icons-vue';
 import { ElMessageBox } from 'element-plus';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, nextTick } from 'vue';
 import MyTable from '@/components/MyTable/index.vue';
 import type { TableColumn } from '@/components/MyTable/types';
 
-import { getAllScienceReservationsApi } from '@/api/admin';
+import {
+	getAllScienceReservationsApi,
+	searchScienceReservationsNativeApi,
+	type SearchScienceReservationsParams
+} from '@/api/admin';
 import { type BookingRow, type BookingStatus } from '@/api/science';
 import { exportExcel } from '@/utils/excel';
 
@@ -435,7 +439,9 @@ const queryForm = ref({
 /** 成团方式选项 */
 const groupTypeOptions = [
 	{ label: '个人预约', value: '个人预约' },
-	{ label: '团队预约', value: '团队预约' }
+	{ label: '团队预约', value: '团队预约' },
+	{ label: '活动预约（个人）', value: '活动预约（个人）' },
+	{ label: '活动预约（团队）', value: '活动预约（团队）' }
 ];
 
 /** 时间段选项（固定 4 档） */
@@ -457,22 +463,65 @@ const statusOptions = [
 const tableData = ref<BookingViewRow[]>([]);
 const tableLoading = ref(false);
 
-async function fetchBookings(params = queryForm.value) {
+function mapGroupTypeToApiValue(groupType: string) {
+	const groupTypeMap: Record<string, number> = {
+		个人预约: 0,
+		团队预约: 1,
+		'活动预约（个人）': 2,
+		'活动预约（团队）': 3
+	};
+
+	return groupTypeMap[groupType];
+}
+
+function buildSearchParams(params = queryForm.value): SearchScienceReservationsParams {
+	const requestParams: SearchScienceReservationsParams = {};
+
+	if (params.startDate) requestParams.startDate = params.startDate;
+	if (params.endDate) requestParams.endDate = params.endDate;
+	if (params.timeSlot) requestParams.timeRange = params.timeSlot;
+	if (params.name) requestParams.name = params.name;
+	if (params.phone) requestParams.phone = params.phone;
+	if (params.status !== '') requestParams.status = Number(params.status);
+
+	const groupTypeValue = mapGroupTypeToApiValue(params.groupType);
+
+	if (typeof groupTypeValue === 'number') {
+		requestParams.groupType = groupTypeValue;
+	}
+
+	return requestParams;
+}
+
+async function loadAllBookings() {
+	const response = await getAllScienceReservationsApi();
+	tableData.value = (response.data ?? []).map(normalizeBookingRow);
+}
+
+async function searchBookings(params = queryForm.value) {
+	const response = await searchScienceReservationsNativeApi(buildSearchParams(params));
+	tableData.value = (response.data ?? []).map(normalizeBookingRow);
+}
+
+async function fetchBookings(params = queryForm.value, useSearch = false) {
 	tableLoading.value = true;
 
 	try {
-		void params;
-		const response = await getAllScienceReservationsApi();
-		tableData.value = (response.data ?? []).map(normalizeBookingRow);
-		console.log(tableData.value);
+		if (useSearch) {
+			await searchBookings(params);
+			return;
+		}
+		await loadAllBookings();
 	} finally {
-		tableLoading.value = false;
+		nextTick(() => {
+			tableLoading.value = false;
+		});
 	}
 }
 
 /** 点击查询：多条件组合过滤 */
 function handleSearch() {
-	fetchBookings();
+	fetchBookings(queryForm.value, true);
 }
 
 /** 重置查询条件与数据 */
