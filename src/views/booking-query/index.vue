@@ -197,10 +197,10 @@ import { Download, Search } from '@element-plus/icons-vue';
 import { ElMessageBox } from 'element-plus';
 import { onMounted, ref } from 'vue';
 import MyTable from '@/components/MyTable/index.vue';
-import type { TableColumn } from '@/components/MyTable/types.ts';
+import type { TableColumn } from '@/components/MyTable/types';
 
-import { getBookingList, type BookingRow, type BookingStatus } from '@/api/science.ts';
-import { exportExcel } from '@/utils/excel.ts';
+import { getBookingList, type BookingRow, type BookingStatus } from '@/api/science';
+import { exportExcel } from '@/utils/excel';
 
 const columns: TableColumn[] = [
 	{

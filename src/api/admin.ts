@@ -1,29 +1,16 @@
 import request from '@/utils/request';
+import { AdminUserInfo } from '@/types/AdminUserInfo';
+import { type ApiResponse } from '@/utils/request';
 
 export interface AdminPasswordLoginParams {
 	phone: string;
 	password: string;
 }
 
-export interface AdminUserInfo {
-	id?: number | string;
-	name?: string;
-	phone?: string;
-	role?: string;
-	avatar?: string;
-	[key: string]: unknown;
-}
 
-export interface AdminPasswordLoginResponse {
-	token?: string;
-	adminInfo?: AdminUserInfo;
-	[key: string]: unknown;
-}
+export type AdminPasswordLoginResponse = ApiResponse<AdminUserInfo>;
 
-export interface AdminInformationResponse {
-	adminInfo?: AdminUserInfo;
-	[key: string]: unknown;
-}
+export type AdminInformationResponse = ApiResponse<AdminUserInfo>;
 
 export interface UpdateAdminPasswordParams {
 	password: string;

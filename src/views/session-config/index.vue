@@ -228,9 +228,10 @@ import { Plus, Search } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import MyTable from '@/components/MyTable/index.vue';
-import type { TableColumn } from '@/components/MyTable/types.ts';
+import type { TableColumn } from '@/components/MyTable/types';
+// import { adminPasswordLoginApi, getAdminInformationApi, adminLogoutApi } from '@/api/admin';
 
-import { getSessionList, type SessionQuery, type SessionRow } from '@/api/science.ts';
+import { getSessionList, type SessionQuery, type SessionRow } from '@/api/science';
 
 let rawData: SessionRow[] = [];
 

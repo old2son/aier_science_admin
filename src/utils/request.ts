@@ -4,10 +4,8 @@ import { ElMessage } from 'element-plus';
 import { useUserStore } from '@/stores/modules/user';
 // import { getRequestBaseUrl } from '@/utils/mock';
 const requestBaseUrl = import.meta.env.VITE_API_URL_TARGET;
-console.log(requestBaseUrl);
 
-
-interface ApiResponse<T = unknown> {
+export interface ApiResponse<T = unknown> {
 	code?: number;
 	message?: string;
 	data?: T;
@@ -23,7 +21,7 @@ request.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 	const userStore = useUserStore();
 
 	if (userStore.token) {
-		config.headers.Authorization = `Bearer ${userStore.token}`;
+		config.headers.token = userStore.token;
 	}
 
 	return config;
@@ -31,16 +29,16 @@ request.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
 request.interceptors.response.use(
 	(response) => {
-		const result = response.data as ApiResponse;
+		// const result = response.data as ApiResponse;
 
-		if (typeof result?.code === 'number') {
-			if (result.code !== 0) {
-				ElMessage.error(result.message ?? '请求失败');
-				return Promise.reject(new Error(result.message ?? '请求失败'));
-			}
+		// if (typeof result?.code === 'number') {
+		// 	if (result.code !== 0) {
+		// 		ElMessage.error(result.message ?? '请求失败');
+		// 		return Promise.reject(new Error(result.message ?? '请求失败'));
+		// 	}
 
-			return result.data;
-		}
+		// 	return result.data;
+		// }
 
 		return response.data;
 	},

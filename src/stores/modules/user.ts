@@ -1,26 +1,15 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
-// import { loginApi } from '@/api/auth.ts';
-import { adminPasswordLoginApi } from '@/api/admin.ts';
-
-export interface UserInfo {
-	id: number;
-	name: string;
-	role: string;
-	avatar: string;
-}
+import { adminPasswordLoginApi, getAdminInformationApi, adminLogoutApi } from '@/api/admin';
+import { AdminUserInfo } from '@/types/AdminUserInfo';
+import { resolve } from 'path';
 
 const TOKEN_KEY = 'aier_admin_token';
 
 export const useUserStore = defineStore('user', () => {
 	const token = ref(localStorage.getItem(TOKEN_KEY) ?? '');
-	const userInfo = ref<UserInfo>({
-		id: 1,
-		name: 'Admin',
-		role: '系统管理员',
-		avatar: ''
-	});
+	const userInfo = ref<AdminUserInfo | null>(null);
 
 	const isLoggedIn = computed(() => Boolean(token.value));
 
@@ -29,20 +18,34 @@ export const useUserStore = defineStore('user', () => {
 			return Promise.reject(new Error('请输入账号和密码'));
 		}
 
-		const data = await adminPasswordLoginApi({ phone: username, password });
+		const res = await adminPasswordLoginApi({ phone: username, password });
 
+		if (!res?.data?.userToken) {
+			return Promise.reject(new Error(res.message));
+		}
 
-		console.log(data);
-
-		token.value = data.token;
-		userInfo.value = data.userInfo;
+		token.value = res?.data?.userToken ?? '';
 		localStorage.setItem(TOKEN_KEY, token.value);
-		return userInfo.value;
+
+		return res;
 	}
 
-	function logout() {
-		token.value = '';
-		localStorage.removeItem(TOKEN_KEY);
+	async function logout() {
+		try {
+			await adminLogoutApi();
+		} catch (error) {
+			console.error(error);
+		} finally {
+			token.value = '';
+			userInfo.value = null;
+			localStorage.removeItem(TOKEN_KEY);
+		}
+	}
+
+	function getAdminInfo() {
+		getAdminInformationApi().then((res) => {
+			userInfo.value = res.data ?? null;
+		});
 	}
 
 	return {
@@ -50,6 +53,7 @@ export const useUserStore = defineStore('user', () => {
 		userInfo,
 		isLoggedIn,
 		login,
-		logout
+		logout,
+		getAdminInfo
 	};
 });

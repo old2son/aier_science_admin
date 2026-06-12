@@ -289,9 +289,9 @@ import { Download, Plus, Search } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadRequestOptions } from 'element-plus';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import MyTable from '@/components/MyTable/index.vue';
-import type { TableColumn } from '@/components/MyTable/types.ts';
+import type { TableColumn } from '@/components/MyTable/types';
 
-import { getActivitySessionList, type ActivitySessionQuery, type ActivitySessionRow } from '@/api/science.ts';
+import { getActivitySessionList, type ActivitySessionQuery, type ActivitySessionRow } from '@/api/science';
 
 let rawData: ActivitySessionRow[] = [];
 

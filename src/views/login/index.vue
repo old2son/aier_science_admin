@@ -54,7 +54,7 @@ import { ElMessage } from 'element-plus';
 import { reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { useUserStore } from '@/stores/modules/user.ts';
+import { useUserStore } from '@/stores/modules/user';
 
 const router = useRouter();
 const route = useRoute();
@@ -73,6 +73,8 @@ async function handleLogin() {
 		await userStore.login(form.username, form.password);
 		ElMessage.success('登录成功');
 		router.replace((route.query.redirect as string) || '/session-config');
+	} catch (error) {
+		ElMessage.error((error as Error).message);
 	} finally {
 		loading.value = false;
 	}
