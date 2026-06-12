@@ -167,9 +167,9 @@
 					<span v-else>{{ getBookingMemberCount(row) }}</span>
 				</template>
 
-				<template #attachment="{ row }">
-					<span v-if="row.attachment !== '-'">
-						<el-link :href="row.attachment" target="_blank" type="primary" underline="never">
+				<template #excelUrl="{ row }">
+					<span v-if="row?.excelUrl">
+						<el-link :href="row.excelUrl" target="_blank" type="primary" underline="never">
 							查看附件
 						</el-link>
 					</span>
@@ -228,7 +228,7 @@ const columns: TableColumn[] = [
 		label: '姓名',
 		prop: 'name',
 		slot: true,
-		minWidth: 70
+		minWidth: 80
 	},
 	{
 		label: '手机',
@@ -258,7 +258,7 @@ const columns: TableColumn[] = [
 	},
 	{
 		label: '附件',
-		prop: 'attachment',
+		prop: 'excelUrl',
 		slot: true,
 		minWidth: 80
 	},
