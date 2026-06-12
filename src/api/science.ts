@@ -12,9 +12,9 @@ export interface SessionRow {
 	operator: string;
 }
 
-export type BookingStatus = 'pending' | 'verified' | 'expired';
+export type BookingStatus = 0 | 1 | 2;
 
-export interface BookingCompanion {
+export interface BookingMember {
 	activityId: number;
 	documentType: string;
 	idNumber: string;
@@ -25,20 +25,27 @@ export interface BookingCompanion {
 }
 
 export interface BookingRow {
-	id?: number;
-	reId?: number;
-	name?: string;
-	phone?: string;
-	idCard?: string;
-	groupType: string;
-	groupCount: number;
-	attachment: string;
-	date: string;
-	startTime: string;
-	endTime: string;
-	companions?: BookingCompanion[];
-	status: BookingStatus;
-	createdAt: string;
+	activityId: number;
+	activityName: string;
+	age: number | null;
+	cancel: number | null;
+	channel: string | null;
+	colleagueName: string | null;
+	colleagues: number;
+	dateTime: string;
+	excelUrl: string | null;
+	expound: number;
+	idNumber: string;
+	members: BookingMember[];
+	name: string | null;
+	numbers: number;
+	phone: string | null;
+	reId: number;
+	status: number;
+	timeSlot: string;
+	type: number;
+	unitName: string | null;
+	week: string;
 }
 
 export interface SessionQuery {
@@ -51,7 +58,7 @@ export interface BookingQuery extends SessionQuery {
 	name?: string;
 	phone?: string;
 	groupType?: string;
-	status?: string;
+	status?: BookingStatus | '';
 }
 
 /** 活动场次行数据（日期拆分为开始日期/结束日期） */

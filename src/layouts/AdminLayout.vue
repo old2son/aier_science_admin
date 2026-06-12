@@ -116,7 +116,7 @@ async function handleLogout() {
 }
 
 function getAdminInfo() {
-	userStore.getAdminInfo();
+	!userStore.userInfo && userStore.getAdminInfo();
 }
 
 onMounted(() => {

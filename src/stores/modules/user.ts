@@ -3,7 +3,6 @@ import { computed, ref } from 'vue';
 
 import { adminPasswordLoginApi, getAdminInformationApi, adminLogoutApi } from '@/api/admin';
 import { AdminUserInfo } from '@/types/AdminUserInfo';
-import { resolve } from 'path';
 
 const TOKEN_KEY = 'aier_admin_token';
 
