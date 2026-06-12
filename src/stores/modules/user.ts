@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
-import { loginApi } from '@/api/auth';
+// import { loginApi } from '@/api/auth.ts';
+import { adminPasswordLoginApi } from '@/api/admin.ts';
 
 export interface UserInfo {
 	id: number;
@@ -28,7 +29,10 @@ export const useUserStore = defineStore('user', () => {
 			return Promise.reject(new Error('请输入账号和密码'));
 		}
 
-		const data = await loginApi({ username, password });
+		const data = await adminPasswordLoginApi({ phone: username, password });
+
+
+		console.log(data);
 
 		token.value = data.token;
 		userInfo.value = data.userInfo;

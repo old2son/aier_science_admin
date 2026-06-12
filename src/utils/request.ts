@@ -2,7 +2,10 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { ElMessage } from 'element-plus';
 
 import { useUserStore } from '@/stores/modules/user';
-import { getRequestBaseUrl } from '@/utils/mock';
+// import { getRequestBaseUrl } from '@/utils/mock';
+const requestBaseUrl = import.meta.env.VITE_API_URL_TARGET;
+console.log(requestBaseUrl);
+
 
 interface ApiResponse<T = unknown> {
 	code?: number;
@@ -11,7 +14,8 @@ interface ApiResponse<T = unknown> {
 }
 
 const request = axios.create({
-	baseURL: getRequestBaseUrl(),
+	// baseURL: getRequestBaseUrl(),
+	baseURL: requestBaseUrl,
 	timeout: 12000
 });
 

@@ -35,17 +35,17 @@ export interface AdminCommonResponse {
 }
 
 export function adminPasswordLoginApi(data: AdminPasswordLoginParams) {
-	return request.post<unknown, AdminPasswordLoginResponse>('/admin/passWordLogin', data);
+	return request.post<unknown, AdminPasswordLoginResponse>('/api/admin/passWordLogin', data);
 }
 
 export function getAdminInformationApi() {
-	return request.post<unknown, AdminInformationResponse>('/admin/getAdminInforMation');
+	return request.post<unknown, AdminInformationResponse>('/api/admin/getAdminInforMation');
 }
 
 export function updateAdminPasswordApi(data: UpdateAdminPasswordParams) {
-	return request.post<unknown, AdminCommonResponse>('/admin/updatePassWord', data);
+	return request.post<unknown, AdminCommonResponse>('/api/admin/updatePassWord', data);
 }
 
 export function adminLogoutApi() {
-	return request.post<unknown, AdminCommonResponse>('/admin/adminLogout');
+	return request.post<unknown, AdminCommonResponse>('/api/admin/adminLogout');
 }

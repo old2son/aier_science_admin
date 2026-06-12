@@ -20,9 +20,9 @@ async function enableMocking() {
 }
 
 async function bootstrap() {
-	if (isMockEnabled()) {
-		await enableMocking();
-	}
+	// if (isMockEnabled()) {
+	// 	await enableMocking();
+	// }
 
 	const app = createApp(App);
 

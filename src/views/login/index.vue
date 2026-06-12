@@ -22,7 +22,7 @@
 						A
 					</div>
 					<h2 class="text-2xl font-semibold text-slate-950">登录后台</h2>
-					<p class="mt-2 text-sm text-slate-500">默认账号 admin，密码 123456</p>
+					<!-- <p class="mt-2 text-sm text-slate-500">默认账号 admin，密码 123456</p> -->
 				</div>
 
 				<el-form class="space-y-4" @submit.prevent="handleLogin">
@@ -62,8 +62,8 @@ const userStore = useUserStore();
 const loading = ref(false);
 
 const form = reactive({
-	username: 'admin',
-	password: '123456'
+	username: '',
+	password: ''
 });
 
 async function handleLogin() {
