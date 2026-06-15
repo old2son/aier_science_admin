@@ -196,7 +196,7 @@
 
 <script setup lang="ts">
 import { Download, Search } from '@element-plus/icons-vue';
-import { ElMessageBox } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { onMounted, ref, nextTick } from 'vue';
 import MyTable from '@/components/MyTable/index.vue';
 import type { TableColumn } from '@/components/MyTable/types';
@@ -568,11 +568,16 @@ function handleConfirm(reId: number) {
 		.then(() => {
 			return confirmAttendanceApi({ reId });
 		})
-		.then(() => {
-			fetchBookings();
+		.then((res) => {
+			if (res.code === 200 && res.message === '修改成功！') {
+				fetchBookings();
+			}
+			else {
+				ElMessage.error(res.message ?? '操作失败！');
+			}
 		})
-		.catch(() => {
-			// 用户取消，不做处理
+		.catch((error) => {
+			ElMessage.error((error as Error).message);
 		});
 }
 
@@ -587,11 +592,16 @@ function handleCancel(reId: number) {
 		.then(() => {
 			return cancelAppointmentApi({ reId });
 		})
-		.then(() => {
-			fetchBookings();
+		.then((res) => {
+			if (res.code === 200 && res.message === '取消成功！') {
+				fetchBookings();
+			}
+			else {
+				ElMessage.error(res.message ?? '操作失败！');
+			}
 		})
-		.catch(() => {
-			// 用户取消，不做处理
+		.catch((error) => {
+			ElMessage.error((error as Error).message);
 		});
 }
 
