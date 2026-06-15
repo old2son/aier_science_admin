@@ -806,7 +806,6 @@ onMounted(() => {
 	cursor: pointer;
 	overflow: hidden;
 	transition: border-color 0.2s;
-	
 }
 
 .kv-uploader :deep(.el-upload:hover) {

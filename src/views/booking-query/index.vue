@@ -144,7 +144,7 @@
 								{{ getBookingMemberCount(row) }}
 							</el-button>
 						</template>
-						
+
 						<div class="companion-list">
 							<div
 								v-for="(companion, index) in row.members"
@@ -182,11 +182,11 @@
 					</el-tag>
 				</template>
 
-				<template #action="{row}">
+				<template #action="{ row }">
 					<template v-if="row.status === 0">
-						<el-button type="primary" link> 确认参观 </el-button>
+						<el-button type="primary" link @click="handleConfirm(row.reId)"> 确认参观 </el-button>
 						<el-divider direction="vertical" />
-						<el-button type="danger" link> 取消参观 </el-button>
+						<el-button type="danger" link @click="handleCancel(row.reId)"> 取消参观 </el-button>
 					</template>
 				</template>
 			</my-table>
@@ -204,9 +204,11 @@ import type { TableColumn } from '@/components/MyTable/types';
 import {
 	getAllScienceReservationsApi,
 	searchScienceReservationsNativeApi,
-	type SearchScienceReservationsParams
+	type SearchScienceReservationsParams,
+	confirmAttendanceApi,
+	cancelAppointmentApi
 } from '@/api/admin';
-import { type BookingRow, type BookingStatus } from '@/api/science';
+import { type BookingRow, type BookingStatus } from '@/types/BookingInfo';
 import { exportExcel } from '@/utils/excel';
 
 type BookingViewRow = BookingRow & {
@@ -306,11 +308,11 @@ const columns: TableColumn[] = [
 ];
 
 /** 状态映射 */
-const statusMap: Record<BookingStatus, { label: string; type: '' | 'warning' | 'success' | 'info' }> = {
+const statusMap: Record<BookingStatus, { label: string; type: '' | 'warning' | 'success' | 'info' | 'danger' }> = {
 	0: { label: '未使用', type: 'warning' },
 	1: { label: '已过期', type: 'info' },
 	2: { label: '已使用', type: 'success' },
-	3: { label: '已取消', type: 'info' }
+	3: { label: '已取消', type: 'danger' }
 };
 
 /** 手机号脱敏：前3后4，中间 **** */
@@ -554,6 +556,43 @@ function handleExport() {
 		confirmButtonText: '我知道了',
 		type: 'info'
 	});
+}
+
+/** 确认参观 */
+function handleConfirm(reId: number) {
+	ElMessageBox.confirm('确认该预约已参观？操作后状态将变更为「已使用」。', '确认参观', {
+		confirmButtonText: '确认',
+		cancelButtonText: '取消',
+		type: 'warning'
+	})
+		.then(() => {
+			return confirmAttendanceApi({ reId });
+		})
+		.then(() => {
+			fetchBookings();
+		})
+		.catch(() => {
+			// 用户取消，不做处理
+		});
+}
+
+/** 取消参观 */
+function handleCancel(reId: number) {
+	ElMessageBox.confirm('确认取消该预约？操作后状态将变更为「已取消」，且不可恢复。', '取消参观', {
+		confirmButtonText: '确认取消',
+		cancelButtonText: '返回',
+		type: 'warning',
+		confirmButtonClass: 'el-button--danger'
+	})
+		.then(() => {
+			return cancelAppointmentApi({ reId });
+		})
+		.then(() => {
+			fetchBookings();
+		})
+		.catch(() => {
+			// 用户取消，不做处理
+		});
 }
 
 function getStatusInfo(status: BookingStatus) {
