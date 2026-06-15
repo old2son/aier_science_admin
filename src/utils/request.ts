@@ -1,15 +1,34 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { ElMessage } from 'element-plus';
 
+import router from '@/router';
 import { useUserStore } from '@/stores/modules/user';
 // import { getRequestBaseUrl } from '@/utils/mock';
 const requestBaseUrl = import.meta.env.VITE_API_URL_TARGET;
 
+const TOKEN_KEY = 'aier_admin_token';
 export interface ApiResponse<T = unknown> {
 	code?: number;
 	message?: string;
 	data?: T;
 }
+
+let messageTimer: number | null = null;
+
+const showError = (message: string) => {
+	if (messageTimer) return;
+
+	ElMessage.error(message);
+
+	messageTimer = window.setTimeout(() => {
+		messageTimer = null;
+	}, 2000);
+};
+
+const toLogin = () => {
+	localStorage.removeItem(TOKEN_KEY);
+	router.replace({ name: 'Login' });
+};
 
 const request = axios.create({
 	// baseURL: getRequestBaseUrl(),
@@ -29,22 +48,24 @@ request.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
 request.interceptors.response.use(
 	(response) => {
-		// const result = response.data as ApiResponse;
+		if (response.data.code === 0 && response.data.message === '登录失效，请重新登录') {
+			showError(response.data.message ?? '请求失败');
+			toLogin();
+			return Promise.reject(new Error(response.data.message ?? '请求失败'));
+		}
 
-		// if (typeof result?.code === 'number') {
-		// 	if (result.code !== 0) {
-		// 		ElMessage.error(result.message ?? '请求失败');
-		// 		return Promise.reject(new Error(result.message ?? '请求失败'));
-		// 	}
-
-		// 	return result.data;
-		// }
+		if (response.data.code !== 200) {
+			showError(response.data.message ?? '请求失败');
+			return Promise.reject(new Error(response.data.message ?? '请求失败'));
+		}
 
 		return response.data;
 	},
 	(error: AxiosError<{ message?: string }>) => {
 		const message = error.response?.data?.message ?? error.message ?? '请求失败';
-		ElMessage.error(message);
+		toLogin();
+
+		showError(message);
 		return Promise.reject(error);
 	}
 );

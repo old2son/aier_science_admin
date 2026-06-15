@@ -793,7 +793,7 @@ function handleExport() {
 }
 
 onMounted(() => {
-	fetchSessions();
+	// fetchSessions();
 });
 </script>
 

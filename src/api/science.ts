@@ -12,7 +12,7 @@ export interface SessionRow {
 	operator: string;
 }
 
-export type BookingStatus = 0 | 1 | 2;
+export type BookingStatus = 0 | 1 | 2 | 3;
 
 export interface BookingMember {
 	activityId: number;

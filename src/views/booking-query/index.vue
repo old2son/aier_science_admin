@@ -144,7 +144,7 @@
 								{{ getBookingMemberCount(row) }}
 							</el-button>
 						</template>
-
+						
 						<div class="companion-list">
 							<div
 								v-for="(companion, index) in row.members"
@@ -182,10 +182,12 @@
 					</el-tag>
 				</template>
 
-				<template #action>
-					<el-button type="primary" link> 确认参观 </el-button>
-					<el-divider direction="vertical" />
-					<el-button type="danger" link> 取消参观 </el-button>
+				<template #action="{row}">
+					<template v-if="row.status === 0">
+						<el-button type="primary" link> 确认参观 </el-button>
+						<el-divider direction="vertical" />
+						<el-button type="danger" link> 取消参观 </el-button>
+					</template>
 				</template>
 			</my-table>
 		</div>
@@ -214,13 +216,6 @@ type BookingViewRow = BookingRow & {
 };
 
 const columns: TableColumn[] = [
-	{
-		type: 'index',
-		label: '序号',
-		slot: false,
-		width: 60,
-		align: 'center'
-	},
 	{
 		label: '单号',
 		prop: 'reId',
@@ -296,7 +291,7 @@ const columns: TableColumn[] = [
 	},
 	{
 		label: '创建时间',
-		prop: 'createdAt',
+		prop: 'createTime',
 		slot: false,
 		minWidth: 160
 	},
@@ -313,8 +308,9 @@ const columns: TableColumn[] = [
 /** 状态映射 */
 const statusMap: Record<BookingStatus, { label: string; type: '' | 'warning' | 'success' | 'info' }> = {
 	0: { label: '未使用', type: 'warning' },
-	1: { label: '已使用', type: 'success' },
-	2: { label: '已过期', type: 'info' }
+	1: { label: '已过期', type: 'info' },
+	2: { label: '已使用', type: 'success' },
+	3: { label: '已取消', type: 'info' }
 };
 
 /** 手机号脱敏：前3后4，中间 **** */
@@ -455,8 +451,9 @@ const timeSlotOptions = [
 /** 状态选项 */
 const statusOptions = [
 	{ label: '未使用', value: 0 },
-	{ label: '已使用', value: 1 },
-	{ label: '已过期', value: 2 }
+	{ label: '已过期', value: 1 },
+	{ label: '已使用', value: 2 },
+	{ label: '已取消', value: 3 }
 ];
 
 /** 表格展示数据（默认全部，查询后为过滤结果） */
@@ -465,10 +462,10 @@ const tableLoading = ref(false);
 
 function mapGroupTypeToApiValue(groupType: string) {
 	const groupTypeMap: Record<string, number> = {
-		个人预约: 0,
-		团队预约: 1,
-		'活动预约（个人）': 2,
-		'活动预约（团队）': 3
+		个人预约: 1,
+		团队预约: 2,
+		'活动预约（个人）': 3,
+		'活动预约（团队）': 4
 	};
 
 	return groupTypeMap[groupType];

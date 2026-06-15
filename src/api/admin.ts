@@ -16,6 +16,10 @@ export interface UpdateAdminPasswordParams {
 	password: string;
 }
 
+export interface ReservationActionParams {
+	reId: number;
+}
+
 export interface SearchScienceReservationsParams {
 	endDate?: string;
 	groupType?: number | string;
@@ -55,4 +59,12 @@ export function getAllScienceReservationsApi() {
 
 export function searchScienceReservationsNativeApi(data: SearchScienceReservationsParams) {
 	return request.post<unknown, ScienceReservationsResponse>('/api/admin/searchScienceReservationsNative', data);
+}
+
+export function confirmAttendanceApi(data: ReservationActionParams) {
+	return request.post<unknown, ApiResponse>('/api/admin/confirmAttendance', data);
+}
+
+export function cancelAppointmentApi(data: ReservationActionParams) {
+	return request.post<unknown, ApiResponse>('/api/admin/cancelAppointment', data);
 }

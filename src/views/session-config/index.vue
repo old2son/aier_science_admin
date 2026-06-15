@@ -641,6 +641,6 @@ async function handleBatchSubmit() {
 }
 
 onMounted(() => {
-	fetchSessions();
+	// fetchSessions();
 });
 </script>
