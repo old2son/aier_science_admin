@@ -128,16 +128,6 @@
 						style="width: 100%"
 					/>
 				</el-form-item>
-				<el-form-item label="讲解人数">
-					<el-input-number
-						v-model="formData.guideCount"
-						:min="0"
-						:max="999"
-						placeholder="请输入讲解服务人数（选填）"
-						style="width: 100%"
-					/>
-					<div class="mt-1 text-xs text-slate-400">讲解服务人数，可选填</div>
-				</el-form-item>
 			</el-form>
 			<template #footer>
 				<el-button @click="dialogVisible = false">取消</el-button>
@@ -184,15 +174,6 @@
 						:min="1"
 						:max="9999"
 						placeholder="请输入总号数"
-						style="width: 100%"
-					/>
-				</el-form-item>
-				<el-form-item label="讲解人数">
-					<el-input-number
-						v-model="batchFormData.guideCount"
-						:min="0"
-						:max="999"
-						placeholder="请输入讲解服务人数（选填）"
 						style="width: 100%"
 					/>
 				</el-form-item>
@@ -348,8 +329,7 @@ const timeSlotOptions = [
 const formData = reactive({
 	date: '',
 	timeSlot: '' as string,
-	totalCount: undefined as number | undefined,
-	guideCount: undefined as number | undefined
+	totalCount: undefined as number | undefined
 });
 
 /** 表单校验规则 */
@@ -377,7 +357,6 @@ function handleEdit(row: SessionRow) {
 	formData.date = row.date;
 	formData.timeSlot = `${row.startTime}-${row.endTime}`;
 	formData.totalCount = row.totalCount;
-	formData.guideCount = row.guideCount;
 	dialogVisible.value = true;
 }
 
@@ -405,7 +384,6 @@ async function handleSubmit() {
 				target.startTime = startTime;
 				target.endTime = endTime;
 				target.totalCount = formData.totalCount!;
-				target.guideCount = formData.guideCount;
 				tableData.value = [...rawData];
 				ElMessage.success('编辑成功');
 				dialogVisible.value = false;
@@ -425,7 +403,6 @@ async function handleSubmit() {
 			endTime,
 			totalCount: formData.totalCount!,
 			remainCount: formData.totalCount!,
-			guideCount: formData.guideCount,
 			createdAt: timeStr,
 			operator: '当前用户'
 		};
@@ -517,8 +494,7 @@ const batchSubmitLoading = ref(false);
 const batchFormData = reactive({
 	dateRange: [] as string[],
 	timeSlots: [] as string[],
-	totalCount: undefined as number | undefined,
-	guideCount: undefined as number | undefined
+	totalCount: undefined as number | undefined
 });
 
 /** 批量表单校验规则 */
@@ -624,7 +600,6 @@ async function handleBatchSubmit() {
 				endTime,
 				totalCount: item.totalCount,
 				remainCount: item.totalCount,
-				guideCount: batchFormData.guideCount,
 				createdAt: timeStr,
 				operator: '当前用户'
 			};

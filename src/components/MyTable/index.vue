@@ -17,10 +17,9 @@
 			</template>
 		</el-table-column>
 	</el-table> -->
-
 	
 	<el-table v-loading="loading" :data="data" border stripe style="width: 100%">
-		<el-table-column v-for="col in columns" :key="col.prop || col.type" v-bind="col">
+		<el-table-column v-for="col in visibleColumns" :key="col.prop || col.type" v-bind="col">
 			<template v-if="col.slot" #default="scope">
 				<slot :name="col.prop" v-bind="scope" />
 			</template>
@@ -33,11 +32,15 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+
 import { TableColumn } from './types';
 
-defineProps<{
+const props = defineProps<{
 	loading?: boolean;
 	data: any[];
 	columns: TableColumn[];
 }>();
+
+const visibleColumns = computed(() => props.columns.filter((col) => !col.hide));
 </script>

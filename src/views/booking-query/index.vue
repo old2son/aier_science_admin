@@ -244,6 +244,13 @@ const columns: TableColumn[] = [
 		minWidth: 180
 	},
 	{
+		label: '年龄',
+		prop: 'age',
+		slot: false,
+		hide: true,
+		minWidth: 60
+	},
+	{
 		label: '成团方式',
 		prop: 'groupType',
 		slot: true,
@@ -330,7 +337,7 @@ function maskIdCard(idCard: string): string {
 
 // 获取第一个成年人
 function getPrimaryCompanion(row: BookingRow) {
-	return row.members.find((companion) => companion.userPhone);	
+	return row.members.find((companion) => companion.userPhone);
 }
 
 function hasMembers(row: BookingRow) {
@@ -383,7 +390,7 @@ function getExportRows(row: BookingRow) {
 				groupType: getBookingGroupType(row),
 				name: getBookingDisplayName(row),
 				phone: getBookingDisplayPhone(row),
-				idCard: hasMembers(row) ? getBookingDisplayIdCard(row) : '-',
+				idCard: '-',
 				groupCount: getBookingMemberCount(row)
 			}
 		];
@@ -395,6 +402,7 @@ function getExportRows(row: BookingRow) {
 		reId: companion.reId || row.reId,
 		name: companion.userName,
 		phone: companion.userPhone,
+		age: companion.userAge,
 		idCard: companion.idNumber,
 		groupCount: getBookingMemberCount(row)
 	}));
@@ -550,6 +558,12 @@ function handleExport() {
 			prop: item.prop as string,
 			exportFormatter: item.exportFormatter
 		}));
+		
+	// 手动插入年龄
+	// exportColumns.splice(4, 0, {
+	// 	label: '年龄',
+	// 	prop: 'age'
+	// });
 
 	const exportData = tableData.value.flatMap((row) => getExportRows(row));
 
