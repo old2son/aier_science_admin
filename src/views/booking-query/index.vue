@@ -229,7 +229,7 @@ const columns: TableColumn[] = [
 		label: '姓名',
 		prop: 'name',
 		slot: true,
-		minWidth: 80
+		minWidth: 85
 	},
 	{
 		label: '手机',
@@ -267,20 +267,20 @@ const columns: TableColumn[] = [
 		label: '日期',
 		prop: 'dateTime',
 		slot: false,
-		minWidth: 100
+		minWidth: 90
 	},
 	{
 		label: '开始时间',
 		prop: 'startTime',
 		slot: false,
-		minWidth: 85,
+		minWidth: 75,
 		align: 'center'
 	},
 	{
 		label: '结束时间',
 		prop: 'endTime',
 		slot: false,
-		minWidth: 85,
+		minWidth: 75,
 		align: 'center'
 	},
 	{
@@ -295,13 +295,13 @@ const columns: TableColumn[] = [
 		label: '创建时间',
 		prop: 'createTime',
 		slot: false,
-		minWidth: 160
+		minWidth: 150
 	},
 	{
 		label: '操作',
 		prop: 'action',
 		slot: true,
-		minWidth: 180,
+		minWidth: 150,
 		align: 'center',
 		fixed: 'right'
 	}
@@ -328,8 +328,9 @@ function maskIdCard(idCard: string): string {
 	return `${idCard.slice(0, 3)}${'*'.repeat(starCount)}${idCard.slice(-4)}`;
 }
 
+// 获取第一个成年人
 function getPrimaryCompanion(row: BookingRow) {
-	return row.members?.[0];
+	return row.members.find((companion) => companion.userPhone);	
 }
 
 function hasMembers(row: BookingRow) {
@@ -360,15 +361,18 @@ function getBookingMemberCount(row: BookingRow) {
 }
 
 function getBookingDisplayName(row: BookingRow) {
-	return row.name || getPrimaryCompanion(row)?.userName || '-';
+	if (!hasMembers(row)) return row.name || '-';
+	return getPrimaryCompanion(row)?.userName || '-';
 }
 
 function getBookingDisplayPhone(row: BookingRow) {
-	return row.phone || getPrimaryCompanion(row)?.userPhone || '-';
+	if (!hasMembers(row)) return row.phone || '-';
+	return getPrimaryCompanion(row)?.userPhone || '-';
 }
 
 function getBookingDisplayIdCard(row: BookingRow) {
-	return row.idNumber || getPrimaryCompanion(row)?.idNumber || '-';
+	if (!hasMembers(row)) return row.idNumber || '-';
+	return getPrimaryCompanion(row)?.idNumber || '-';
 }
 
 function getExportRows(row: BookingRow) {
@@ -571,13 +575,12 @@ function handleConfirm(reId: number) {
 		.then((res) => {
 			if (res.code === 200 && res.message === '修改成功！') {
 				fetchBookings();
-			}
-			else {
+			} else {
 				ElMessage.error(res.message ?? '操作失败！');
 			}
 		})
-		.catch((error) => {
-			ElMessage.error((error as Error).message);
+		.catch(() => {
+			// 用户取消
 		});
 }
 
@@ -595,13 +598,12 @@ function handleCancel(reId: number) {
 		.then((res) => {
 			if (res.code === 200 && res.message === '取消成功！') {
 				fetchBookings();
-			}
-			else {
+			} else {
 				ElMessage.error(res.message ?? '操作失败！');
 			}
 		})
-		.catch((error) => {
-			ElMessage.error((error as Error).message);
+		.catch(() => {
+			// 用户取消
 		});
 }
 
