@@ -25,12 +25,6 @@
 						<h2 class="login-page__title text-2xl font-semibold">登录后台</h2>
 						<!-- <p class="mt-2 text-sm text-slate-500">默认账号 admin，密码 123456</p> -->
 					</div>
-					<el-button
-						class="app-theme-button"
-						:icon="themeMode === 'dark' ? Sunny : Moon"
-						circle
-						@click="handleToggleTheme"
-					/>
 				</div>
 
 				<el-form class="space-y-4" @submit.prevent="handleLogin">
@@ -57,19 +51,17 @@
 </template>
 
 <script setup lang="ts">
-import { Lock, Moon, Sunny, User } from '@element-plus/icons-vue';
+import { Lock, User } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { useUserStore } from '@/stores/modules/user';
-import { getTheme, toggleTheme, type ThemeMode } from '@/utils/theme';
 
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
 const loading = ref(false);
-const themeMode = ref<ThemeMode>(getTheme());
 
 const form = reactive({
 	username: '',
@@ -90,9 +82,6 @@ async function handleLogin() {
 	}
 }
 
-function handleToggleTheme() {
-	themeMode.value = toggleTheme(themeMode.value);
-}
 </script>
 
 <style scoped>

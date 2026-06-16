@@ -102,6 +102,7 @@
 						type="date"
 						placeholder="选择日期"
 						value-format="YYYY-MM-DD"
+						:disabled-date="disablePastDate"
 						style="width: 100%"
 					/>
 				</el-form-item>
@@ -148,6 +149,7 @@
 						start-placeholder="开始日期"
 						end-placeholder="结束日期"
 						value-format="YYYY-MM-DD"
+						:disabled-date="disablePastDate"
 						style="width: 100%"
 					/>
 				</el-form-item>
@@ -530,6 +532,12 @@ interface BatchPreviewItem {
 }
 
 const batchPreview = ref<BatchPreviewItem[]>([]);
+
+function disablePastDate(date: Date) {
+	const today = new Date();
+	today.setHours(0, 0, 0, 0);
+	return date.getTime() < today.getTime();
+}
 
 /** 监听批量表单变化，实时更新预览 */
 watch(
