@@ -510,8 +510,9 @@ async function loadAllBookings() {
 }
 
 async function searchBookings(params = queryForm.value) {
-	const response = await searchScienceReservationsNativeApi(buildSearchParams(params));
-	tableData.value = (response.data ?? []).map(normalizeBookingRow);
+	const { data = [] } = await searchScienceReservationsNativeApi(buildSearchParams(params));
+	// tableData.value = (data ?? []).map(normalizeBookingRow);
+	tableData.value = [...data].sort((a, b) => Number(b.reId) - Number(a.reId)).map(normalizeBookingRow);
 }
 
 async function fetchBookings(params = queryForm.value, useSearch = false) {
@@ -558,7 +559,7 @@ function handleExport() {
 			prop: item.prop as string,
 			exportFormatter: item.exportFormatter
 		}));
-		
+
 	// 手动插入年龄
 	// exportColumns.splice(4, 0, {
 	// 	label: '年龄',
