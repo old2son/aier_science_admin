@@ -10,7 +10,7 @@
 					业务流程的可视化和管理,让你的后台管理更加简单、高效
 				</p>
 			</div>
-			<div class="login-page__hero-text text-sm">Copyright © 2026 爱尔科普馆</div>
+			<div class="login-page__hero-text text-sm">Copyright &copy; {{ year }} 爱尔科普馆</div>
 		</section>
 
 		<section class="login-page__panel flex items-center justify-center px-5">
@@ -62,6 +62,8 @@ const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
 const loading = ref(false);
+
+const year = new Date().getFullYear();
 
 const form = reactive({
 	username: '',

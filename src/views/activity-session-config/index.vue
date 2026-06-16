@@ -460,14 +460,35 @@ function handleBeforeUpload(file: File) {
 	return true;
 }
 
+function fileToBase64(file: File) {
+	return new Promise<string>((resolve, reject) => {
+		const reader = new FileReader();
+
+		reader.onload = () => {
+			if (typeof reader.result === 'string') {
+				resolve(reader.result);
+				return;
+			}
+
+			reject(new Error('图片读取失败'));
+		};
+
+		reader.onerror = () => reject(new Error('图片读取失败'));
+		reader.readAsDataURL(file);
+	});
+}
+
 /** 自定义上传：本地预览，实际项目替换为真实上传接口 */
-function handleUploadKV(options: UploadRequestOptions) {
-	const file = options.file;
-	// 本地预览
-	formData.coverUrl = URL.createObjectURL(file);
-	// 模拟返回 key（真实项目中替换为接口返回的 key）
-	formData.coverKey = `activity/kv/${Date.now()}_${file.name}`;
-	ElMessage.success('图片上传成功（本地预览）');
+async function handleUploadKV(options: UploadRequestOptions) {
+	try {
+		const base64 = await fileToBase64(options.file as File);
+		formData.coverUrl = base64;
+		formData.coverKey = base64;
+		options.onSuccess?.({ base64 });
+		ElMessage.success('图片转 base64 成功');
+	} catch (error) {
+		ElMessage.error((error as Error).message || '图片处理失败');
+	}
 }
 
 /** 弹窗标题（新增 / 编辑） */
@@ -722,11 +743,16 @@ function handleBatchAdd() {
 }
 
 /** 批量弹窗 KV 上传 */
-function handleBatchUploadKV(options: UploadRequestOptions) {
-	const file = options.file;
-	batchFormData.coverUrl = URL.createObjectURL(file);
-	batchFormData.coverKey = `activity/kv/${Date.now()}_${file.name}`;
-	ElMessage.success('图片上传成功（本地预览）');
+async function handleBatchUploadKV(options: UploadRequestOptions) {
+	try {
+		const base64 = await fileToBase64(options.file as File);
+		batchFormData.coverUrl = base64;
+		batchFormData.coverKey = base64;
+		options.onSuccess?.({ base64 });
+		ElMessage.success('图片转 base64 成功');
+	} catch (error) {
+		ElMessage.error((error as Error).message || '图片处理失败');
+	}
 }
 
 /** 关闭批量添加弹窗时重置 */
