@@ -13,12 +13,42 @@
 		sans-serif;
 	color: #1f2937;
 	background: #f5f7fb;
+	color-scheme: light;
+	--app-bg: #f5f7fb;
+	--app-surface: #ffffff;
+	--app-surface-soft: #f8fafc;
+	--app-border: #e2e8f0;
+	--app-text: #0f172a;
+	--app-text-secondary: #64748b;
+	--app-hover: #f1f5f9;
+	--app-login-hero-bg: linear-gradient(135deg, #e8f3ff 0%, #f7fafc 48%, #dff7ef 100%);
+	--app-login-side-bg: #ffffff;
+}
+
+html.dark {
+	color: #e5e7eb;
+	background: #0f172a;
+	color-scheme: dark;
+	--app-bg: #0f172a;
+	--app-surface: #111827;
+	--app-surface-soft: #1e293b;
+	--app-border: #334155;
+	--app-text: #e5e7eb;
+	--app-text-secondary: #94a3b8;
+	--app-hover: #1f2937;
+	--app-login-hero-bg: linear-gradient(135deg, #172554 0%, #0f172a 48%, #052e16 100%);
+	--app-login-side-bg: #111827;
 }
 
 body {
 	min-width: 320px;
 	min-height: 100vh;
 	margin: 0;
+	color: var(--app-text);
+	background: var(--app-bg);
+	transition:
+		background-color 0.2s ease,
+		color 0.2s ease;
 }
 
 #app {
@@ -26,9 +56,37 @@ body {
 }
 
 .admin-page {
-	@apply min-h-full bg-slate-50 p-4 md:p-6;
+	min-height: 100%;
+	padding: 1rem;
+	background: var(--app-bg);
+}
+
+@media (min-width: 768px) {
+	.admin-page {
+		padding: 1.5rem;
+	}
 }
 
 .page-panel {
-	@apply rounded-lg border border-slate-200 bg-white p-4 shadow-sm md:p-5;
+	padding: 1rem;
+	border: 1px solid var(--app-border);
+	border-radius: 0.5rem;
+	background: var(--app-surface);
+	box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
+}
+
+@media (min-width: 768px) {
+	.page-panel {
+		padding: 1.25rem;
+	}
+}
+
+.app-theme-button {
+	border: 1px solid var(--app-border);
+	background: var(--app-surface);
+	color: var(--app-text);
+}
+
+.app-theme-button:hover {
+	background: var(--app-hover);
 }

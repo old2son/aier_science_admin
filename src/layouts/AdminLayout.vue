@@ -1,16 +1,16 @@
 <template>
-	<div class="flex min-h-screen bg-slate-50">
+	<div class="admin-layout flex min-h-screen">
 		<aside
-			class="hidden border-r border-slate-200 bg-white transition-all duration-200 md:block"
+			class="admin-layout__aside hidden transition-all duration-200 md:block"
 			:class="collapsed ? 'w-16' : 'w-60'"
 		>
-			<div class="flex h-16 items-center gap-3 border-b border-slate-200 px-4">
+			<div class="admin-layout__brand flex h-16 items-center gap-3 px-4">
 				<div
 					class="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-brand-600 text-sm font-bold text-white"
 				>
 					爱
 				</div>
-				<span v-show="!collapsed" class="text-base font-semibold text-slate-900">爱尔科普馆管理后台</span>
+				<span v-show="!collapsed" class="admin-layout__title text-base font-semibold">爱尔科普馆管理后台</span>
 			</div>
 
 			<el-menu :collapse="collapsed" :default-active="route.path" :router="true" class="admin-menu border-0">
@@ -24,10 +24,7 @@
 		</aside>
 
 		<section class="flex min-w-0 flex-1 flex-col">
-			<header
-				class="flex items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6"
-				style="height: 64px"
-			>
+			<header class="admin-layout__header flex items-center justify-between px-4 md:px-6" style="height: 64px">
 				<div class="flex min-w-0 flex-1 items-center gap-3">
 					<el-button :icon="collapsed ? MenuIcon : Fold" circle @click="toggleCollapse" />
 					<div class="min-w-0">
@@ -40,24 +37,33 @@
 								{{ item.title }}
 							</el-breadcrumb-item>
 						</el-breadcrumb>
-						<p class="mt-1 hidden text-xs text-slate-500 sm:block">后台管理系统</p>
+						<p class="admin-layout__subtitle mt-1 hidden text-xs sm:block">后台管理系统</p>
 					</div>
 				</div>
 
-				<el-dropdown trigger="click">
-					<button class="flex items-center gap-3 rounded-md px-2 py-1 text-left hover:bg-slate-100">
-						<el-avatar :src="userStore?.userInfo?.userAvatarUrl" :size="32">{{ userStore?.userInfo?.nickName.slice(0, 1).toUpperCase() }}</el-avatar>
-						<span class="hidden text-sm font-medium text-slate-700 sm:inline">{{
-							userStore?.userInfo?.nickName
-						}}</span>
-					</button>
-					<template #dropdown>
-						<el-dropdown-menu>
-							<el-dropdown-item disabled>{{ userStore?.userInfo?.phone }}</el-dropdown-item>
-							<el-dropdown-item :icon="SwitchButton" @click="handleLogout">退出登录</el-dropdown-item>
-						</el-dropdown-menu>
-					</template>
-				</el-dropdown>
+				<div class="flex items-center gap-2">
+					<el-button
+						class="app-theme-button"
+						:icon="themeMode === 'dark' ? Sunny : Moon"
+						circle
+						@click="handleToggleTheme"
+					/>
+
+					<el-dropdown trigger="click">
+						<button class="admin-layout__user-trigger flex items-center gap-3 rounded-md px-2 py-1 text-left">
+							<el-avatar :src="userStore?.userInfo?.userAvatarUrl" :size="32">{{ userInitial }}</el-avatar>
+							<span class="admin-layout__user-name hidden text-sm font-medium sm:inline">{{
+								userStore?.userInfo?.nickName
+							}}</span>
+						</button>
+						<template #dropdown>
+							<el-dropdown-menu>
+								<el-dropdown-item disabled>{{ userStore?.userInfo?.phone }}</el-dropdown-item>
+								<el-dropdown-item :icon="SwitchButton" @click="handleLogout">退出登录</el-dropdown-item>
+							</el-dropdown-menu>
+						</template>
+					</el-dropdown>
+				</div>
 			</header>
 
 			<main class="min-h-0 flex-1 overflow-auto">
@@ -68,13 +74,24 @@
 </template>
 
 <script setup lang="ts">
-import { Calendar, Document, Fold, Menu as MenuIcon, Setting, SwitchButton, Tickets } from '@element-plus/icons-vue';
+import {
+	Calendar,
+	Document,
+	Fold,
+	Menu as MenuIcon,
+	Moon,
+	Setting,
+	Sunny,
+	SwitchButton,
+	Tickets
+} from '@element-plus/icons-vue';
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { routes } from '@/router';
 import { useUserStore } from '@/stores/modules/user';
 import { ElMessage } from 'element-plus';
+import { getTheme, toggleTheme, type ThemeMode } from '@/utils/theme';
 
 // import { getAdminInformationApi, adminLogoutApi } from '@/api/admin';
 
@@ -82,8 +99,10 @@ const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 const collapsed = ref(false);
+const themeMode = ref<ThemeMode>(getTheme());
 
 const menuRoutes = computed(() => routes.find((item) => item.path === '/')?.children ?? []);
+const userInitial = computed(() => (userStore.userInfo?.nickName?.slice(0, 1) || 'A').toUpperCase());
 
 /** 面包屑数据：[控制面板, 当前页面] */
 const breadcrumbs = computed(() => {
@@ -107,6 +126,10 @@ function toggleCollapse() {
 	collapsed.value = !collapsed.value;
 }
 
+function handleToggleTheme() {
+	themeMode.value = toggleTheme(themeMode.value);
+}
+
 async function handleLogout() {
 	await userStore.logout();
 	ElMessage.success('已退出登录');
@@ -123,6 +146,44 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.admin-layout {
+	background: var(--app-bg);
+}
+
+.admin-layout__aside {
+	border-right: 1px solid var(--app-border);
+	background: var(--app-surface);
+}
+
+.admin-layout__brand {
+	border-bottom: 1px solid var(--app-border);
+}
+
+.admin-layout__title {
+	color: var(--app-text);
+}
+
+.admin-layout__header {
+	border-bottom: 1px solid var(--app-border);
+	background: var(--app-surface);
+}
+
+.admin-layout__subtitle {
+	color: var(--app-text-secondary);
+}
+
+.admin-layout__user-trigger {
+	color: var(--app-text);
+}
+
+.admin-layout__user-trigger:hover {
+	background: var(--app-hover);
+}
+
+.admin-layout__user-name {
+	color: var(--app-text);
+}
+
 .admin-menu {
 	--el-menu-item-height: 48px;
 }
