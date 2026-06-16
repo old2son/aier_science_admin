@@ -71,13 +71,9 @@
 			</el-table> -->
 
 			<my-table v-loading="tableLoading" :data="tableData" :columns="columns">
-				<template #guideCount="{ row }">
-					<span>{{ row.guideCount ?? '-' }}</span>
-				</template>
-
-				<template #remainCount="{ row }">
-					<el-tag :type="row.remainCount === 0 ? 'danger' : row.remainCount < 10 ? 'warning' : 'success'">
-						{{ row.remainCount }}
+				<template #surplusNumber="{ row }">
+					<el-tag :type="row.surplusNumber === 0 ? 'danger' : row.surplusNumber < 10 ? 'warning' : 'success'">
+						{{ row.surplusNumber }}
 					</el-tag>
 				</template>
 
@@ -210,23 +206,39 @@ import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'elem
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import MyTable from '@/components/MyTable/index.vue';
 import type { TableColumn } from '@/components/MyTable/types';
-// import { adminPasswordLoginApi, getAdminInformationApi, adminLogoutApi } from '@/api/admin';
+import {
+	getAllScienceConfigurationApi,
+	searchScienceConfigurationApi,
+	addScienceConfigurationApi,
+	batchAddScienceConfigurationApi,
+	updateScienceConfigurationApi,
+	zeroClearingConfigurationApi,
+	deleteScienceConfigurationApi
+} from '@/api/admin';
 
-import { getSessionList, type SessionQuery, type SessionRow } from '@/api/science';
+import { type SessionRow } from '@/types/SessionInfo';
+import { useUserStore } from '@/stores/modules/user';
 
-let rawData: SessionRow[] = [];
+const userStore = useUserStore();
 
 const columns: TableColumn[] = [
+	// {
+	// 	type: 'index',
+	// 	label: '序号',
+	// 	slot: false,
+	// 	width: 60,
+	// 	align: 'center'
+	// },
 	{
-		type: 'index',
-		label: '序号',
+		label: '场次id',
+		prop: 'configId',
 		slot: false,
-		width: 60,
+		minWidth: 70,
 		align: 'center'
 	},
 	{
 		label: '日期',
-		prop: 'date',
+		prop: 'dateTime',
 		slot: false,
 		minWidth: 120
 	},
@@ -246,34 +258,34 @@ const columns: TableColumn[] = [
 	},
 	{
 		label: '总号数',
-		prop: 'totalCount',
+		prop: 'totalNumber',
 		slot: false,
 		minWidth: 90,
 		align: 'center'
 	},
 	{
 		label: '需要讲解服务人数',
-		prop: 'guideCount',
-		slot: true,
+		prop: 'expound',
+		slot: false,
 		minWidth: 120,
 		align: 'center'
 	},
 	{
 		label: '余号',
-		prop: 'remainCount',
+		prop: 'surplusNumber',
 		slot: true,
 		minWidth: 90,
 		align: 'center'
 	},
 	{
 		label: '创建时间',
-		prop: 'createdAt',
+		prop: 'createTime',
 		slot: false,
 		minWidth: 160
 	},
 	{
 		label: '操作人',
-		prop: 'operator',
+		prop: 'operatorName',
 		slot: false,
 		minWidth: 90,
 		align: 'center'
@@ -298,13 +310,12 @@ const queryForm = ref({
 const tableData = ref<SessionRow[]>([]);
 const tableLoading = ref(false);
 
-async function fetchSessions(params?: SessionQuery) {
+async function fetchSessions() {
 	tableLoading.value = true;
 
 	try {
-		const list = await getSessionList(params);
-		rawData = list;
-		tableData.value = [...list];
+		const { data = [] } = await getAllScienceConfigurationApi();
+		tableData.value = data;
 	} finally {
 		tableLoading.value = false;
 	}
@@ -353,10 +364,10 @@ function handleAdd() {
 
 /** 打开编辑弹窗，回填数据 */
 function handleEdit(row: SessionRow) {
-	editId.value = row.id;
-	formData.date = row.date;
+	editId.value = row.configId;
+	formData.date = row.dateTime;
 	formData.timeSlot = `${row.startTime}-${row.endTime}`;
-	formData.totalCount = row.totalCount;
+	formData.totalCount = row.totalNumber;
 	dialogVisible.value = true;
 }
 
@@ -378,40 +389,40 @@ async function handleSubmit() {
 
 		/* 编辑模式：更新已有数据 */
 		if (editId.value) {
-			const target = rawData.find((r) => r.id === editId.value);
+			const target = tableData.value.find((r) => r.configId === editId.value);
+
 			if (target) {
-				target.date = formData.date;
+				target.dateTime = formData.date;
 				target.startTime = startTime;
 				target.endTime = endTime;
-				target.totalCount = formData.totalCount!;
-				tableData.value = [...rawData];
-				ElMessage.success('编辑成功');
-				dialogVisible.value = false;
+				target.totalNumber = formData.totalCount!;
+				updateScienceConfigurationApi({
+					configId: editId.value,
+					dateTime: formData.date,
+					startTime,
+					endTime,
+					totalNumber: formData.totalCount!,
+					operatorName: userStore.userInfo?.nickName || '当前用户'
+				}).then((res) => {
+					fetchSessions();
+					dialogVisible.value = false;
+					ElMessage.success(res.message);
+				});
 			}
 			return;
 		}
 
-		/* 新增模式 */
-		const now = new Date();
-		const pad = (n: number) => String(n).padStart(2, '0');
-		const timeStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-
-		const newSession: SessionRow = {
-			id: Math.max(...rawData.map((r) => r.id), 0) + 1,
-			date: formData.date,
+		addScienceConfigurationApi({
+			dateTime: formData.date,
 			startTime,
 			endTime,
-			totalCount: formData.totalCount!,
-			remainCount: formData.totalCount!,
-			createdAt: timeStr,
-			operator: '当前用户'
-		};
-
-		rawData.push(newSession);
-		tableData.value = [...rawData];
-
-		ElMessage.success('场次添加成功');
-		dialogVisible.value = false;
+			totalNumber: formData.totalCount!,
+			operatorName: userStore.userInfo?.nickName || '当前用户'
+		}).then((res) => {
+			fetchSessions();
+			dialogVisible.value = false;
+			ElMessage.success(res.message);
+		});
 	} finally {
 		submitLoading.value = false;
 	}
@@ -426,7 +437,8 @@ async function handleSearch() {
 		return;
 	}
 
-	await fetchSessions({ startDate, endDate });
+	const { data = [] } = await searchScienceConfigurationApi({ startDate, endDate });
+	tableData.value = data;
 }
 
 /** 重置查询条件与数据 */
@@ -439,24 +451,25 @@ function handleReset() {
 /** 余号清零 */
 async function handleResetCount(row: SessionRow) {
 	try {
-		await ElMessageBox.confirm(`确认清零 ${row.date} ${row.startTime}-${row.endTime} 的场次吗？`, '清零确认', {
+		await ElMessageBox.confirm(`确认清零 ${row.dateTime} ${row.startTime}-${row.endTime} 的场次吗？`, '清零确认', {
 			confirmButtonText: '确定清零',
 			cancelButtonText: '取消',
 			type: 'warning',
 			confirmButtonClass: 'el-button--danger'
 		});
 
-		const idx = rawData.findIndex((r) => r.id === row.id);
+		const idx = tableData.value.findIndex((r) => r.configId === row.configId);
 
-		if (rawData[idx].remainCount === 0) {
+		if (tableData.value[idx].surplusNumber === 0) {
 			ElMessage.warning('余号已清零');
 			return;
 		}
 
 		if (idx > -1) {
-			rawData[idx].remainCount = 0;
-			tableData.value = [...rawData];
-			ElMessage.success('清零成功');
+			zeroClearingConfigurationApi({ configId: row.configId }).then((res) => {
+				fetchSessions();
+				ElMessage.success(res.message);
+			});
 		}
 	} catch {
 		// 用户取消，不做操作
@@ -466,18 +479,19 @@ async function handleResetCount(row: SessionRow) {
 /** 删除场次 */
 async function handleDelete(row: SessionRow) {
 	try {
-		await ElMessageBox.confirm(`确认删除 ${row.date} ${row.startTime}-${row.endTime} 的场次吗？`, '删除确认', {
+		await ElMessageBox.confirm(`确认删除 ${row.dateTime} ${row.startTime}-${row.endTime} 的场次吗？`, '删除确认', {
 			confirmButtonText: '确定删除',
 			cancelButtonText: '取消',
 			type: 'warning',
 			confirmButtonClass: 'el-button--danger'
 		});
 
-		const idx = rawData.findIndex((r) => r.id === row.id);
+		const idx = tableData.value.findIndex((r) => r.configId === row.configId);
 		if (idx > -1) {
-			rawData.splice(idx, 1);
-			tableData.value = [...rawData];
-			ElMessage.success('删除成功');
+			deleteScienceConfigurationApi({ configId: row.configId }).then((res) => {
+				fetchSessions();
+				ElMessage.success(res.message);
+			});
 		}
 	} catch {
 		// 用户取消，不做操作
@@ -583,32 +597,21 @@ async function handleBatchSubmit() {
 	batchSubmitLoading.value = true;
 
 	try {
-		const now = new Date();
-		const pad = (n: number) => String(n).padStart(2, '0');
-		const timeStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+		const [startDate, endDate] = batchFormData.dateRange;
+		const startTimes = batchFormData.timeSlots.map((slot) => slot.split('-')[0] ?? '');
+		const endTimes = batchFormData.timeSlots.map((slot) => slot.split('-')[1] ?? '');
 
-		let maxId = rawData.length > 0 ? Math.max(...rawData.map((r) => r.id)) : 0;
+		const res = await batchAddScienceConfigurationApi({
+			startDate,
+			endDate,
+			startTimes,
+			endTimes,
+			totalNumber: batchFormData.totalCount as number,
+			operatorName: userStore.userInfo?.nickName || '当前用户'
+		});
 
-		const newSessions: SessionRow[] = [];
-		for (const item of batchPreview.value) {
-			const [startTime, endTime] = item.timeSlot.split('-');
-			maxId += 1;
-			const session: SessionRow = {
-				id: maxId,
-				date: item.date,
-				startTime,
-				endTime,
-				totalCount: item.totalCount,
-				remainCount: item.totalCount,
-				createdAt: timeStr,
-				operator: '当前用户'
-			};
-			newSessions.push(session);
-			rawData.push(session);
-		}
-
-		tableData.value = [...rawData];
-		ElMessage.success(`成功批量添加 ${newSessions.length} 场次`);
+		ElMessage.success(res.message || `成功批量添加 ${batchPreview.value.length} 场次`);
+		await fetchSessions();
 		batchDialogVisible.value = false;
 	} finally {
 		batchSubmitLoading.value = false;
@@ -616,6 +619,6 @@ async function handleBatchSubmit() {
 }
 
 onMounted(() => {
-	// fetchSessions();
+	fetchSessions();
 });
 </script>

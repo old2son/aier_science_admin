@@ -323,17 +323,17 @@ const statusMap: Record<BookingStatus, { label: string; type: '' | 'warning' | '
 };
 
 /** 手机号脱敏：前3后4，中间 **** */
-function maskPhone(phone: string): string {
-	if (phone.length !== 11) return phone;
-	return `${phone.slice(0, 3)}****${phone.slice(7)}`;
-}
+// function maskPhone(phone: string): string {
+// 	if (phone.length !== 11) return phone;
+// 	return `${phone.slice(0, 3)}****${phone.slice(7)}`;
+// }
 
 /** 身份证脱敏：前3后4，中间 *********** */
-function maskIdCard(idCard: string): string {
-	if (idCard.length < 8) return idCard;
-	const starCount = idCard.length - 7;
-	return `${idCard.slice(0, 3)}${'*'.repeat(starCount)}${idCard.slice(-4)}`;
-}
+// function maskIdCard(idCard: string): string {
+// 	if (idCard.length < 8) return idCard;
+// 	const starCount = idCard.length - 7;
+// 	return `${idCard.slice(0, 3)}${'*'.repeat(starCount)}${idCard.slice(-4)}`;
+// }
 
 // 获取第一个成年人
 function getPrimaryCompanion(row: BookingRow) {

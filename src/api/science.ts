@@ -1,3 +1,7 @@
+/** 
+ * mock 数据页面
+ */
+
 import request from '@/utils/request';
 
 export interface SessionRow {
