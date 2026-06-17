@@ -227,11 +227,7 @@
 				</el-form-item>
 				<el-form-item label="时间配置" prop="timeRanges">
 					<div class="batch-time-list">
-						<div
-							v-for="(item, index) in batchFormData.timeRanges"
-							:key="index"
-							class="batch-time-card"
-						>
+						<div v-for="(item, index) in batchFormData.timeRanges" :key="index" class="batch-time-card">
 							<div class="batch-time-card__header">
 								<span class="batch-time-card__title">时间段 {{ index + 1 }}</span>
 								<el-button
@@ -293,17 +289,11 @@
 				<!-- 预览 -->
 				<el-form-item label="预览" v-if="batchPreview.length > 0">
 					<div class="batch-preview-panel">
-						<div
-							v-for="(item, idx) in batchPreview"
-							:key="idx"
-							class="batch-preview-item"
-						>
+						<div v-for="(item, idx) in batchPreview" :key="idx" class="batch-preview-item">
 							<span class="batch-preview-item__label">{{ item.dateLabel }} {{ item.timeLabel }}</span>
 							<el-tag size="small">{{ item.totalCount }} 号</el-tag>
 						</div>
-						<div class="batch-preview-total">
-							共 {{ batchPreview.length }} 场次
-						</div>
+						<div class="batch-preview-total">共 {{ batchPreview.length }} 场次</div>
 					</div>
 				</el-form-item>
 			</el-form>
@@ -421,7 +411,7 @@ const columns: TableColumn[] = [
 	},
 	{
 		label: '操作人',
-		prop: 'operator',
+		prop: 'operatorName',
 		slot: false,
 		minWidth: 70,
 		align: 'center'
@@ -525,6 +515,39 @@ function fileToBase64(file: File) {
 	});
 }
 
+function blobToBase64(blob: Blob) {
+	return new Promise<string>((resolve, reject) => {
+		const reader = new FileReader();
+
+		reader.onload = () => {
+			if (typeof reader.result === 'string') {
+				resolve(reader.result);
+				return;
+			}
+
+			reject(new Error('图片读取失败'));
+		};
+
+		reader.onerror = () => reject(new Error('图片读取失败'));
+		reader.readAsDataURL(blob);
+	});
+}
+
+async function imageToBase64(imageUrl: string) {
+
+	if (!imageUrl) return '';
+	if (imageUrl.startsWith('data:')) return imageUrl;
+
+	const response = await fetch(imageUrl);
+
+	if (!response.ok) {
+		throw new Error('活动图片转换失败');
+	}
+
+	const blob = await response.blob();
+	return blobToBase64(blob);
+}
+
 /** 自定义上传：本地预览，实际项目替换为真实上传接口 */
 async function handleUploadKV(options: UploadRequestOptions) {
 	try {
@@ -547,18 +570,27 @@ function handleAdd() {
 }
 
 /** 打开编辑弹窗，回填数据 */
-function handleEdit(row: ActivitySessionRow) {
+async function handleEdit(row: ActivitySessionRow) {
 	editId.value = row.activityId;
 	formData.title = row.activityName;
 	formData.background = row.theBackground;
 	formData.location = row.place ?? '';
-	formData.coverKey = row.activityCoverUrl ?? '';
-	formData.coverUrl = '';
 	formData.startDate = row.activityTime;
 	formData.endDate = row.endDate;
 	formData.startTime = row.startTime;
 	formData.endTime = row.endTime;
 	formData.totalCount = row.totalNumber;
+
+	try {
+		const base64 = await imageToBase64(row.activityCoverUrl ?? '');
+		formData.coverKey = base64;
+		formData.coverUrl = base64;
+	} catch (error) {
+		formData.coverKey = '';
+		formData.coverUrl = row.activityCoverUrl ?? '';
+		ElMessage.warning((error as Error).message || '活动图片转换失败，请重新上传');
+	}
+
 	dialogVisible.value = true;
 }
 
@@ -819,7 +851,11 @@ function generateBatchPreview(): BatchPreviewItem[] {
 	const result: BatchPreviewItem[] = [];
 	const [activityTime, endDate] = dateRange;
 	const dateLabel =
-		activityTime && endDate ? (activityTime === endDate ? activityTime : `${activityTime} 至 ${endDate}`) : '未选择日期';
+		activityTime && endDate
+			? activityTime === endDate
+				? activityTime
+				: `${activityTime} 至 ${endDate}`
+			: '未选择日期';
 
 	for (const item of timeRanges) {
 		if (!item.startTime || !item.endTime || !item.coverKey || item.startTime >= item.endTime) continue;
@@ -888,7 +924,7 @@ async function handleBatchSubmit() {
 
 	try {
 		const [activityTime, endDate] = batchFormData.dateRange;
-		await Promise.all(
+		const res = await Promise.allSettled(
 			batchPreview.value.map((item) =>
 				addActivityConfigurationApi({
 					activityName: batchFormData.title,
@@ -906,7 +942,10 @@ async function handleBatchSubmit() {
 		);
 
 		await fetchSessions();
-		ElMessage.success(`成功批量添加 ${batchPreview.value.length} 场次`);
+		console.log(res);
+		const successCount = res.filter((item) => item.status === 'fulfilled').length;
+		const failCount = res.length - successCount;
+		ElMessage.success(`成功新增 ${successCount} 条，失败 ${failCount} 条`);
 		batchDialogVisible.value = false;
 	} finally {
 		batchSubmitLoading.value = false;
