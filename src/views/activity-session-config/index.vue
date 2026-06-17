@@ -71,9 +71,21 @@
 			</el-table> -->
 
 			<my-table v-loading="tableLoading" :data="tableData" :columns="columns">
-				<template #remainCount="{ row }">
-					<el-tag :type="row.remainCount === 0 ? 'danger' : row.remainCount < 10 ? 'warning' : 'success'">
-						{{ row.remainCount }}
+				<template #activityCoverUrl="{ row }">
+					<el-image
+						v-if="row.activityCoverUrl"
+						:src="row.activityCoverUrl"
+						:preview-src-list="[row.activityCoverUrl]"
+						fit="cover"
+						preview-teleported
+						class="activity-cover-thumb"
+					/>
+					<span v-else class="text-slate-400">-</span>
+				</template>
+
+				<template #surplusNumber="{ row }">
+					<el-tag :type="row.surplusNumber === 0 ? 'danger' : row.surplusNumber < 10 ? 'warning' : 'success'">
+						{{ row.surplusNumber }}
 					</el-tag>
 				</template>
 
@@ -290,44 +302,60 @@ import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type Upload
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import MyTable from '@/components/MyTable/index.vue';
 import type { TableColumn } from '@/components/MyTable/types';
+import {
+	getAllActivityConfigurationApi,
+	searchActivityConfigurationApi,
+	addActivityConfigurationApi,
+	batchAddActivityConfigurationApi,
+	updateActivityConfigurationApi,
+	clearingActivityConfigurationApi,
+	deleteActivityConfigurationApi
+} from '@/api/admin';
+import { type ActivitySessionRow } from '@/types/SessionInfo';
+import { useUserStore } from '@/stores/modules/user';
 
-import { getActivitySessionList, type ActivitySessionQuery, type ActivitySessionRow } from '@/api/science';
-
-let rawData: ActivitySessionRow[] = [];
+const userStore = useUserStore();
 
 const columns: TableColumn[] = [
 	{
-		type: 'index',
-		label: '序号',
+		label: '活动id',
+		prop: 'activityId',
 		slot: false,
-		width: 60,
+		width: 70,
 		align: 'center'
 	},
 	{
 		label: '活动标题',
-		prop: 'title',
+		prop: 'activityName',
 		slot: false,
-		minWidth: 160,
+		minWidth: 110,
 		showOverflowTooltip: true
 	},
 	{
 		label: '活动背景',
-		prop: 'background',
+		prop: 'theBackground',
 		slot: false,
 		minWidth: 180,
 		align: 'center',
 		showOverflowTooltip: true
 	},
 	{
+		label: '活动KV',
+		prop: 'activityCoverUrl',
+		slot: true,
+		minWidth: 110,
+		align: 'center'
+	},
+	{
 		label: '活动地点',
-		prop: 'location',
+		prop: 'place',
 		slot: false,
 		minWidth: 140,
 		showOverflowTooltip: true
 	},
 	{
 		label: '开始日期',
-		prop: 'startDate',
+		prop: 'activityTime',
 		slot: false,
 		minWidth: 100
 	},
@@ -341,33 +369,33 @@ const columns: TableColumn[] = [
 		label: '开始时间',
 		prop: 'startTime',
 		slot: false,
-		minWidth: 100,
+		minWidth: 80,
 		align: 'center'
 	},
 	{
 		label: '结束时间',
 		prop: 'endTime',
 		slot: false,
-		minWidth: 100,
+		minWidth: 80,
 		align: 'center'
 	},
 	{
 		label: '总号数',
-		prop: 'totalCount',
+		prop: 'totalNumber',
 		slot: false,
-		minWidth: 80,
+		minWidth: 75,
 		align: 'center'
 	},
 	{
 		label: '余号',
-		prop: 'remainCount',
+		prop: 'surplusNumber',
 		slot: true,
-		minWidth: 80,
+		minWidth: 75,
 		align: 'center'
 	},
 	{
 		label: '创建时间',
-		prop: 'createdAt',
+		prop: 'createTime',
 		slot: false,
 		minWidth: 160
 	},
@@ -375,7 +403,7 @@ const columns: TableColumn[] = [
 		label: '操作人',
 		prop: 'operator',
 		slot: false,
-		minWidth: 90,
+		minWidth: 70,
 		align: 'center'
 	},
 	{
@@ -398,13 +426,12 @@ const queryForm = ref({
 const tableData = ref<ActivitySessionRow[]>([]);
 const tableLoading = ref(false);
 
-async function fetchSessions(params?: ActivitySessionQuery) {
+async function fetchSessions() {
 	tableLoading.value = true;
 
 	try {
-		const list = await getActivitySessionList(params);
-		rawData = list;
-		tableData.value = [...list];
+		const { data = [] } = await getAllActivityConfigurationApi();
+		tableData.value = data;
 	} finally {
 		tableLoading.value = false;
 	}
@@ -484,8 +511,7 @@ async function handleUploadKV(options: UploadRequestOptions) {
 		const base64 = await fileToBase64(options.file as File);
 		formData.coverUrl = base64;
 		formData.coverKey = base64;
-		options.onSuccess?.({ base64 });
-		ElMessage.success('图片转 base64 成功');
+		ElMessage.success('图片上传成功');
 	} catch (error) {
 		ElMessage.error((error as Error).message || '图片处理失败');
 	}
@@ -502,17 +528,17 @@ function handleAdd() {
 
 /** 打开编辑弹窗，回填数据 */
 function handleEdit(row: ActivitySessionRow) {
-	editId.value = row.id;
-	formData.title = row.title;
-	formData.background = row.background;
-	formData.location = row.location ?? '';
-	formData.coverKey = row.coverKey ?? '';
+	editId.value = row.activityId;
+	formData.title = row.activityName;
+	formData.background = row.theBackground;
+	formData.location = row.place ?? '';
+	formData.coverKey = row.activityCoverUrl ?? '';
 	formData.coverUrl = '';
-	formData.startDate = row.startDate;
+	formData.startDate = row.activityTime;
 	formData.endDate = row.endDate;
 	formData.startTime = row.startTime;
 	formData.endTime = row.endTime;
-	formData.totalCount = row.totalCount;
+	formData.totalCount = row.totalNumber;
 	dialogVisible.value = true;
 }
 
@@ -534,50 +560,58 @@ async function handleSubmit() {
 	try {
 		/* 编辑模式：更新已有数据 */
 		if (editId.value) {
-			const target = rawData.find((r) => r.id === editId.value);
+			const target = tableData.value.find((r) => r.activityId === editId.value);
 			if (target) {
-				target.title = formData.title;
-				target.background = formData.background;
-				target.location = formData.location;
-				target.coverKey = formData.coverKey || undefined;
-				target.startDate = formData.startDate;
+				target.activityName = formData.title;
+				target.theBackground = formData.background;
+				target.place = formData.location;
+				target.activityCoverUrl = formData.coverKey || '';
+				target.activityTime = formData.startDate;
 				target.endDate = formData.endDate;
 				target.startTime = formData.startTime;
 				target.endTime = formData.endTime;
-				target.totalCount = formData.totalCount!;
-				tableData.value = [...rawData];
-				ElMessage.success('编辑成功');
-				dialogVisible.value = false;
+				target.totalNumber = formData.totalCount!;
+
+				updateActivityConfigurationApi({
+					activityId: editId.value,
+					activityName: formData.title,
+					theBackground: formData.background,
+					place: formData.location || '',
+					activityCoverUrl: formData.coverKey || '',
+					activityTime: formData.startDate,
+					endDate: formData.endDate,
+					startTime: formData.startTime,
+					endTime: formData.endTime,
+					totalNumber: formData.totalCount!,
+					// operatorName: userStore.userInfo?.nickName || '当前用户'
+					operatorName: '活动主持人莉莉丝'
+				}).then((res) => {
+					fetchSessions();
+					dialogVisible.value = false;
+					ElMessage.success(res.message);
+				});
 			}
 			return;
 		}
 
 		/* 新增模式 */
-		const now = new Date();
-		const pad = (n: number) => String(n).padStart(2, '0');
-		const timeStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-
-		const newSession: ActivitySessionRow = {
-			id: Math.max(...rawData.map((r) => r.id), 0) + 1,
-			title: formData.title,
-			background: formData.background,
-			location: formData.location || undefined,
-			coverKey: formData.coverKey || undefined,
-			startDate: formData.startDate,
+		addActivityConfigurationApi({
+			activityName: formData.title,
+			theBackground: formData.background,
+			place: formData.location || '',
+			activityCoverUrl: formData.coverKey || '',
+			activityTime: formData.startDate,
 			endDate: formData.endDate,
 			startTime: formData.startTime,
 			endTime: formData.endTime,
-			totalCount: formData.totalCount!,
-			remainCount: formData.totalCount!,
-			createdAt: timeStr,
-			operator: '当前用户'
-		};
-
-		rawData.push(newSession);
-		tableData.value = [...rawData];
-
-		ElMessage.success('场次添加成功');
-		dialogVisible.value = false;
+			totalNumber: formData.totalCount!,
+			// operatorName: userStore.userInfo?.nickName || '当前用户'
+			operatorName: '活动主持人莉莉丝'
+		}).then((res) => {
+			fetchSessions();
+			ElMessage.success(res.message);
+			dialogVisible.value = false;
+		});
 	} finally {
 		submitLoading.value = false;
 	}
@@ -592,7 +626,8 @@ async function handleSearch() {
 		return;
 	}
 
-	await fetchSessions({ startDate, endDate });
+	const { data = [] } = await searchActivityConfigurationApi({ startDate, endDate });
+	tableData.value = data;
 }
 
 /** 重置查询条件与数据 */
@@ -605,24 +640,29 @@ function handleReset() {
 /** 余号清零 */
 async function handleResetCount(row: ActivitySessionRow) {
 	try {
-		await ElMessageBox.confirm(`确认清零 ${row.startDate} ${row.startTime}-${row.endTime} 的场次吗？`, '清零确认', {
-			confirmButtonText: '确定清零',
-			cancelButtonText: '取消',
-			type: 'warning',
-			confirmButtonClass: 'el-button--danger'
-		});
+		await ElMessageBox.confirm(
+			`确认清零 ${row.activityName} ${row.startTime}-${row.endTime} 的场次吗？`,
+			'清零确认',
+			{
+				confirmButtonText: '确定清零',
+				cancelButtonText: '取消',
+				type: 'warning',
+				confirmButtonClass: 'el-button--danger'
+			}
+		);
 
-		const idx = rawData.findIndex((r) => r.id === row.id);
+		const idx = tableData.value.findIndex((r) => r.activityId === row.activityId);
 
-		if (rawData[idx].remainCount === 0) {
+		if (tableData.value[idx].surplusNumber === 0) {
 			ElMessage.warning('余号已清零');
 			return;
 		}
 
 		if (idx > -1) {
-			rawData[idx].remainCount = 0;
-			tableData.value = [...rawData];
-			ElMessage.success('清零成功');
+			clearingActivityConfigurationApi({ activityId: row.activityId }).then((res) => {
+				fetchSessions();
+				ElMessage.success(res.message);
+			});
 		}
 	} catch {
 		// 用户取消，不做操作
@@ -633,7 +673,7 @@ async function handleResetCount(row: ActivitySessionRow) {
 async function handleDelete(row: ActivitySessionRow) {
 	try {
 		await ElMessageBox.confirm(
-			`确认删除「${row.title}」${row.startDate}~${row.endDate} ${row.startTime}-${row.endTime} 的场次吗？`,
+			`确认删除「${row.activityName}」${row.activityTime}~${row.endDate} ${row.startTime}-${row.endTime} 的场次吗？`,
 			'删除确认',
 			{
 				confirmButtonText: '确定删除',
@@ -643,11 +683,12 @@ async function handleDelete(row: ActivitySessionRow) {
 			}
 		);
 
-		const idx = rawData.findIndex((r) => r.id === row.id);
+		const idx = tableData.value.findIndex((r) => r.activityId === row.activityId);
 		if (idx > -1) {
-			rawData.splice(idx, 1);
-			tableData.value = [...rawData];
-			ElMessage.success('删除成功');
+			deleteActivityConfigurationApi({ activityId: row.activityId }).then((res) => {
+				fetchSessions();
+				ElMessage.success(res.message);
+			});
 		}
 	} catch {
 		// 用户取消，不做操作
@@ -748,8 +789,7 @@ async function handleBatchUploadKV(options: UploadRequestOptions) {
 		const base64 = await fileToBase64(options.file as File);
 		batchFormData.coverUrl = base64;
 		batchFormData.coverKey = base64;
-		options.onSuccess?.({ base64 });
-		ElMessage.success('图片转 base64 成功');
+		ElMessage.success('图片上传成功');
 	} catch (error) {
 		ElMessage.error((error as Error).message || '图片处理失败');
 	}
@@ -773,37 +813,23 @@ async function handleBatchSubmit() {
 	batchSubmitLoading.value = true;
 
 	try {
-		const now = new Date();
-		const pad = (n: number) => String(n).padStart(2, '0');
-		const timeStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+		const [activityTime, endDate] = batchFormData.dateRange;
+		const timeRanges = [`${batchFormData.startTime}-${batchFormData.endTime}`];
 
-		let maxId = rawData.length > 0 ? Math.max(...rawData.map((r) => r.id)) : 0;
+		const res = await batchAddActivityConfigurationApi({
+			activityName: batchFormData.title,
+			activityCoverUrls: batchFormData.coverKey ? [batchFormData.coverKey] : [],
+			theBackground: batchFormData.background,
+			totalNumber: batchFormData.totalCount as number,
+			operatorName: userStore.userInfo?.nickName || '当前用户',
+			place: batchFormData.location || '',
+			activityTime,
+			endDate,
+			timeRanges
+		});
 
-		const newSessions: ActivitySessionRow[] = [];
-		for (const item of batchPreview.value) {
-			maxId += 1;
-			// 批量生成的活动，开始日期=结束日期=该场次日期
-			const session: ActivitySessionRow = {
-				id: maxId,
-				title: batchFormData.title,
-				background: batchFormData.background,
-				location: batchFormData.location || undefined,
-				coverKey: batchFormData.coverKey || undefined,
-				startDate: item.date,
-				endDate: item.date,
-				startTime: batchFormData.startTime,
-				endTime: batchFormData.endTime,
-				totalCount: item.totalCount,
-				remainCount: item.totalCount,
-				createdAt: timeStr,
-				operator: '当前用户'
-			};
-			newSessions.push(session);
-			rawData.push(session);
-		}
-
-		tableData.value = [...rawData];
-		ElMessage.success(`成功批量添加 ${newSessions.length} 场次`);
+		await fetchSessions();
+		ElMessage.success(res.message || `成功批量添加 ${batchPreview.value.length} 场次`);
 		batchDialogVisible.value = false;
 	} finally {
 		batchSubmitLoading.value = false;
@@ -819,7 +845,7 @@ function handleExport() {
 }
 
 onMounted(() => {
-	// fetchSessions();
+	fetchSessions();
 });
 </script>
 
@@ -843,6 +869,18 @@ onMounted(() => {
 	width: 100%;
 	height: 100%;
 	object-fit: contain;
+}
+
+.activity-cover-thumb {
+	display: block;
+	width: 84px;
+	height: 48px;
+	margin: 0 auto;
+	border: 1px solid var(--el-border-color);
+	border-radius: 6px;
+	background: var(--el-fill-color-light);
+	cursor: pointer;
+	overflow: hidden;
 }
 
 .kv-placeholder {

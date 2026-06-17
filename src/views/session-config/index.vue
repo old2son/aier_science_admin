@@ -217,7 +217,6 @@ import {
 	zeroClearingConfigurationApi,
 	deleteScienceConfigurationApi
 } from '@/api/admin';
-
 import { type SessionRow } from '@/types/SessionInfo';
 import { useUserStore } from '@/stores/modules/user';
 

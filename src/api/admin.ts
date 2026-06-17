@@ -2,7 +2,7 @@ import request from '@/utils/request';
 import { AdminUserInfo } from '@/types/AdminUserInfo';
 import { type ApiResponse } from '@/utils/request';
 import type { BookingRow } from '@/types/BookingInfo';
-import type { SessionRow, SessionQuery } from '@/types/SessionInfo';
+import type { SessionRow, SessionQuery, ActivitySessionQuery, ActivitySessionRow } from '@/types/SessionInfo';
 
 export interface AdminPasswordLoginParams {
 	phone: string;
@@ -56,6 +56,39 @@ export interface ScienceConfigurationActionParams {
 	configId: number;
 }
 
+export interface AddActivityConfigurationParams {
+	activityName: string;
+	activityCoverUrl: string;
+	theBackground: string;
+	totalNumber: number;
+	operatorName: string;
+	place: string;
+	activityTime: string;
+	endDate: string;
+	startTime: string;
+	endTime: string;
+}
+
+export interface BatchAddActivityConfigurationParams {
+	activityName: string;
+	activityCoverUrls: string[];
+	theBackground: string;
+	totalNumber: number;
+	operatorName: string;
+	place: string;
+	activityTime: string;
+	endDate: string;
+	timeRanges: string[];
+}
+
+export interface UpdateActivityConfigurationParams extends AddActivityConfigurationParams {
+	activityId: number;
+}
+
+export interface ActivityConfigurationActionParams {
+	activityId: number;
+}
+
 export interface AdminCommonResponse {
 	message?: string;
 	[key: string]: unknown;
@@ -63,6 +96,7 @@ export interface AdminCommonResponse {
 
 export type ScienceReservationsResponse = ApiResponse<BookingRow[]>;
 export type ScienceConfigurationResponse = ApiResponse<SessionRow[]>;
+export type ActivityConfigurationResponse = ApiResponse<ActivitySessionRow[]>;
 
 /** 登录后台管理系统 */
 export function adminPasswordLoginApi(data: AdminPasswordLoginParams) {
@@ -137,4 +171,39 @@ export function zeroClearingConfigurationApi(data: ScienceConfigurationActionPar
 /** 删除场次配置 */
 export function deleteScienceConfigurationApi(data: ScienceConfigurationActionParams) {
 	return request.post<unknown, ApiResponse>('/api/admin/deleteScienceConfiguration', data);
+}
+
+/** 查询科普馆所有活动场次配置 */
+export function getAllActivityConfigurationApi() {
+	return request.post<unknown, ActivityConfigurationResponse>('/api/admin/getAllActivityConfiguration');
+}
+
+/** 筛选活动场次配置 */
+export function searchActivityConfigurationApi(data: ActivitySessionQuery) {
+	return request.post<unknown, ActivityConfigurationResponse>('/api/admin/searchActivityConfiguration', data);
+}
+
+/** 添加活动场次 */
+export function addActivityConfigurationApi(data: AddActivityConfigurationParams) {
+	return request.post<unknown, ApiResponse>('/api/admin/addActivityConfiguration', data);
+}
+
+/** 批量添加活动场次配置 */
+export function batchAddActivityConfigurationApi(data: BatchAddActivityConfigurationParams) {
+	return request.post<unknown, ApiResponse>('/api/admin/batchAddActivityConfiguration', data);
+}
+
+/** 修改活动场次 */
+export function updateActivityConfigurationApi(data: UpdateActivityConfigurationParams) {
+	return request.post<unknown, ApiResponse>('/api/admin/updateActivityConfiguration', data);
+}
+
+/** 活动余号清零 */
+export function clearingActivityConfigurationApi(data: ActivityConfigurationActionParams) {
+	return request.post<unknown, ApiResponse>('/api/admin/clearingActivityConfiguration', data);
+}
+
+/** 删除活动 */
+export function deleteActivityConfigurationApi(data: ActivityConfigurationActionParams) {
+	return request.post<unknown, ApiResponse>('/api/admin/deleteActivityConfiguration', data);
 }

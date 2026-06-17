@@ -219,7 +219,7 @@ type BookingViewRow = BookingRow & {
 
 const columns: TableColumn[] = [
 	{
-		label: '单号',
+		label: '预约id',
 		prop: 'reId',
 		slot: false,
 		minWidth: 70,
