@@ -211,23 +211,6 @@
 						placeholder="请输入活动背景介绍"
 					/>
 				</el-form-item>
-				<el-form-item label="活动 KV">
-					<el-upload
-						class="kv-uploader"
-						action="#"
-						:show-file-list="false"
-						:before-upload="handleBeforeUpload"
-						:http-request="handleBatchUploadKV"
-						accept="image/*"
-					>
-						<img v-if="batchFormData.coverUrl" :src="batchFormData.coverUrl" class="kv-preview" />
-						<div v-else class="kv-placeholder">
-							<el-icon class="text-2xl text-slate-400"><Plus /></el-icon>
-							<span class="mt-1 text-xs text-slate-400">上传活动 KV</span>
-						</div>
-					</el-upload>
-					<div class="mt-1 text-xs text-slate-400">建议尺寸 750×420，JPG/PNG，≤2MB</div>
-				</el-form-item>
 				<el-form-item label="活动地点">
 					<el-input v-model="batchFormData.location" placeholder="请输入活动地点（选填）" clearable />
 				</el-form-item>
@@ -242,23 +225,61 @@
 						style="width: 100%"
 					/>
 				</el-form-item>
-				<el-form-item label="开始时间" prop="startTime">
-					<el-time-picker
-						v-model="batchFormData.startTime"
-						placeholder="选择开始时间"
-						format="HH:mm"
-						value-format="HH:mm"
-						style="width: 100%"
-					/>
-				</el-form-item>
-				<el-form-item label="结束时间" prop="endTime">
-					<el-time-picker
-						v-model="batchFormData.endTime"
-						placeholder="选择结束时间"
-						format="HH:mm"
-						value-format="HH:mm"
-						style="width: 100%"
-					/>
+				<el-form-item label="时间配置" prop="timeRanges">
+					<div class="batch-time-list">
+						<div
+							v-for="(item, index) in batchFormData.timeRanges"
+							:key="index"
+							class="batch-time-card"
+						>
+							<div class="batch-time-card__header">
+								<span class="batch-time-card__title">时间段 {{ index + 1 }}</span>
+								<el-button
+									v-if="batchFormData.timeRanges.length > 1"
+									type="danger"
+									link
+									@click="removeBatchTimeRange(index)"
+								>
+									删除
+								</el-button>
+							</div>
+
+							<div class="batch-time-card__grid">
+								<el-time-picker
+									v-model="item.startTime"
+									placeholder="选择开始时间"
+									format="HH:mm"
+									value-format="HH:mm"
+									style="width: 100%"
+								/>
+								<el-time-picker
+									v-model="item.endTime"
+									placeholder="选择结束时间"
+									format="HH:mm"
+									value-format="HH:mm"
+									style="width: 100%"
+								/>
+							</div>
+
+							<el-upload
+								class="batch-kv-uploader"
+								action="#"
+								:show-file-list="false"
+								:before-upload="handleBeforeUpload"
+								:http-request="(options: UploadRequestOptions) => handleBatchUploadKV(index, options)"
+								accept="image/*"
+							>
+								<img v-if="item.coverUrl" :src="item.coverUrl" class="kv-preview" />
+								<div v-else class="kv-placeholder">
+									<el-icon class="text-2xl text-slate-400"><Plus /></el-icon>
+									<span class="mt-1 text-xs text-slate-400">上传该时间段 KV</span>
+								</div>
+							</el-upload>
+						</div>
+
+						<el-button plain type="primary" @click="addBatchTimeRange">新增时间段</el-button>
+						<div class="batch-time-tip">每个时间段可单独上传一张图片，提交时按时间段条数逐条新增。</div>
+					</div>
 				</el-form-item>
 				<el-form-item label="总号数" prop="totalCount">
 					<el-input-number
@@ -271,16 +292,16 @@
 				</el-form-item>
 				<!-- 预览 -->
 				<el-form-item label="预览" v-if="batchPreview.length > 0">
-					<div class="max-h-48 overflow-y-auto rounded border border-slate-200 p-3">
+					<div class="batch-preview-panel">
 						<div
 							v-for="(item, idx) in batchPreview"
 							:key="idx"
-							class="flex items-center justify-between py-1 text-sm"
+							class="batch-preview-item"
 						>
-							<span class="text-slate-600">{{ item.date }} {{ item.timeLabel }}</span>
+							<span class="batch-preview-item__label">{{ item.dateLabel }} {{ item.timeLabel }}</span>
 							<el-tag size="small">{{ item.totalCount }} 号</el-tag>
 						</div>
-						<div class="mt-2 border-t border-slate-100 pt-2 text-sm font-medium text-primary">
+						<div class="batch-preview-total">
 							共 {{ batchPreview.length }} 场次
 						</div>
 					</div>
@@ -306,7 +327,6 @@ import {
 	getAllActivityConfigurationApi,
 	searchActivityConfigurationApi,
 	addActivityConfigurationApi,
-	batchAddActivityConfigurationApi,
 	updateActivityConfigurationApi,
 	clearingActivityConfigurationApi,
 	deleteActivityConfigurationApi
@@ -545,8 +565,16 @@ function handleEdit(row: ActivitySessionRow) {
 /** 关闭弹窗时重置表单 */
 function handleDialogClose() {
 	formRef.value?.resetFields();
+	formData.title = '';
+	formData.background = '';
+	formData.location = '';
 	formData.coverKey = '';
 	formData.coverUrl = '';
+	formData.startDate = '';
+	formData.endDate = '';
+	formData.startTime = '';
+	formData.endTime = '';
+	formData.totalCount = undefined;
 	editId.value = null;
 }
 
@@ -701,44 +729,80 @@ const batchDialogVisible = ref(false);
 const batchFormRef = ref<FormInstance>();
 const batchSubmitLoading = ref(false);
 
+interface BatchTimeRangeItem {
+	startTime: string;
+	endTime: string;
+	coverKey: string;
+	coverUrl: string;
+}
+
+function createBatchTimeRangeItem(): BatchTimeRangeItem {
+	return {
+		startTime: '',
+		endTime: '',
+		coverKey: '',
+		coverUrl: ''
+	};
+}
+
 /** 批量表单数据 */
 const batchFormData = reactive({
 	title: '',
 	background: '',
 	location: '',
-	coverKey: '',
-	coverUrl: '',
 	dateRange: [] as string[],
-	startTime: '' as string,
-	endTime: '' as string,
+	timeRanges: [createBatchTimeRangeItem()] as BatchTimeRangeItem[],
 	totalCount: undefined as number | undefined
 });
+
+function validateBatchTimeRanges(_rule: unknown, value: BatchTimeRangeItem[], callback: (error?: Error) => void) {
+	if (!Array.isArray(value) || value.length === 0) {
+		callback(new Error('请至少添加一个时间段'));
+		return;
+	}
+
+	const hasIncomplete = value.some((item) => !item.startTime || !item.endTime || !item.coverKey);
+	if (hasIncomplete) {
+		callback(new Error('请完善每个时间段的时间和图片'));
+		return;
+	}
+
+	const hasInvalidOrder = value.some((item) => item.startTime >= item.endTime);
+	if (hasInvalidOrder) {
+		callback(new Error('结束时间需晚于开始时间'));
+		return;
+	}
+
+	callback();
+}
 
 /** 批量表单校验规则 */
 const batchRules = reactive<FormRules>({
 	title: [{ required: true, message: '请输入活动标题', trigger: 'blur' }],
 	background: [{ required: true, message: '请输入活动背景', trigger: 'blur' }],
 	dateRange: [{ required: true, message: '请选择日期范围', trigger: 'change' }],
-	startTime: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
-	endTime: [{ required: true, message: '请选择结束时间', trigger: 'change' }],
+	timeRanges: [{ validator: validateBatchTimeRanges, trigger: 'change' }],
 	totalCount: [
 		{ required: true, message: '请输入总号数', trigger: 'blur' },
 		{ type: 'number', min: 1, message: '总号数必须大于 0', trigger: 'blur' }
 	]
 });
 
-/** 预览列表：根据日期范围生成预览数据 */
+/** 预览列表：按时间段生成，保留日期范围展示 */
 interface BatchPreviewItem {
-	date: string;
+	dateLabel: string;
 	timeLabel: string;
 	totalCount: number;
+	startTime: string;
+	endTime: string;
+	coverKey: string;
 }
 
 const batchPreview = ref<BatchPreviewItem[]>([]);
 
 /** 监听批量表单变化，实时更新预览 */
 watch(
-	() => [batchFormData.dateRange, batchFormData.startTime, batchFormData.endTime, batchFormData.totalCount],
+	() => [batchFormData.dateRange, batchFormData.timeRanges, batchFormData.totalCount],
 	() => {
 		batchPreview.value = generateBatchPreview();
 	},
@@ -746,36 +810,30 @@ watch(
 );
 
 function generateBatchPreview(): BatchPreviewItem[] {
-	const { dateRange, startTime, endTime, totalCount } = batchFormData;
+	const { dateRange, timeRanges, totalCount } = batchFormData;
 
-	if (!dateRange || dateRange.length !== 2 || !startTime || !endTime || !totalCount) {
+	if (!timeRanges.length || !totalCount) {
 		return [];
 	}
 
-	const [startStr, endStr] = dateRange;
-	const start = new Date(startStr);
-	const end = new Date(endStr);
-
-	if (start > end) return [];
-
 	const result: BatchPreviewItem[] = [];
-	const current = new Date(start);
+	const [activityTime, endDate] = dateRange;
+	const dateLabel =
+		activityTime && endDate ? (activityTime === endDate ? activityTime : `${activityTime} 至 ${endDate}`) : '未选择日期';
 
-	while (current <= end) {
-		const dateStr = formatDate(current);
-		result.push({ date: dateStr, timeLabel: `${startTime}-${endTime}`, totalCount });
-		current.setDate(current.getDate() + 1);
+	for (const item of timeRanges) {
+		if (!item.startTime || !item.endTime || !item.coverKey || item.startTime >= item.endTime) continue;
+		result.push({
+			dateLabel,
+			timeLabel: `${item.startTime}-${item.endTime}`,
+			totalCount,
+			startTime: item.startTime,
+			endTime: item.endTime,
+			coverKey: item.coverKey
+		});
 	}
 
 	return result;
-}
-
-/** 日期格式化 YYYY-MM-DD */
-function formatDate(d: Date): string {
-	const y = d.getFullYear();
-	const m = String(d.getMonth() + 1).padStart(2, '0');
-	const day = String(d.getDate()).padStart(2, '0');
-	return `${y}-${m}-${day}`;
 }
 
 /** 打开批量添加弹窗 */
@@ -783,12 +841,24 @@ function handleBatchAdd() {
 	batchDialogVisible.value = true;
 }
 
+function addBatchTimeRange() {
+	batchFormData.timeRanges.push(createBatchTimeRangeItem());
+}
+
+function removeBatchTimeRange(index: number) {
+	batchFormData.timeRanges.splice(index, 1);
+	if (batchFormData.timeRanges.length === 0) {
+		batchFormData.timeRanges.push(createBatchTimeRangeItem());
+	}
+}
+
 /** 批量弹窗 KV 上传 */
-async function handleBatchUploadKV(options: UploadRequestOptions) {
+async function handleBatchUploadKV(index: number, options: UploadRequestOptions) {
 	try {
 		const base64 = await fileToBase64(options.file as File);
-		batchFormData.coverUrl = base64;
-		batchFormData.coverKey = base64;
+		batchFormData.timeRanges[index].coverUrl = base64;
+		batchFormData.timeRanges[index].coverKey = base64;
+		void batchFormRef.value?.validateField('timeRanges');
 		ElMessage.success('图片上传成功');
 	} catch (error) {
 		ElMessage.error((error as Error).message || '图片处理失败');
@@ -798,8 +868,12 @@ async function handleBatchUploadKV(options: UploadRequestOptions) {
 /** 关闭批量添加弹窗时重置 */
 function handleBatchDialogClose() {
 	batchFormRef.value?.resetFields();
-	batchFormData.coverKey = '';
-	batchFormData.coverUrl = '';
+	batchFormData.title = '';
+	batchFormData.background = '';
+	batchFormData.location = '';
+	batchFormData.dateRange = [];
+	batchFormData.timeRanges = [createBatchTimeRangeItem()];
+	batchFormData.totalCount = undefined;
 	batchPreview.value = [];
 }
 
@@ -814,22 +888,25 @@ async function handleBatchSubmit() {
 
 	try {
 		const [activityTime, endDate] = batchFormData.dateRange;
-		const timeRanges = [`${batchFormData.startTime}-${batchFormData.endTime}`];
-
-		const res = await batchAddActivityConfigurationApi({
-			activityName: batchFormData.title,
-			activityCoverUrls: batchFormData.coverKey ? [batchFormData.coverKey] : [],
-			theBackground: batchFormData.background,
-			totalNumber: batchFormData.totalCount as number,
-			operatorName: userStore.userInfo?.nickName || '当前用户',
-			place: batchFormData.location || '',
-			activityTime,
-			endDate,
-			timeRanges
-		});
+		await Promise.all(
+			batchPreview.value.map((item) =>
+				addActivityConfigurationApi({
+					activityName: batchFormData.title,
+					activityCoverUrl: item.coverKey,
+					theBackground: batchFormData.background,
+					totalNumber: batchFormData.totalCount as number,
+					operatorName: userStore.userInfo?.nickName || '当前用户',
+					place: batchFormData.location || '',
+					activityTime,
+					endDate,
+					startTime: item.startTime,
+					endTime: item.endTime
+				})
+			)
+		);
 
 		await fetchSessions();
-		ElMessage.success(res.message || `成功批量添加 ${batchPreview.value.length} 场次`);
+		ElMessage.success(`成功批量添加 ${batchPreview.value.length} 场次`);
 		batchDialogVisible.value = false;
 	} finally {
 		batchSubmitLoading.value = false;
@@ -864,6 +941,20 @@ onMounted(() => {
 	border-color: var(--el-color-primary);
 }
 
+.batch-kv-uploader :deep(.el-upload) {
+	width: 100%;
+	height: 157px;
+	border: 1px dashed var(--el-border-color);
+	border-radius: 6px;
+	cursor: pointer;
+	overflow: hidden;
+	transition: border-color 0.2s;
+}
+
+.batch-kv-uploader :deep(.el-upload:hover) {
+	border-color: var(--el-color-primary);
+}
+
 .kv-preview {
 	display: block;
 	width: 100%;
@@ -890,5 +981,92 @@ onMounted(() => {
 	justify-content: center;
 	width: 100%;
 	height: 100%;
+}
+
+.batch-time-list {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	width: 100%;
+}
+
+.batch-time-card {
+	padding: 12px;
+	border: 1px solid var(--el-border-color);
+	border-radius: 8px;
+	background: var(--el-bg-color-overlay);
+	box-shadow: 0 4px 14px rgb(15 23 42 / 0.04);
+	transition:
+		border-color 0.2s ease,
+		box-shadow 0.2s ease,
+		background-color 0.2s ease;
+}
+
+.batch-time-card:hover {
+	border-color: var(--el-color-primary-light-7);
+	box-shadow: 0 8px 20px rgb(15 23 42 / 0.06);
+}
+
+.batch-time-card__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 10px;
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+.batch-time-card__title {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--el-color-primary);
+}
+
+.batch-time-card__grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+	margin-bottom: 12px;
+}
+
+.batch-time-tip {
+	font-size: 12px;
+	line-height: 1.5;
+	color: var(--el-text-color-secondary);
+}
+
+.batch-preview-panel {
+	max-height: 192px;
+	overflow-y: auto;
+	padding: 12px;
+	border: 1px solid var(--el-border-color-lighter);
+	border-radius: 8px;
+	background: var(--el-bg-color-page);
+}
+
+.batch-preview-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 8px 0;
+	font-size: 14px;
+}
+
+.batch-preview-item + .batch-preview-item {
+	border-top: 1px dashed var(--el-border-color-lighter);
+}
+
+.batch-preview-item__label {
+	color: var(--el-text-color-regular);
+}
+
+.batch-preview-total {
+	margin-top: 10px;
+	padding-top: 10px;
+	border-top: 1px solid var(--el-border-color-lighter);
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--el-color-primary);
 }
 </style>
