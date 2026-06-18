@@ -104,6 +104,7 @@
 			v-model="dialogVisible"
 			:title="dialogTitle"
 			width="560px"
+			align-center
 			destroy-on-close
 			@close="handleDialogClose"
 		>
@@ -196,6 +197,8 @@
 			v-model="batchDialogVisible"
 			title="批量添加场次"
 			width="600px"
+			class="batch-dialog"
+			align-center
 			destroy-on-close
 			@close="handleBatchDialogClose"
 		>
@@ -225,7 +228,7 @@
 						style="width: 100%"
 					/>
 				</el-form-item>
-				<el-form-item label="时间配置" prop="timeRanges">
+				<el-form-item label="时间配置" class="mb-[30px]" prop="timeRanges" required>
 					<div class="batch-time-list">
 						<div v-for="(item, index) in batchFormData.timeRanges" :key="index" class="batch-time-card">
 							<div class="batch-time-card__header">
@@ -274,7 +277,7 @@
 						</div>
 
 						<el-button plain type="primary" @click="addBatchTimeRange">新增时间段</el-button>
-						<div class="batch-time-tip">每个时间段可单独上传一张图片，提交时按时间段条数逐条新增。</div>
+						<!-- <div class="batch-time-tip">每个时间段可单独上传一张图片，提交时按时间段条数逐条新增。</div> -->
 					</div>
 				</el-form-item>
 				<el-form-item label="总号数" prop="totalCount">
@@ -931,7 +934,8 @@ async function handleBatchSubmit() {
 					activityCoverUrl: item.coverKey,
 					theBackground: batchFormData.background,
 					totalNumber: batchFormData.totalCount as number,
-					operatorName: userStore.userInfo?.nickName || '当前用户',
+					// operatorName: userStore.userInfo?.nickName || '当前用户',
+					operatorName:  '活动主持人莉莉丝',
 					place: batchFormData.location || '',
 					activityTime,
 					endDate,
@@ -1022,6 +1026,10 @@ onMounted(() => {
 	height: 100%;
 }
 
+:deep(.batch-dialog .el-form-item__error) {
+	padding: 8px 0;
+}
+
 .batch-time-list {
 	display: flex;
 	flex-direction: column;
@@ -1078,9 +1086,10 @@ onMounted(() => {
 	max-height: 192px;
 	overflow-y: auto;
 	padding: 12px;
-	border: 1px solid var(--el-border-color-lighter);
+	border: 1px solid color-mix(in srgb, var(--el-border-color) 70%, transparent);
 	border-radius: 8px;
-	background: var(--el-bg-color-page);
+	background: var(--el-bg-color-overlay);
+	box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35);
 }
 
 .batch-preview-item {
@@ -1088,12 +1097,12 @@ onMounted(() => {
 	align-items: center;
 	justify-content: space-between;
 	gap: 12px;
-	padding: 8px 0;
+	padding: 10px 0;
 	font-size: 14px;
 }
 
 .batch-preview-item + .batch-preview-item {
-	border-top: 1px dashed var(--el-border-color-lighter);
+	border-top: 1px dashed color-mix(in srgb, var(--el-border-color-lighter) 75%, transparent);
 }
 
 .batch-preview-item__label {
@@ -1103,7 +1112,7 @@ onMounted(() => {
 .batch-preview-total {
 	margin-top: 10px;
 	padding-top: 10px;
-	border-top: 1px solid var(--el-border-color-lighter);
+	border-top: 1px solid color-mix(in srgb, var(--el-border-color-lighter) 75%, transparent);
 	font-size: 14px;
 	font-weight: 600;
 	color: var(--el-color-primary);

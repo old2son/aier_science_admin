@@ -25,9 +25,13 @@ const showError = (message: string) => {
 	}, 2000);
 };
 
-const toLogin = () => {
+const toLogout = () => {
 	localStorage.removeItem(TOKEN_KEY);
 	router.replace({ name: 'Login' });
+};
+
+const isLoginExpired = (message: string) => {
+	return message.includes('JWT expired') || message.includes('登录失效') || message.includes('token失效');
 };
 
 const request = axios.create({
@@ -50,7 +54,7 @@ request.interceptors.response.use(
 	(response) => {
 		if (response.data.code === 0 && response.data.message === '登录失效，请重新登录') {
 			showError(response.data.message ?? '请求失败');
-			toLogin();
+			toLogout();
 			return Promise.reject(new Error(response.data.message ?? '请求失败'));
 		}
 
@@ -63,9 +67,15 @@ request.interceptors.response.use(
 	},
 	(error: AxiosError<{ message?: string }>) => {
 		const message = error.response?.data?.message ?? error.message ?? '请求失败';
-		toLogin();
+
+		if (isLoginExpired(message)) {
+			toLogout();
+			showError('登录已过期，请重新登录');
+			return Promise.reject(error);
+		}
 
 		showError(message);
+
 		return Promise.reject(error);
 	}
 );
