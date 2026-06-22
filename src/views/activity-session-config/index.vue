@@ -444,7 +444,10 @@ async function fetchSessions() {
 
 	try {
 		const { data = [] } = await getAllActivityConfigurationApi();
-		tableData.value = data;
+		// tableData.value = data;
+
+		// 简单处理排序
+		tableData.value = [...data].sort((a, b) => Number(b.activityId) - Number(a.activityId));
 	} finally {
 		tableLoading.value = false;
 	}
@@ -537,7 +540,6 @@ function blobToBase64(blob: Blob) {
 }
 
 async function imageToBase64(imageUrl: string) {
-
 	if (!imageUrl) return '';
 	if (imageUrl.startsWith('data:')) return imageUrl;
 
@@ -935,7 +937,7 @@ async function handleBatchSubmit() {
 					theBackground: batchFormData.background,
 					totalNumber: batchFormData.totalCount as number,
 					// operatorName: userStore.userInfo?.nickName || '当前用户',
-					operatorName:  '活动主持人莉莉丝',
+					operatorName: '活动主持人莉莉丝',
 					place: batchFormData.location || '',
 					activityTime,
 					endDate,

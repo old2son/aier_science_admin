@@ -319,9 +319,7 @@ async function fetchSessions() {
 		// tableData.value = data;
 
 		// 简单处理排序
-		tableData.value = [...data].sort(
-			(a, b) => Number(b.configId) - Number(a.configId)
-		);
+		tableData.value = [...data].sort((a, b) => Number(b.configId) - Number(a.configId));
 	} finally {
 		tableLoading.value = false;
 	}

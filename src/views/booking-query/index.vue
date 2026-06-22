@@ -512,6 +512,8 @@ async function loadAllBookings() {
 async function searchBookings(params = queryForm.value) {
 	const { data = [] } = await searchScienceReservationsNativeApi(buildSearchParams(params));
 	// tableData.value = (data ?? []).map(normalizeBookingRow);
+
+	console.log(data);
 	// 简单处理排序
 	tableData.value = [...data].sort((a, b) => Number(b.reId) - Number(a.reId)).map(normalizeBookingRow);
 }
