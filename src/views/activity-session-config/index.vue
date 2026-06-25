@@ -316,6 +316,7 @@ import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type Upload
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import MyTable from '@/components/MyTable/index.vue';
 import type { TableColumn } from '@/components/MyTable/types';
+import { exportExcel, type ExportColumn } from '@/utils/excel';
 import {
 	getAllActivityConfigurationApi,
 	searchActivityConfigurationApi,
@@ -958,12 +959,55 @@ async function handleBatchSubmit() {
 	}
 }
 
-/** 导出 Excel（敬请期待） */
+/** 导出 Excel */
 function handleExport() {
-	ElMessageBox.alert('敬请期待！', '提示', {
-		confirmButtonText: '我知道了',
-		type: 'info'
-	});
+	if (!tableData.value.length) {
+		ElMessage.warning('暂无可导出的数据');
+		return;
+	}
+
+	const exportColumns: ExportColumn[] = [
+		{ label: '活动ID', prop: 'activityId' },
+		{ label: '活动标题', prop: 'activityName' },
+		{ label: '活动背景', prop: 'theBackground' },
+		{
+			label: '活动KV',
+			prop: 'activityCoverUrl',
+			exportFormatter: (value: string) => value || '-'
+		},
+		{
+			label: '活动地点',
+			prop: 'place',
+			exportFormatter: (value: string) => value || '-'
+		},
+		{ label: '开始日期', prop: 'activityTime' },
+		{ label: '结束日期', prop: 'endDate' },
+		{ label: '开始时间', prop: 'startTime' },
+		{ label: '结束时间', prop: 'endTime' },
+		{ label: '总号数', prop: 'totalNumber' },
+		{ label: '余号', prop: 'surplusNumber' },
+		{
+			label: '操作人',
+			prop: 'operatorName',
+			exportFormatter: (value: string | null) => value || '-'
+		},
+		{
+			label: '创建时间',
+			prop: 'createTime',
+			exportFormatter: (value: string) => value || '-'
+		}
+	];
+
+	try {
+		exportExcel(exportColumns, tableData.value, '活动场次配置');
+		ElMessageBox.alert('导出成功', '提示', {
+			confirmButtonText: '我知道了',
+			type: 'info'
+		});
+	} catch (error) {
+		console.error(error);
+		ElMessage.error('导出失败');
+	}
 }
 
 onMounted(() => {

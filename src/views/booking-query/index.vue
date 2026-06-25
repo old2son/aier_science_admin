@@ -571,13 +571,17 @@ function handleExport() {
 
 	const exportData = tableData.value.flatMap((row) => getExportRows(row));
 
-	exportExcel(exportColumns, exportData, '科普馆预约查询');
+	try {
+		exportExcel(exportColumns, exportData, '科普馆预约查询');
 
-	// 导出 Excel 时，弹出下载提示
-	ElMessageBox.alert('导出成功', '提示', {
-		confirmButtonText: '我知道了',
-		type: 'info'
-	});
+		ElMessageBox.alert('导出成功', '提示', {
+			confirmButtonText: '我知道了',
+			type: 'info'
+		});
+	} catch (error) {
+		console.error(error);
+		ElMessage.error('导出失败');
+	}
 }
 
 /** 确认参观 */
