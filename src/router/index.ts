@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
+import { createRouter, /** createWebHistory, */ createWebHashHistory, type RouteRecordRaw } from 'vue-router';
 
 import { useUserStore } from '@/stores/modules/user';
 
@@ -43,7 +43,7 @@ const routes: RouteRecordRaw[] = [
 					title: '活动场次配置',
 					icon: 'Tickets'
 				}
-			},
+			}
 			// {
 			// 	path: 'users',
 			// 	name: 'Users',
@@ -62,7 +62,8 @@ const routes: RouteRecordRaw[] = [
 ];
 
 const router = createRouter({
-	history: createWebHistory('/adminManage/'), // history 模式, o2s.fun 用
+	// history: createWebHistory('/adminManage/'), // history 模式, o2s.fun 用
+	history: createWebHashHistory(),
 	routes
 });
 

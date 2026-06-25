@@ -7,7 +7,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
 	const env = loadEnv(mode, process.cwd(), 'VITE_');
 
 	return {
-		base: '/adminManage/', // o2s.fun 网页用
+		// base: '/adminManage/', // o2s.fun 网页用
 
 		plugins: [vue()],
 		resolve: {
