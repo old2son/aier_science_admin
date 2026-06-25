@@ -17,7 +17,7 @@
 			</template>
 		</el-table-column>
 	</el-table> -->
-	
+
 	<el-table v-loading="loading" :data="data" border stripe style="width: 100%">
 		<el-table-column v-for="col in visibleColumns" :key="col.prop || col.type" v-bind="col">
 			<template v-if="col.slot" #default="scope">
@@ -25,7 +25,7 @@
 			</template>
 
 			<template v-else #default="{ row, $index }">
-				{{ col.type === 'index' ? $index + 1 : row[col.prop] }}
+				{{ getCellValue(row, col, $index) }}
 			</template>
 		</el-table-column>
 	</el-table>
@@ -43,4 +43,16 @@ const props = defineProps<{
 }>();
 
 const visibleColumns = computed(() => props.columns.filter((col) => !col.hide));
+
+const getCellValue = (row: Record<string, any>, col: TableColumn, index: number) => {
+	if (col.type === 'index') {
+		return index + 1;
+	}
+
+	if (!col.prop) {
+		return '';
+	}
+
+	return row[col.prop];
+};
 </script>

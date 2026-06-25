@@ -8,18 +8,18 @@ import './styles/index.css';
 import App from './App.vue';
 import router from './router';
 import { setupStore } from './stores';
-import { getMockServiceWorkerUrl, isMockEnabled } from './utils/mock';
+// import { getMockServiceWorkerUrl, isMockEnabled } from './utils/mock';
 import { initializeTheme } from './utils/theme';
 
-async function enableMocking() {
-	const { worker } = await import('./mocks/browser');
-	return worker.start({
-		onUnhandledRequest: 'bypass',
-		serviceWorker: {
-			url: getMockServiceWorkerUrl()
-		}
-	});
-}
+// async function enableMocking() {
+// 	const { worker } = await import('./mocks/browser');
+// 	return worker.start({
+// 		onUnhandledRequest: 'bypass',
+// 		serviceWorker: {
+// 			url: getMockServiceWorkerUrl()
+// 		}
+// 	});
+// }
 
 async function bootstrap() {
 	// if (isMockEnabled()) {

@@ -218,9 +218,6 @@ import {
 	deleteScienceConfigurationApi
 } from '@/api/admin';
 import { type SessionRow } from '@/types/SessionInfo';
-import { useUserStore } from '@/stores/modules/user';
-
-const userStore = useUserStore();
 
 const columns: TableColumn[] = [
 	// {

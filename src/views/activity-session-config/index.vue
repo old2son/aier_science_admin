@@ -326,9 +326,6 @@ import {
 	deleteActivityConfigurationApi
 } from '@/api/admin';
 import { type ActivitySessionRow } from '@/types/SessionInfo';
-import { useUserStore } from '@/stores/modules/user';
-
-const userStore = useUserStore();
 
 const columns: TableColumn[] = [
 	{
