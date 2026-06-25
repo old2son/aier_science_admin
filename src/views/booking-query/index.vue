@@ -148,7 +148,7 @@
 						<div class="companion-list">
 							<div
 								v-for="(companion, index) in row.members"
-								:key="companion.reId || `${row.reId || row.id}-${index}`"
+								:key="`${companion.reId}-${index}`"
 								class="companion-card"
 							>
 								<div class="companion-card__header">
@@ -513,7 +513,6 @@ async function searchBookings(params = queryForm.value) {
 	const { data = [] } = await searchScienceReservationsNativeApi(buildSearchParams(params));
 	// tableData.value = (data ?? []).map(normalizeBookingRow);
 
-	console.log(data);
 	// 简单处理排序
 	tableData.value = [...data].sort((a, b) => Number(b.reId) - Number(a.reId)).map(normalizeBookingRow);
 }
