@@ -522,25 +522,26 @@ function fileToBase64(file: File) {
 	});
 }
 
-function blobToBase64(blob: Blob) {
-	return new Promise<string>((resolve, reject) => {
-		const reader = new FileReader();
+/** 接口返回的图片转 base64 */
+// function blobToBase64(blob: Blob) {
+// 	return new Promise<string>((resolve, reject) => {
+// 		const reader = new FileReader();
 
-		reader.onload = () => {
-			if (typeof reader.result === 'string') {
-				resolve(reader.result);
-				return;
-			}
+// 		reader.onload = () => {
+// 			if (typeof reader.result === 'string') {
+// 				resolve(reader.result);
+// 				return;
+// 			}
 
-			reject(new Error('图片读取失败'));
-		};
+// 			reject(new Error('图片读取失败'));
+// 		};
 
-		reader.onerror = () => reject(new Error('图片读取失败'));
-		reader.readAsDataURL(blob);
-	});
-}
+// 		reader.onerror = () => reject(new Error('图片读取失败'));
+// 		reader.readAsDataURL(blob);
+// 	});
+// }
 
-// /** 接口返回的图片转 base64 */
+/** 接口返回的图片转 base64 */
 // async function imageToBase64(imageUrl: string) {
 // 	if (!imageUrl) return '';
 // 	if (imageUrl.startsWith('data:')) return imageUrl;
