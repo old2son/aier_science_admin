@@ -540,19 +540,20 @@ function blobToBase64(blob: Blob) {
 	});
 }
 
-async function imageToBase64(imageUrl: string) {
-	if (!imageUrl) return '';
-	if (imageUrl.startsWith('data:')) return imageUrl;
+// /** 接口返回的图片转 base64 */
+// async function imageToBase64(imageUrl: string) {
+// 	if (!imageUrl) return '';
+// 	if (imageUrl.startsWith('data:')) return imageUrl;
 
-	const response = await fetch(imageUrl);
+// 	const response = await fetch(imageUrl);
 
-	if (!response.ok) {
-		throw new Error('活动图片转换失败');
-	}
+// 	if (!response.ok) {
+// 		throw new Error('活动图片转换失败');
+// 	}
 
-	const blob = await response.blob();
-	return blobToBase64(blob);
-}
+// 	const blob = await response.blob();
+// 	return blobToBase64(blob);
+// }
 
 /** 自定义上传：本地预览，实际项目替换为真实上传接口 */
 async function handleUploadKV(options: UploadRequestOptions) {
