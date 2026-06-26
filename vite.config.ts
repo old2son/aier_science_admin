@@ -6,6 +6,19 @@ import vue from '@vitejs/plugin-vue';
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
 	const env = loadEnv(mode, process.cwd(), 'VITE_');
 
+	const manualChunks = (id: string) => {
+		if (!id.includes('node_modules')) return;
+
+		if (id.includes('xlsx')) return 'vendor-xlsx';
+		if (id.includes('element-plus') || id.includes('@element-plus')) return 'vendor-element-plus';
+		if (id.includes('vue-router')) return 'vendor-vue-router';
+		if (id.includes('pinia')) return 'vendor-pinia';
+		if (id.includes('axios')) return 'vendor-axios';
+		if (id.includes('/vue/') || id.includes('\\vue\\')) return 'vendor-vue';
+
+		return 'vendor';
+	};
+
 	return {
 		// base: '/adminManage/', // o2s.fun 网页用
 
@@ -15,6 +28,13 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
 		resolve: {
 			alias: {
 				'@': fileURLToPath(new URL('./src', import.meta.url))
+			}
+		},
+		build: {
+			rollupOptions: {
+				output: {
+					manualChunks
+				}
 			}
 		},
 		mode: mode,
