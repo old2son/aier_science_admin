@@ -59,7 +59,7 @@ request.interceptors.response.use(
 		}
 
 		if (response.data.code !== 200) {
-			showError(response.data.message ?? '请求失败');
+			// showError(response.data.message ?? '请求失败');
 			return Promise.reject(new Error(response.data.message ?? '请求失败'));
 		}
 

@@ -218,6 +218,9 @@ import {
 	deleteScienceConfigurationApi
 } from '@/api/admin';
 import { type SessionRow } from '@/types/SessionInfo';
+import { useUserStore } from '@/stores/modules/user';
+
+const userStore = useUserStore();
 
 const columns: TableColumn[] = [
 	// {
@@ -403,8 +406,8 @@ async function handleSubmit() {
 					startTime,
 					endTime,
 					totalNumber: formData.totalCount!,
-					// operatorName: userStore.userInfo?.nickName || '当前用户'
-					operatorName: '测试用户之我是小草'
+					operatorName: userStore.userInfo?.nickName || '当前用户'
+					// operatorName: '测试用户之我是小草'
 				}).then((res) => {
 					fetchSessions();
 					dialogVisible.value = false;
@@ -419,8 +422,8 @@ async function handleSubmit() {
 			startTime,
 			endTime,
 			totalNumber: formData.totalCount!,
-			// operatorName: userStore.userInfo?.nickName || '当前用户'
-			operatorName: '测试用户之我是小草'
+			operatorName: userStore.userInfo?.nickName || '当前用户'
+			// operatorName: '测试用户之我是小草'
 		}).then((res) => {
 			fetchSessions();
 			dialogVisible.value = false;
@@ -616,8 +619,8 @@ async function handleBatchSubmit() {
 			startTimes,
 			endTimes,
 			totalNumber: batchFormData.totalCount as number,
-			// operatorName: userStore.userInfo?.nickName || '当前用户'
-			operatorName: '测试用户之我是小草'
+			operatorName: userStore.userInfo?.nickName || '当前用户'
+			// operatorName: '测试用户之我是小草'
 		});
 
 		ElMessage.success(res.message || `成功批量添加 ${batchPreview.value.length} 场次`);

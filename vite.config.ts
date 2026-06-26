@@ -9,6 +9,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
 	return {
 		// base: '/adminManage/', // o2s.fun 网页用
 
+		base: '/',
+
 		plugins: [vue()],
 		resolve: {
 			alias: {

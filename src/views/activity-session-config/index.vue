@@ -326,6 +326,9 @@ import {
 	deleteActivityConfigurationApi
 } from '@/api/admin';
 import { type ActivitySessionRow } from '@/types/SessionInfo';
+import { useUserStore } from '@/stores/modules/user';
+
+const userStore = useUserStore();
 
 const columns: TableColumn[] = [
 	{
@@ -583,16 +586,8 @@ async function handleEdit(row: ActivitySessionRow) {
 	formData.startTime = row.startTime;
 	formData.endTime = row.endTime;
 	formData.totalCount = row.totalNumber;
-
-	try {
-		const base64 = await imageToBase64(row.activityCoverUrl ?? '');
-		formData.coverKey = base64;
-		formData.coverUrl = base64;
-	} catch (error) {
-		formData.coverKey = '';
-		formData.coverUrl = row.activityCoverUrl ?? '';
-		ElMessage.warning((error as Error).message || '活动图片转换失败，请重新上传');
-	}
+	formData.coverKey = '';
+	formData.coverUrl = row.activityCoverUrl ?? '';
 
 	dialogVisible.value = true;
 }
@@ -646,8 +641,8 @@ async function handleSubmit() {
 					startTime: formData.startTime,
 					endTime: formData.endTime,
 					totalNumber: formData.totalCount!,
-					// operatorName: userStore.userInfo?.nickName || '当前用户'
-					operatorName: '活动主持人莉莉丝'
+					operatorName: userStore.userInfo?.nickName || '当前用户'
+					// operatorName: '活动主持人莉莉丝'
 				}).then((res) => {
 					fetchSessions();
 					dialogVisible.value = false;

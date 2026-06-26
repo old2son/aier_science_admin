@@ -115,16 +115,12 @@
 			</el-table> -->
 
 			<my-table v-loading="tableLoading" :data="tableData" :columns="columns">
-				<template #name="{ row }">
-					{{ getBookingDisplayName(row) }}
-				</template>
-
 				<template #phone="{ row }">
-					{{ getBookingDisplayPhone(row) }}
+					{{ row.phone || '-' }}
 				</template>
 
 				<template #idCard="{ row }">
-					{{ hasMembers(row) ? getBookingDisplayIdCard(row) : '-' }}
+					{{ row.idNumber || '-' }}
 				</template>
 
 				<template #groupType="{ row }">
@@ -228,7 +224,7 @@ const columns: TableColumn[] = [
 	{
 		label: '姓名',
 		prop: 'name',
-		slot: true,
+		slot: false,
 		minWidth: 85
 	},
 	{
@@ -377,10 +373,10 @@ function getBookingDisplayPhone(row: BookingRow) {
 	return getPrimaryCompanion(row)?.userPhone || '-';
 }
 
-function getBookingDisplayIdCard(row: BookingRow) {
-	if (!hasMembers(row)) return row.idNumber || '-';
-	return getPrimaryCompanion(row)?.idNumber || '-';
-}
+// function getBookingDisplayIdCard(row: BookingRow) {
+// 	if (!hasMembers(row)) return row.idNumber || '-';
+// 	return getPrimaryCompanion(row)?.idNumber || '-';
+// }
 
 function getExportRows(row: BookingRow) {
 	if (!hasMembers(row)) {
@@ -409,30 +405,37 @@ function getExportRows(row: BookingRow) {
 }
 
 function normalizeBookingRow(row: BookingRow): BookingViewRow {
-	const primaryCompanion = getPrimaryCompanion(row);
+	// const primaryCompanion = getPrimaryCompanion(row);
 	const groupType = getBookingGroupType(row);
 	const [startTime, endTime] = (row.timeSlot || '').split('-');
-
-	if (!hasMembers(row) || !primaryCompanion) {
-		return {
-			...row,
-			reId: row.reId,
-			groupType,
-			startTime,
-			endTime
-		};
-	}
 
 	return {
 		...row,
 		groupType,
-		reId: row.reId || primaryCompanion.reId,
-		name: row.name || primaryCompanion.userName,
-		phone: row.phone || primaryCompanion.userPhone,
-		idNumber: row.idNumber || primaryCompanion.idNumber,
 		startTime,
 		endTime
 	};
+
+	// if (!hasMembers(row) || !primaryCompanion) {
+	// 	return {
+	// 		...row,
+	// 		reId: row.reId,
+	// 		groupType,
+	// 		startTime,
+	// 		endTime
+	// 	};
+	// }
+
+	// return {
+	// 	...row,
+	// 	groupType,
+	// 	reId: row.reId || primaryCompanion.reId,
+	// 	name: row.name || primaryCompanion.userName,
+	// 	phone: row.phone || primaryCompanion.userPhone,
+	// 	idNumber: row.idNumber || primaryCompanion.idNumber,
+	// 	startTime,
+	// 	endTime
+	// };
 }
 
 /* 查询条件 */
@@ -511,10 +514,10 @@ async function loadAllBookings() {
 
 async function searchBookings(params = queryForm.value) {
 	const { data = [] } = await searchScienceReservationsNativeApi(buildSearchParams(params));
-	// tableData.value = (data ?? []).map(normalizeBookingRow);
+	tableData.value = (data ?? []).map(normalizeBookingRow);
 
 	// 简单处理排序
-	tableData.value = [...data].sort((a, b) => Number(b.reId) - Number(a.reId)).map(normalizeBookingRow);
+	// tableData.value = [...data].sort((a, b) => Number(b.reId) - Number(a.reId)).map(normalizeBookingRow);
 }
 
 async function fetchBookings(params = queryForm.value, useSearch = false) {
