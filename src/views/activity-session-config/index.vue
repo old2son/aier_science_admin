@@ -445,10 +445,7 @@ async function fetchSessions() {
 
 	try {
 		const { data = [] } = await getAllActivityConfigurationApi();
-		// tableData.value = data;
-
-		// 简单处理排序
-		tableData.value = [...data].sort((a, b) => Number(b.activityId) - Number(a.activityId));
+		tableData.value = data;
 	} finally {
 		tableLoading.value = false;
 	}
