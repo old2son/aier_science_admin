@@ -7,6 +7,7 @@
 		"dev": "vite --host 0.0.0.0",
 		"build": "vue-tsc -b && vite build",
 		"preview": "vite preview --host 0.0.0.0",
+		"test": "npx vitest",
 		"typecheck": "vue-tsc -b"
 	},
 	"dependencies": {
@@ -22,11 +23,13 @@
 	"devDependencies": {
 		"@types/node": "^22.10.2",
 		"autoprefixer": "^10.4.20",
+		"jsdom": "^29.1.1",
 		"msw": "^2.14.6",
 		"postcss": "^8.4.49",
 		"tailwindcss": "^3.4.17",
 		"typescript": "~5.6.3",
 		"vite": "^8.0.0",
+		"vitest": "^4.1.9",
 		"vue-tsc": "^2.2.0"
 	},
 	"msw": {

@@ -41,7 +41,7 @@ export const useUserStore = defineStore('user', () => {
 		}
 	}
 
-	function getAdminInfo() {
+	async function getAdminInfo() {
 		getAdminInformationApi().then((res) => {
 			userInfo.value = res.data ?? null;
 		});
