@@ -9,6 +9,7 @@
 						type="date"
 						placeholder="选择开始日期"
 						value-format="YYYY-MM-DD"
+						:disabled-date="disableQueryStartDate"
 						clearable
 						style="width: 170px"
 					/>
@@ -19,6 +20,7 @@
 						type="date"
 						placeholder="选择结束日期"
 						value-format="YYYY-MM-DD"
+						:disabled-date="disableQueryEndDate"
 						clearable
 						style="width: 170px"
 					/>
@@ -460,6 +462,21 @@ const queryForm = ref({
 	status: '' as string
 });
 
+function parseDateString(dateStr: string) {
+	const [year, month, day] = dateStr.split('-').map(Number);
+	return new Date(year, (month || 1) - 1, day || 1);
+}
+
+function disableQueryStartDate(date: Date) {
+	if (!queryForm.value.endDate) return false;
+	return date.getTime() > parseDateString(queryForm.value.endDate).getTime();
+}
+
+function disableQueryEndDate(date: Date) {
+	if (!queryForm.value.startDate) return false;
+	return date.getTime() < parseDateString(queryForm.value.startDate).getTime();
+}
+
 /** 成团方式选项 */
 const groupTypeOptions = [
 	{ label: '个人预约', value: '个人预约' },
@@ -560,6 +577,13 @@ async function fetchBookings(params = queryForm.value, useSearch = false) {
 
 /** 点击查询：多条件组合过滤 */
 function handleSearch() {
+	const { startDate, endDate } = queryForm.value;
+
+	if (startDate && endDate && parseDateString(startDate).getTime() > parseDateString(endDate).getTime()) {
+		ElMessage.warning('开始日期不可大于结束日期');
+		return;
+	}
+
 	fetchBookings(queryForm.value, true);
 }
 
