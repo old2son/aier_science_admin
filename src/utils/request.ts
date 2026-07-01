@@ -6,7 +6,6 @@ import { useUserStore } from '@/stores/modules/user';
 // import { getRequestBaseUrl } from '@/utils/mock';
 const requestBaseUrl = import.meta.env.VITE_API_URL_TARGET;
 
-const TOKEN_KEY = 'aier_admin_token';
 export interface ApiResponse<T = unknown> {
 	code?: number;
 	message?: string;
@@ -25,8 +24,10 @@ const showError = (message: string) => {
 	}, 2000);
 };
 
-const toLogout = () => {
-	localStorage.removeItem(TOKEN_KEY);
+const toLogout = async () => {
+	const userStore = useUserStore();
+
+	await userStore.logout();
 	router.replace({ name: 'Login' });
 };
 
@@ -69,8 +70,8 @@ request.interceptors.response.use(
 		const message = error.response?.data?.message ?? error.message ?? '请求失败';
 
 		if (isLoginExpired(message)) {
-			toLogout();
 			showError('登录已过期，请重新登录');
+			toLogout();
 			return Promise.reject(error);
 		}
 

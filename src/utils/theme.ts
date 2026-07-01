@@ -1,4 +1,4 @@
-const THEME_KEY = 'aier_admin_theme';
+import { STORAGE_KEY } from '@/constants/storage';
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -17,7 +17,7 @@ function setDocumentTheme(theme: ThemeMode) {
 export function getStoredTheme(): ThemeMode | null {
 	if (typeof window === 'undefined') return null;
 
-	const theme = window.localStorage.getItem(THEME_KEY);
+	const theme = window.localStorage.getItem(STORAGE_KEY.THEME_KEY);
 	return theme === 'dark' || theme === 'light' ? theme : null;
 }
 
@@ -28,7 +28,7 @@ export function getTheme(): ThemeMode {
 export function applyTheme(theme: ThemeMode) {
 	if (typeof window === 'undefined') return;
 
-	window.localStorage.setItem(THEME_KEY, theme);
+	window.localStorage.setItem(STORAGE_KEY.THEME_KEY, theme);
 	setDocumentTheme(theme);
 }
 

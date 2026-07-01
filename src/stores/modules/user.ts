@@ -4,10 +4,10 @@ import { computed, ref } from 'vue';
 import { adminPasswordLoginApi, getAdminInformationApi, adminLogoutApi } from '@/api/admin';
 import { AdminUserInfo } from '@/types/AdminUserInfo';
 
-const TOKEN_KEY = 'aier_admin_token';
+import { STORAGE_KEY } from '@/constants/storage';
 
 export const useUserStore = defineStore('user', () => {
-	const token = ref(localStorage.getItem(TOKEN_KEY) ?? '');
+	const token = ref(localStorage.getItem(STORAGE_KEY.TOKEN) ?? '');
 	const userInfo = ref<AdminUserInfo | null>(null);
 
 	const isLoggedIn = computed(() => Boolean(token.value));
@@ -24,7 +24,7 @@ export const useUserStore = defineStore('user', () => {
 		}
 
 		token.value = res?.data?.userToken ?? '';
-		localStorage.setItem(TOKEN_KEY, token.value);
+		localStorage.setItem(STORAGE_KEY.TOKEN, token.value);
 
 		return res;
 	}
@@ -37,7 +37,7 @@ export const useUserStore = defineStore('user', () => {
 		} finally {
 			token.value = '';
 			userInfo.value = null;
-			localStorage.removeItem(TOKEN_KEY);
+			localStorage.removeItem(STORAGE_KEY.TOKEN);
 		}
 	}
 
