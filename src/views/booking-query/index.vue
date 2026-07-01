@@ -114,7 +114,7 @@
 				</el-table-column>
 			</el-table> -->
 
-			<my-table v-loading="tableLoading" :data="tableData" :columns="columns">
+			<my-table v-loading="tableLoading" :data="pagedTableData" :columns="columns">
 				<template #phone="{ row }">
 					{{ row.phone || '-' }}
 				</template>
@@ -186,6 +186,17 @@
 					</template>
 				</template>
 			</my-table>
+
+			<div v-if="shouldShowPagination" class="pagination-wrap">
+				<el-pagination
+					v-model:current-page="pagination.currentPage"
+					v-model:page-size="pagination.pageSize"
+					:total="tableData.length"
+					:page-sizes="[10, 20, 50, 100]"
+					layout="total, sizes, prev, pager, next, jumper"
+					background
+				/>
+			</div>
 		</div>
 	</div>
 </template>
@@ -193,7 +204,7 @@
 <script setup lang="ts">
 import { Download, Search } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { onMounted, ref, nextTick } from 'vue';
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import MyTable from '@/components/MyTable/index.vue';
 import type { TableColumn } from '@/components/MyTable/types';
 
@@ -476,6 +487,18 @@ const statusOptions = [
 /** 表格展示数据（默认全部，查询后为过滤结果） */
 const tableData = ref<BookingViewRow[]>([]);
 const tableLoading = ref(false);
+const pagination = reactive({
+	currentPage: 1,
+	pageSize: 10
+});
+
+const pagedTableData = computed(() => {
+	const start = (pagination.currentPage - 1) * pagination.pageSize;
+	const end = start + pagination.pageSize;
+	return tableData.value.slice(start, end);
+});
+
+const shouldShowPagination = computed(() => tableData.value.length > pagination.pageSize);
 
 function mapGroupTypeToApiValue(groupType: string) {
 	const groupTypeMap: Record<string, number> = {
@@ -510,11 +533,13 @@ function buildSearchParams(params = queryForm.value): SearchScienceReservationsP
 async function loadAllBookings() {
 	const response = await getAllScienceReservationsApi();
 	tableData.value = (response.data ?? []).map(normalizeBookingRow);
+	pagination.currentPage = 1;
 }
 
 async function searchBookings(params = queryForm.value) {
 	const { data = [] } = await searchScienceReservationsNativeApi(buildSearchParams(params));
 	tableData.value = (data ?? []).map(normalizeBookingRow);
+	pagination.currentPage = 1;
 }
 
 async function fetchBookings(params = queryForm.value, useSearch = false) {
@@ -552,8 +577,13 @@ function handleReset() {
 	fetchBookings();
 }
 
-/** 导出 Excel（敬请期待） */
-function handleExport() {
+/** 导出 Excel */
+async function handleExport() {
+	if (!tableData.value.length) {
+		ElMessage.warning('暂无可导出的数据');
+		return;
+	}
+
 	const exportColumns = columns
 		.filter((item) => item.prop && item.prop !== 'action')
 		.map((item) => ({
@@ -568,15 +598,33 @@ function handleExport() {
 	// 	prop: 'age'
 	// });
 
-	const exportData = tableData.value.flatMap((row) => getExportRows(row));
+	let exportMode: 'current' | 'all' | null = null;
+
+	await ElMessageBox.confirm('请选择导出范围', '导出 Excel', {
+		confirmButtonText: '导出当前页',
+		cancelButtonText: '导出全部',
+		distinguishCancelAndClose: true,
+		closeOnClickModal: false,
+		type: 'info'
+	})
+		.then(() => {
+			exportMode = 'current';
+		})
+		.catch((action: 'cancel' | 'close') => {
+			if (action === 'cancel') {
+				exportMode = 'all';
+			}
+		});
+
+	if (!exportMode) return;
+
+	const sourceData = exportMode === 'current' ? pagedTableData.value : tableData.value;
+	const exportData = sourceData.flatMap((row) => getExportRows(row));
 
 	try {
-		exportExcel(exportColumns, exportData, '科普馆预约查询');
+		exportExcel(exportColumns, exportData, exportMode === 'current' ? '科普馆预约查询-当前页' : '科普馆预约查询');
 
-		ElMessageBox.alert('导出成功', '提示', {
-			confirmButtonText: '我知道了',
-			type: 'info'
-		});
+		ElMessage.success('导出成功');
 	} catch (error) {
 		console.error(error);
 		ElMessage.error('导出失败');
@@ -632,12 +680,28 @@ function getStatusInfo(status: BookingStatus) {
 	return statusMap[status];
 }
 
+watch(
+	() => [tableData.value.length, pagination.pageSize],
+	() => {
+		const maxPage = Math.max(Math.ceil(tableData.value.length / pagination.pageSize), 1);
+		if (pagination.currentPage > maxPage) {
+			pagination.currentPage = maxPage;
+		}
+	}
+);
+
 onMounted(() => {
 	fetchBookings();
 });
 </script>
 
 <style scoped>
+.pagination-wrap {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 16px;
+}
+
 .companion-list {
 	display: flex;
 	flex-direction: column;

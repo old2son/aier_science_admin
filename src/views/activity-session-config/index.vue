@@ -70,7 +70,7 @@
 				</el-table-column>
 			</el-table> -->
 
-			<my-table v-loading="tableLoading" :data="tableData" :columns="columns">
+			<my-table v-loading="tableLoading" :data="pagedTableData" :columns="columns">
 				<template #activityCoverUrl="{ row }">
 					<el-image
 						v-if="row.activityCoverUrl"
@@ -97,6 +97,17 @@
 					<el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
 				</template>
 			</my-table>
+
+			<div v-if="shouldShowPagination" class="pagination-wrap">
+				<el-pagination
+					v-model:current-page="pagination.currentPage"
+					v-model:page-size="pagination.pageSize"
+					:total="tableData.length"
+					:page-sizes="[10, 20, 50, 100]"
+					layout="total, sizes, prev, pager, next, jumper"
+					background
+				/>
+			</div>
 		</div>
 
 		<!-- 添加/编辑场次弹窗 -->
@@ -439,6 +450,18 @@ const queryForm = ref({
 /** 表格展示数据（默认全部，查询后为过滤结果） */
 const tableData = ref<ActivitySessionRow[]>([]);
 const tableLoading = ref(false);
+const pagination = reactive({
+	currentPage: 1,
+	pageSize: 10
+});
+
+const pagedTableData = computed(() => {
+	const start = (pagination.currentPage - 1) * pagination.pageSize;
+	const end = start + pagination.pageSize;
+	return tableData.value.slice(start, end);
+});
+
+const shouldShowPagination = computed(() => tableData.value.length > pagination.pageSize);
 
 async function fetchSessions() {
 	tableLoading.value = true;
@@ -446,6 +469,7 @@ async function fetchSessions() {
 	try {
 		const { data = [] } = await getAllActivityConfigurationApi();
 		tableData.value = data;
+		pagination.currentPage = 1;
 	} finally {
 		tableLoading.value = false;
 	}
@@ -574,8 +598,32 @@ function handleAdd() {
 	dialogVisible.value = true;
 }
 
+function hasReservedUsers(row: ActivitySessionRow) {
+	return row.surplusNumber !== row.totalNumber;
+}
+
+function getReservedCount(row: ActivitySessionRow) {
+	return Math.max(row.totalNumber - row.surplusNumber, 0);
+}
+
 /** 打开编辑弹窗，回填数据 */
 async function handleEdit(row: ActivitySessionRow) {
+	if (hasReservedUsers(row)) {
+		const confirmed = await ElMessageBox.confirm(
+			`当前活动场次已有 ${getReservedCount(row)} 位用户预约，修改场次信息可能影响已预约用户，是否继续编辑？`,
+			'编辑警告',
+			{
+				confirmButtonText: '继续编辑',
+				cancelButtonText: '取消',
+				type: 'warning'
+			}
+		)
+			.then(() => true)
+			.catch(() => false);
+
+		if (!confirmed) return;
+	}
+
 	editId.value = row.activityId;
 	formData.title = row.activityName;
 	formData.background = row.theBackground;
@@ -685,6 +733,7 @@ async function handleSearch() {
 
 	const { data = [] } = await searchActivityConfigurationApi({ startDate, endDate });
 	tableData.value = data;
+	pagination.currentPage = 1;
 }
 
 /** 重置查询条件与数据 */
@@ -729,9 +778,12 @@ async function handleResetCount(row: ActivitySessionRow) {
 /** 删除场次 */
 async function handleDelete(row: ActivitySessionRow) {
 	try {
+		const warningText = hasReservedUsers(row)
+			? `\n\n警告：当前活动场次已有 ${getReservedCount(row)} 位用户预约，删除后可能影响已预约用户。`
+			: '';
 		await ElMessageBox.confirm(
-			`确认删除「${row.activityName}」${row.activityTime}~${row.endDate} ${row.startTime}-${row.endTime} 的场次吗？`,
-			'删除确认',
+			`确认删除「${row.activityName}」${row.activityTime}~${row.endDate} ${row.startTime}-${row.endTime} 的场次吗？${warningText}`,
+			hasReservedUsers(row) ? '删除警告' : '删除确认',
 			{
 				confirmButtonText: '确定删除',
 				cancelButtonText: '取消',
@@ -838,6 +890,16 @@ watch(
 	{ deep: true }
 );
 
+watch(
+	() => [tableData.value.length, pagination.pageSize],
+	() => {
+		const maxPage = Math.max(Math.ceil(tableData.value.length / pagination.pageSize), 1);
+		if (pagination.currentPage > maxPage) {
+			pagination.currentPage = maxPage;
+		}
+	}
+);
+
 function generateBatchPreview(): BatchPreviewItem[] {
 	const { dateRange, timeRanges, totalCount } = batchFormData;
 
@@ -940,7 +1002,6 @@ async function handleBatchSubmit() {
 		);
 
 		await fetchSessions();
-		console.log(res);
 		const successCount = res.filter((item) => item.status === 'fulfilled').length;
 		const failCount = res.length - successCount;
 		ElMessage.success(`成功新增 ${successCount} 条，失败 ${failCount} 条`);
@@ -951,7 +1012,7 @@ async function handleBatchSubmit() {
 }
 
 /** 导出 Excel */
-function handleExport() {
+async function handleExport() {
 	if (!tableData.value.length) {
 		ElMessage.warning('暂无可导出的数据');
 		return;
@@ -989,12 +1050,31 @@ function handleExport() {
 		}
 	];
 
-	try {
-		exportExcel(exportColumns, tableData.value, '活动场次配置');
-		ElMessageBox.alert('导出成功', '提示', {
-			confirmButtonText: '我知道了',
-			type: 'info'
+	let exportMode: 'current' | 'all' | null = null;
+
+	await ElMessageBox.confirm('请选择导出范围', '导出 Excel', {
+		confirmButtonText: '导出当前页',
+		cancelButtonText: '导出全部',
+		distinguishCancelAndClose: true,
+		closeOnClickModal: false,
+		type: 'info'
+	})
+		.then(() => {
+			exportMode = 'current';
+		})
+		.catch((action: 'cancel' | 'close') => {
+			if (action === 'cancel') {
+				exportMode = 'all';
+			}
 		});
+
+	if (!exportMode) return;
+
+	const sourceData = exportMode === 'current' ? pagedTableData.value : tableData.value;
+
+	try {
+		exportExcel(exportColumns, sourceData, exportMode === 'current' ? '活动场次配置-当前页' : '活动场次配置');
+		ElMessage.success(exportMode === 'current' ? '当前页导出成功' : '全部数据导出成功');
 	} catch (error) {
 		console.error(error);
 		ElMessage.error('导出失败');
@@ -1007,6 +1087,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.pagination-wrap {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 16px;
+}
+
 .kv-uploader :deep(.el-upload) {
 	width: 280px;
 	height: 157px;

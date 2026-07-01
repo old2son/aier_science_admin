@@ -7,7 +7,6 @@ export interface ExportColumn {
 }
 
 export function exportExcel(columns: ExportColumn[], data: any[], fileName = '导出数据') {
-	console.log(columns);
 	const exportData = data.map((item) => {
 		const row: Record<string, any> = {};
 

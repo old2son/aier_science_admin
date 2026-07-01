@@ -70,7 +70,7 @@
 				</el-table-column>
 			</el-table> -->
 
-			<my-table v-loading="tableLoading" :data="tableData" :columns="columns">
+			<my-table v-loading="tableLoading" :data="pagedTableData" :columns="columns">
 				<template #surplusNumber="{ row }">
 					<el-tag :type="row.surplusNumber === 0 ? 'danger' : row.surplusNumber < 10 ? 'warning' : 'success'">
 						{{ row.surplusNumber }}
@@ -85,6 +85,17 @@
 					<el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
 				</template>
 			</my-table>
+
+			<div v-if="shouldShowPagination" class="pagination-wrap">
+				<el-pagination
+					v-model:current-page="pagination.currentPage"
+					v-model:page-size="pagination.pageSize"
+					:total="tableData.length"
+					:page-sizes="[10, 20, 50, 100]"
+					layout="total, sizes, prev, pager, next, jumper"
+					background
+				/>
+			</div>
 		</div>
 
 		<!-- 添加场次弹窗 -->
@@ -310,6 +321,18 @@ const queryForm = ref({
 /** 表格展示数据（默认全部，查询后为过滤结果） */
 const tableData = ref<SessionRow[]>([]);
 const tableLoading = ref(false);
+const pagination = reactive({
+	currentPage: 1,
+	pageSize: 10
+});
+
+const pagedTableData = computed(() => {
+	const start = (pagination.currentPage - 1) * pagination.pageSize;
+	const end = start + pagination.pageSize;
+	return tableData.value.slice(start, end);
+});
+
+const shouldShowPagination = computed(() => tableData.value.length > pagination.pageSize);
 
 async function fetchSessions() {
 	tableLoading.value = true;
@@ -317,6 +340,7 @@ async function fetchSessions() {
 	try {
 		const { data = [] } = await getAllScienceConfigurationApi();
 		tableData.value = data;
+		pagination.currentPage = 1;
 	} finally {
 		tableLoading.value = false;
 	}
@@ -363,8 +387,32 @@ function handleAdd() {
 	dialogVisible.value = true;
 }
 
+function hasReservedUsers(row: SessionRow) {
+	return row.surplusNumber !== row.totalNumber;
+}
+
+function getReservedCount(row: SessionRow) {
+	return Math.max(row.totalNumber - row.surplusNumber, 0);
+}
+
 /** 打开编辑弹窗，回填数据 */
-function handleEdit(row: SessionRow) {
+async function handleEdit(row: SessionRow) {
+	if (hasReservedUsers(row)) {
+		const confirmed = await ElMessageBox.confirm(
+			`当前场次已有 ${getReservedCount(row)} 位用户预约，修改场次信息可能影响已预约用户，是否继续编辑？`,
+			'编辑警告',
+			{
+				confirmButtonText: '继续编辑',
+				cancelButtonText: '取消',
+				type: 'warning'
+			}
+		)
+			.then(() => true)
+			.catch(() => false);
+
+		if (!confirmed) return;
+	}
+
 	editId.value = row.configId;
 	formData.date = row.dateTime;
 	formData.timeSlot = `${row.startTime}-${row.endTime}`;
@@ -424,7 +472,13 @@ async function handleSubmit() {
 		}).then((res) => {
 			fetchSessions();
 			dialogVisible.value = false;
-			ElMessage.success(res.message);
+
+			if (res.message === '该场次已存在，请勿重复添加！') {
+				ElMessage.warning(res.message);
+			}
+			else {
+				ElMessage.success(res.message);
+			}
 		});
 	} finally {
 		submitLoading.value = false;
@@ -442,6 +496,7 @@ async function handleSearch() {
 
 	const { data = [] } = await searchScienceConfigurationApi({ startDate, endDate });
 	tableData.value = data;
+	pagination.currentPage = 1;
 }
 
 /** 重置查询条件与数据 */
@@ -482,12 +537,19 @@ async function handleResetCount(row: SessionRow) {
 /** 删除场次 */
 async function handleDelete(row: SessionRow) {
 	try {
-		await ElMessageBox.confirm(`确认删除 ${row.dateTime} ${row.startTime}-${row.endTime} 的场次吗？`, '删除确认', {
-			confirmButtonText: '确定删除',
-			cancelButtonText: '取消',
-			type: 'warning',
-			confirmButtonClass: 'el-button--danger'
-		});
+		const warningText = hasReservedUsers(row)
+			? `\n\n警告：当前场次已有 ${getReservedCount(row)} 位用户预约，删除后可能影响已预约用户。`
+			: '';
+		await ElMessageBox.confirm(
+			`确认删除 ${row.dateTime} ${row.startTime}-${row.endTime} 的场次吗？${warningText}`,
+			hasReservedUsers(row) ? '删除警告' : '删除确认',
+			{
+				confirmButtonText: '确定删除',
+				cancelButtonText: '取消',
+				type: 'warning',
+				confirmButtonClass: 'el-button--danger'
+			}
+		);
 
 		const idx = tableData.value.findIndex((r) => r.configId === row.configId);
 		if (idx > -1) {
@@ -547,6 +609,16 @@ watch(
 		batchPreview.value = generateBatchPreview();
 	},
 	{ deep: true }
+);
+
+watch(
+	() => [tableData.value.length, pagination.pageSize],
+	() => {
+		const maxPage = Math.max(Math.ceil(tableData.value.length / pagination.pageSize), 1);
+		if (pagination.currentPage > maxPage) {
+			pagination.currentPage = maxPage;
+		}
+	}
 );
 
 function generateBatchPreview(): BatchPreviewItem[] {
@@ -632,3 +704,11 @@ onMounted(() => {
 	fetchSessions();
 });
 </script>
+
+<style scoped>
+.pagination-wrap {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 16px;
+}
+</style>
