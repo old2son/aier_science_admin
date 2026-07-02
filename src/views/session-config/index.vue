@@ -72,7 +72,7 @@
 				</el-table-column>
 			</el-table> -->
 
-			<my-table v-loading="tableLoading" :data="pagedTableData" :columns="columns">
+			<my-table v-loading="tableLoading" :data="pagedTableData" :columns="columns" @sort-change="handleSortChange">
 				<template #surplusNumber="{ row }">
 					<el-tag :type="row.surplusNumber === 0 ? 'danger' : row.surplusNumber < 10 ? 'warning' : 'success'">
 						{{ row.surplusNumber }}
@@ -248,20 +248,23 @@ const columns: TableColumn[] = [
 		prop: 'configId',
 		slot: false,
 		minWidth: 70,
-		align: 'center'
+		align: 'center',
+		sortable: 'custom'
 	},
 	{
 		label: '日期',
 		prop: 'dateTime',
 		slot: false,
-		minWidth: 120
+		minWidth: 120,
+		sortable: 'custom'
 	},
 	{
 		label: '开始时间',
 		prop: 'startTime',
 		slot: false,
 		minWidth: 100,
-		align: 'center'
+		align: 'center',
+		sortable: 'custom'
 	},
 	{
 		label: '结束时间',
@@ -289,13 +292,15 @@ const columns: TableColumn[] = [
 		prop: 'surplusNumber',
 		slot: true,
 		minWidth: 90,
-		align: 'center'
+		align: 'center',
+		sortable: 'custom'
 	},
 	{
 		label: '创建时间',
 		prop: 'createTime',
 		slot: false,
-		minWidth: 160
+		minWidth: 160,
+		sortable: 'custom'
 	},
 	{
 		label: '操作人',
@@ -342,11 +347,51 @@ const pagination = reactive({
 	currentPage: 1,
 	pageSize: 10
 });
+const sortState = reactive<{
+	prop: '' | 'configId' | 'dateTime' | 'startTime' | 'createTime' | 'surplusNumber';
+	order: '' | 'ascending' | 'descending';
+}>({
+	prop: '',
+	order: ''
+});
+
+function parseDateTimeString(dateStr: string) {
+	return new Date(dateStr.replace(' ', 'T')).getTime();
+}
+
+function parseTimeString(timeStr: string) {
+	const [hour = 0, minute = 0] = timeStr.split(':').map(Number);
+	return hour * 60 + minute;
+}
+
+const sortedTableData = computed(() => {
+	if (!sortState.prop || !sortState.order) {
+		return tableData.value;
+	}
+
+	const sortFactor = sortState.order === 'ascending' ? 1 : -1;
+	return [...tableData.value].sort((a, b) => {
+		switch (sortState.prop) {
+			case 'configId':
+				return (a.configId - b.configId) * sortFactor;
+			case 'dateTime':
+				return (parseDateString(a.dateTime).getTime() - parseDateString(b.dateTime).getTime()) * sortFactor;
+			case 'startTime':
+				return (parseTimeString(a.startTime) - parseTimeString(b.startTime)) * sortFactor;
+			case 'createTime':
+				return (parseDateTimeString(a.createTime) - parseDateTimeString(b.createTime)) * sortFactor;
+			case 'surplusNumber':
+				return (a.surplusNumber - b.surplusNumber) * sortFactor;
+			default:
+				return 0;
+		}
+	});
+});
 
 const pagedTableData = computed(() => {
 	const start = (pagination.currentPage - 1) * pagination.pageSize;
 	const end = start + pagination.pageSize;
-	return tableData.value.slice(start, end);
+	return sortedTableData.value.slice(start, end);
 });
 
 const shouldShowPagination = computed(() => tableData.value.length > pagination.pageSize);
@@ -526,6 +571,28 @@ function handleReset() {
 	queryForm.value.startDate = '';
 	queryForm.value.endDate = '';
 	fetchSessions();
+}
+
+function handleSortChange({
+	prop,
+	order
+}: {
+	prop: string;
+	order: 'ascending' | 'descending' | null;
+}) {
+	const sortableProps = ['configId', 'dateTime', 'startTime', 'createTime', 'surplusNumber'] as const;
+
+	console.log(sortableProps.includes(prop as (typeof sortableProps)[number]));
+
+	if (!sortableProps.includes(prop as (typeof sortableProps)[number])) {
+		sortState.prop = '';
+		sortState.order = '';
+		return;
+	}
+
+	sortState.prop = (prop as typeof sortableProps[number]) ?? '';
+	sortState.order = order ?? '';
+	pagination.currentPage = 1;
 }
 
 /** 余号清零 */

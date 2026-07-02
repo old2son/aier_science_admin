@@ -18,7 +18,7 @@
 		</el-table-column>
 	</el-table> -->
 
-	<el-table v-loading="loading" :data="data" border stripe style="width: 100%">
+	<el-table v-loading="loading" :data="data" border stripe style="width: 100%" @sort-change="handleSortChange">
 		<el-table-column v-for="col in visibleColumns" :key="col.prop || col.type" v-bind="col">
 			<template v-if="col.slot" #default="scope">
 				<slot :name="col.prop" v-bind="scope" />
@@ -42,6 +42,10 @@ const props = defineProps<{
 	columns: TableColumn[];
 }>();
 
+const emit = defineEmits<{
+	(e: 'sort-change', payload: { column: unknown; prop: string; order: 'ascending' | 'descending' | null }): void;
+}>();
+
 const visibleColumns = computed(() => props.columns.filter((col) => !col.hide));
 
 const getCellValue = (row: Record<string, any>, col: TableColumn, index: number) => {
@@ -55,4 +59,8 @@ const getCellValue = (row: Record<string, any>, col: TableColumn, index: number)
 
 	return row[col.prop];
 };
+
+function handleSortChange(payload: { column: unknown; prop: string; order: 'ascending' | 'descending' | null }) {
+	emit('sort-change', payload);
+}
 </script>

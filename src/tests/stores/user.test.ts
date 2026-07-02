@@ -5,7 +5,6 @@ import { useUserStore } from '@/stores/modules/user';
 import { adminPasswordLoginApi, adminLogoutApi, getAdminInformationApi } from '@/api/admin';
 
 import { STORAGE_KEY } from '@/constants/storage';
-import { userInfo } from 'os';
 
 vi.mock('@/api/admin', () => ({
 	adminPasswordLoginApi: vi.fn(),

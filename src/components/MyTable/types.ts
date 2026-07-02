@@ -7,6 +7,7 @@ export interface TableColumn {
 	align?: 'left' | 'center' | 'right';
 	fixed?: boolean | 'left' | 'right';
 	showOverflowTooltip?: boolean;
+	sortable?: boolean | 'custom';
 	slot?: boolean;
 	hide?: boolean;
 	exportFormatter?: (value: any) => any;
