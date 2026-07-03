@@ -83,7 +83,9 @@ import {
 	Setting,
 	Sunny,
 	SwitchButton,
-	Tickets
+	Tickets,
+	Collection,
+	User
 } from '@element-plus/icons-vue';
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -119,7 +121,9 @@ const iconMap = {
 	Calendar,
 	Document,
 	Setting,
-	Tickets
+	Tickets,
+	Collection,
+	User
 };
 
 function toggleCollapse() {

@@ -235,3 +235,7 @@ VITE_API_BASE_URL=https://api.example.com
 - [ ] 添加权限控制（按钮级别 / 菜单级别）
 - [ ] 路由过渡动画
 - [x] 暗色主题支持
+
+<!-- 帐号密码 -->
+<!-- admin / 123456 -->
+<!-- kepuguang / 123456 -->

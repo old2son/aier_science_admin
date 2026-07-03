@@ -1,5 +1,6 @@
 import request from '@/utils/request';
 import { AdminUserInfo } from '@/types/AdminUserInfo';
+import type { Feedback } from '@/types/Feedback';
 import { type ApiResponse } from '@/utils/request';
 import type { BookingRow } from '@/types/BookingInfo';
 import type { SessionRow, SessionQuery, ActivitySessionQuery, ActivitySessionRow } from '@/types/SessionInfo';
@@ -97,6 +98,7 @@ export interface AdminCommonResponse {
 export type ScienceReservationsResponse = ApiResponse<BookingRow[]>;
 export type ScienceConfigurationResponse = ApiResponse<SessionRow[]>;
 export type ActivityConfigurationResponse = ApiResponse<ActivitySessionRow[]>;
+export type UserFeedbackResponse = ApiResponse<Feedback[]>;
 
 /** 登录后台管理系统 */
 export function adminPasswordLoginApi(data: AdminPasswordLoginParams) {
@@ -121,6 +123,11 @@ export function adminLogoutApi() {
 /** 查询所有预约信息 */
 export function getAllScienceReservationsApi() {
 	return request.post<unknown, ScienceReservationsResponse>('/api/admin/getAllScienceReservations');
+}
+
+/** 查询所有用户意见反馈 */
+export function getAllUserFeedbackApi() {
+	return request.post<unknown, UserFeedbackResponse>('/api/admin/getAllUserFeedback');
 }
 
 /** 筛选预约信息 */

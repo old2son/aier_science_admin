@@ -43,6 +43,15 @@ const routes: RouteRecordRaw[] = [
 					title: '活动场次配置',
 					icon: 'Tickets'
 				}
+			},
+			{
+				path: 'feedback-query',
+				name: 'FeedbackQuery',
+				component: () => import('@/views/feedback-query/index.vue'),
+				meta: {
+					title: '意见反馈查询',
+					icon: 'Collection'
+				}
 			}
 			// {
 			// 	path: 'users',
