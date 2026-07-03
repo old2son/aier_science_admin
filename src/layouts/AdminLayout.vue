@@ -13,13 +13,40 @@
 				<span v-show="!collapsed" class="admin-layout__title text-base font-semibold">爱尔科普馆管理后台</span>
 			</div>
 
-			<el-menu :collapse="collapsed" :default-active="route.path" :router="true" class="admin-menu border-0">
-				<el-menu-item v-for="item in menuRoutes" :key="item.path" :index="`/${item.path}`">
-					<el-icon>
-						<component :is="iconMap[item.meta?.icon as keyof typeof iconMap] ?? Calendar" />
-					</el-icon>
-					<span>{{ item.meta?.title }}</span>
-				</el-menu-item>
+			<el-menu
+				:collapse="collapsed"
+				:default-active="activeMenuPath"
+				:default-openeds="openedMenuPaths"
+				:router="true"
+				class="admin-menu border-0"
+			>
+				<template v-for="item in menuRoutes" :key="item.path">
+					<el-sub-menu v-if="getVisibleChildren(item).length" :index="normalizeMenuPath(item.path)">
+						<template #title>
+							<div class="admin-menu__submenu-title" @click="handleParentMenuClick(item)">
+								<el-icon>
+									<component :is="iconMap[item.meta?.icon as keyof typeof iconMap] ?? Calendar" />
+								</el-icon>
+								<span>{{ item.meta?.title }}</span>
+							</div>
+						</template>
+
+						<el-menu-item
+							v-for="child in getVisibleChildren(item)"
+							:key="`${item.path}-${child.path}`"
+							:index="resolveChildMenuPath(item.path, child.path)"
+						>
+							{{ child.meta?.title }}
+						</el-menu-item>
+					</el-sub-menu>
+
+					<el-menu-item v-else :index="normalizeMenuPath(item.path)">
+						<el-icon>
+							<component :is="iconMap[item.meta?.icon as keyof typeof iconMap] ?? Calendar" />
+						</el-icon>
+						<span>{{ item.meta?.title }}</span>
+					</el-menu-item>
+				</template>
 			</el-menu>
 		</aside>
 
@@ -88,7 +115,7 @@ import {
 	User
 } from '@element-plus/icons-vue';
 import { computed, onMounted, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter, type RouteRecordRaw } from 'vue-router';
 
 import { routes } from '@/router';
 import { useUserStore } from '@/stores/modules/user';
@@ -102,6 +129,12 @@ const router = useRouter();
 const userStore = useUserStore();
 const collapsed = ref(false);
 const themeMode = ref<ThemeMode>(getTheme());
+const activeMenuPath = computed(() => route.path);
+const openedMenuPaths = computed(() =>
+	route.matched
+		.filter((item) => item.path !== '/' && item.children?.length)
+		.map((item) => item.path)
+);
 
 const menuRoutes = computed(() => routes.find((item) => item.path === '/')?.children ?? []);
 const userInitial = computed(() => (userStore.userInfo?.nickName?.slice(0, 1) || 'A').toUpperCase());
@@ -128,6 +161,24 @@ const iconMap = {
 
 function toggleCollapse() {
 	collapsed.value = !collapsed.value;
+}
+
+function normalizeMenuPath(path = '') {
+	return path.startsWith('/') ? path : `/${path}`;
+}
+
+function getVisibleChildren(routeItem: RouteRecordRaw) {
+	return (routeItem.children ?? []).filter((child) => !child.meta?.hidden);
+}
+
+function resolveChildMenuPath(parentPath = '', childPath = '') {
+	const normalizedParentPath = normalizeMenuPath(parentPath).replace(/\/$/, '');
+	if (!childPath) return normalizedParentPath;
+	return `${normalizedParentPath}/${childPath}`.replace(/\/+/g, '/');
+}
+
+function handleParentMenuClick(routeItem: RouteRecordRaw) {
+	router.push(normalizeMenuPath(routeItem.path));
 }
 
 function handleToggleTheme() {
@@ -190,5 +241,12 @@ onMounted(() => {
 
 .admin-menu {
 	--el-menu-item-height: 48px;
+}
+
+.admin-menu__submenu-title {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
 }
 </style>

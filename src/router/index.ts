@@ -48,10 +48,30 @@ const routes: RouteRecordRaw[] = [
 				path: 'feedback-query',
 				name: 'FeedbackQuery',
 				component: () => import('@/views/feedback-query/index.vue'),
+				redirect: '/feedback-query/list',
 				meta: {
 					title: '意见反馈查询',
 					icon: 'Collection'
-				}
+				},
+				children: [
+					{
+						path: 'list',
+						name: 'FeedbackQueryList',
+						component: () => import('@/views/feedback-query/list.vue'),
+						meta: {
+							title: '反馈列表'
+						}
+					},
+					{
+						path: 'analytics',
+						name: 'FeedbackQueryAnalytics',
+						component: () => import('@/views/feedback-query/analytics.vue'),
+						meta: {
+							title: '意见反馈图表',
+							icon: 'TrendCharts'
+						}
+					}
+				]
 			}
 			// {
 			// 	path: 'users',
