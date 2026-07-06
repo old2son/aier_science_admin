@@ -1,9 +1,11 @@
 <template>
 	<router-view v-slot="{ Component, route }">
-		<keep-alive>
-			<component :is="Component" v-if="route.meta.keepAlive" />
+		<keep-alive :exclude="cachedViews">
+			<component :is="Component" :key="route.name" />
 		</keep-alive>
-
-		<component :is="Component" v-if="!route.meta.keepAlive" />
 	</router-view>
 </template>
+
+<script setup lang="ts">
+const cachedViews = ['FeedbackQueryAnalytics'];
+</script>

@@ -36,6 +36,10 @@ import { getAllUserFeedbackApi } from '@/api/admin';
 import type { Feedback } from '@/types/Feedback';
 import { CountUp } from 'countup.js';
 
+defineOptions({
+	name: 'FeedbackQueryAnalytics'
+});
+
 const tableData = ref<Feedback[]>([]);
 const tableLoading = ref(false);
 const satisfactionChartRef = ref<HTMLDivElement>();

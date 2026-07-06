@@ -170,14 +170,14 @@ function getSatisfactionLabel(value: number | string) {
 	return String(value || '-');
 }
 
-function getSatisfactionType(value: number | string): '' | 'success' | 'warning' | 'danger' | 'info' {
+function getSatisfactionType(value: number | string): 'primary' | 'success' | 'warning' | 'danger' | 'info' | undefined {
 	const normalizedValue = Number(value);
 
 	if (normalizedValue >= 4) return 'success';
 	if (normalizedValue === 3) return 'warning';
 	if (normalizedValue > 0) return 'danger';
 
-	return 'info';
+	return undefined;
 }
 
 const recommendLabelMap: Record<string, string> = {
@@ -194,14 +194,14 @@ function getRecommendLabel(value: number | string) {
 	return recommendLabelMap[normalizedValue] || normalizedValue || '-';
 }
 
-function getRecommendType(value: number | string): '' | 'success' | 'warning' | 'danger' | 'info' {
+function getRecommendType(value: number | string): 'primary' | 'success' | 'warning' | 'danger' | 'info' | undefined {
 	const normalizedValue = String(value ?? '').trim();
 
 	if (normalizedValue === '1' || normalizedValue === '会主动推荐') return 'success';
 	if (normalizedValue === '2' || normalizedValue === '当有人问起时，会给予正面评价') return 'warning';
 	if (normalizedValue === '3' || normalizedValue === '不会推荐') return 'info';
 
-	return '';
+	return undefined;
 }
 
 async function fetchFeedbackList() {
