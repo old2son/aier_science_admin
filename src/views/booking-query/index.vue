@@ -126,6 +126,10 @@
 					{{ row.phone || '-' }}
 				</template>
 
+				<template #visitLabel="{ row }">
+					{{ getBookingVisitLabel(row) }}
+				</template>
+
 				<template #idCard="{ row }">
 					{{ row.idNumber || '-' }}
 				</template>
@@ -234,6 +238,13 @@ const columns: TableColumn[] = [
 		slot: false,
 		minWidth: 70,
 		align: 'center'
+	},
+	{
+		label: '预约参观',
+		prop: 'visitLabel',
+		slot: true,
+		minWidth: 100,
+		showOverflowTooltip: true
 	},
 	{
 		label: '姓名',
@@ -376,6 +387,14 @@ function getBookingGroupType(row: BookingRow) {
 	return '团队预约';
 }
 
+function getBookingVisitLabel(row: BookingRow) {
+	if (Number(row.activityId) !== 0) {
+		return row.activityName || '-';
+	}
+
+	return hasMembers(row) ? '个人预约' : '团队预约';
+}
+
 function getBookingMemberCount(row: BookingRow) {
 	return row.members?.length || row.colleagues || 0;
 }
@@ -400,6 +419,7 @@ function getExportRows(row: BookingRow) {
 		return [
 			{
 				...row,
+				visitLabel: getBookingVisitLabel(row),
 				groupType: getBookingGroupType(row),
 				name: getBookingDisplayName(row),
 				phone: getBookingDisplayPhone(row),
@@ -411,6 +431,7 @@ function getExportRows(row: BookingRow) {
 
 	return row.members.map((companion) => ({
 		...row,
+		visitLabel: getBookingVisitLabel(row),
 		groupType: getBookingGroupType(row),
 		reId: companion.reId || row.reId,
 		name: companion.userName,

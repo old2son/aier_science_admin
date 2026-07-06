@@ -34,6 +34,9 @@
 							:key="`${item.path}-${child.path}`"
 							:index="resolveChildMenuPath(item.path, child.path)"
 						>
+							<el-icon>
+								<component :is="iconMap[child.meta?.icon as keyof typeof iconMap] ?? Calendar" />
+							</el-icon>
 							{{ child.meta?.title }}
 						</el-menu-item>
 					</el-sub-menu>
@@ -75,8 +78,12 @@
 					/>
 
 					<el-dropdown trigger="click">
-						<button class="admin-layout__user-trigger flex items-center gap-3 rounded-md px-2 py-1 text-left">
-							<el-avatar :src="userStore?.userInfo?.userAvatarUrl" :size="32">{{ userInitial }}</el-avatar>
+						<button
+							class="admin-layout__user-trigger flex items-center gap-3 rounded-md px-2 py-1 text-left"
+						>
+							<el-avatar :src="userStore?.userInfo?.userAvatarUrl" :size="32">{{
+								userInitial
+							}}</el-avatar>
 							<span class="admin-layout__user-name hidden text-sm font-medium sm:inline">{{
 								userStore?.userInfo?.nickName
 							}}</span>
@@ -110,7 +117,9 @@ import {
 	SwitchButton,
 	Tickets,
 	Collection,
-	User
+	User,
+	List,
+	TrendCharts
 } from '@element-plus/icons-vue';
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter, type RouteRecordRaw } from 'vue-router';
@@ -129,9 +138,7 @@ const collapsed = ref(false);
 const themeMode = ref<ThemeMode>(getTheme());
 const activeMenuPath = computed(() => route.path);
 const openedMenuPaths = computed(() =>
-	route.matched
-		.filter((item) => item.path !== '/' && item.children?.length)
-		.map((item) => item.path)
+	route.matched.filter((item) => item.path !== '/' && item.children?.length).map((item) => item.path)
 );
 
 const menuRoutes = computed(() => routes.find((item) => item.path === '/')?.children ?? []);
@@ -154,7 +161,9 @@ const iconMap = {
 	Setting,
 	Tickets,
 	Collection,
-	User
+	User,
+	List,
+	TrendCharts
 };
 
 function toggleCollapse() {
@@ -236,4 +245,8 @@ onMounted(() => {
 .admin-menu {
 	--el-menu-item-height: 48px;
 }
+
+/* .admin-menu :deep(.el-sub-menu .el-menu-item) {
+	font-size: 13px;
+} */
 </style>

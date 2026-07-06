@@ -3,15 +3,15 @@
 		<div class="feedback-overview">
 			<div class="feedback-stat-card">
 				<div class="feedback-stat-card__label">反馈总数</div>
-				<div class="feedback-stat-card__value">{{ feedbackStats.total }}</div>
+				<div class="feedback-stat-card__value" ref="totalEl"></div>
 			</div>
 			<div class="feedback-stat-card">
 				<div class="feedback-stat-card__label">平均满意度</div>
-				<div class="feedback-stat-card__value">{{ feedbackStats.avgSatisfaction }}</div>
+				<div class="feedback-stat-card__value" ref="avgEl"></div>
 			</div>
 			<div class="feedback-stat-card">
 				<div class="feedback-stat-card__label">正向推荐率</div>
-				<div class="feedback-stat-card__value">{{ feedbackStats.positiveRecommendRate }}</div>
+				<div class="feedback-stat-card__value" ref="rateEl"></div>
 			</div>
 		</div>
 
@@ -34,11 +34,15 @@ import * as echarts from 'echarts';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { getAllUserFeedbackApi } from '@/api/admin';
 import type { Feedback } from '@/types/Feedback';
+import { CountUp } from 'countup.js';
 
 const tableData = ref<Feedback[]>([]);
 const tableLoading = ref(false);
 const satisfactionChartRef = ref<HTMLDivElement>();
 const recommendChartRef = ref<HTMLDivElement>();
+const totalEl = ref();
+const avgEl = ref();
+const rateEl = ref();
 let satisfactionChart: echarts.ECharts | null = null;
 let recommendChart: echarts.ECharts | null = null;
 
@@ -51,40 +55,32 @@ const recommendLabelMap: Record<string, string> = {
 	不会推荐: '不会推荐'
 };
 
-function normalizeRecommendValue(value: number | string) {
-	const normalizedValue = String(value ?? '').trim();
-	return recommendLabelMap[normalizedValue] || normalizedValue;
-}
-
-function toSatisfactionNumber(value: number | string) {
-	const normalizedValue = Number(value);
-	return Number.isFinite(normalizedValue) ? normalizedValue : 0;
-}
-
 const feedbackStats = computed(() => {
 	const total = tableData.value.length;
 
 	if (!total) {
 		return {
 			total: 0,
-			avgSatisfaction: '0.0',
-			positiveRecommendRate: '0.0%'
+			avgSatisfaction: 0,
+			positiveRecommendRate: 0
 		};
 	}
 
 	const activityTotal = tableData.value.reduce((sum, item) => sum + toSatisfactionNumber(item.activitySatisfied), 0);
 	const serviceTotal = tableData.value.reduce((sum, item) => sum + toSatisfactionNumber(item.resSatisfied), 0);
 	const facilityTotal = tableData.value.reduce((sum, item) => sum + toSatisfactionNumber(item.facSatisfied), 0);
+
 	const positiveRecommendCount = tableData.value.filter((item) => {
-		const recommendLabel = normalizeRecommendValue(item.recommend);
-		return recommendLabel === '会主动推荐' || recommendLabel === '当有人问起时，会给予正面评价';
+		const r = normalizeRecommendValue(item.recommend);
+		return r === '会主动推荐' || r === '当有人问起时，会给予正面评价';
 	}).length;
+
 	const avgSatisfaction = (activityTotal + serviceTotal + facilityTotal) / (total * 3);
 
 	return {
 		total,
-		avgSatisfaction: avgSatisfaction.toFixed(1),
-		positiveRecommendRate: `${((positiveRecommendCount / total) * 100).toFixed(1)}%`
+		avgSatisfaction,
+		positiveRecommendRate: (positiveRecommendCount / total) * 100
 	};
 });
 
@@ -127,6 +123,35 @@ const recommendChartData = computed(() => {
 		value
 	}));
 });
+
+watch(
+	() => feedbackStats.value,
+	(newVal) => {
+		if (!newVal) return;
+
+		new CountUp(totalEl.value, newVal.total).start();
+
+		new CountUp(avgEl.value, newVal.avgSatisfaction, {
+			decimalPlaces: 1
+		}).start();
+
+		new CountUp(rateEl.value, newVal.positiveRecommendRate, {
+			decimalPlaces: 1,
+			suffix: '%'
+		}).start();
+	},
+	{ immediate: true }
+);
+
+function normalizeRecommendValue(value: number | string) {
+	const normalizedValue = String(value ?? '').trim();
+	return recommendLabelMap[normalizedValue] || normalizedValue;
+}
+
+function toSatisfactionNumber(value: number | string) {
+	const normalizedValue = Number(value);
+	return Number.isFinite(normalizedValue) ? normalizedValue : 0;
+}
 
 function ensureCharts() {
 	if (satisfactionChartRef.value && !satisfactionChart) {

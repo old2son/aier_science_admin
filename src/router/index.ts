@@ -59,7 +59,8 @@ const routes: RouteRecordRaw[] = [
 						name: 'FeedbackQueryList',
 						component: () => import('@/views/feedback-query/list.vue'),
 						meta: {
-							title: '反馈列表'
+							title: '意见反馈列表',
+							icon: 'List'
 						}
 					},
 					{

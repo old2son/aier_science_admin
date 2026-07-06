@@ -1,6 +1,16 @@
 <template>
 	<div class="page-panel">
-		<my-table v-loading="tableLoading" :data="tableData" :columns="columns">
+		<el-form :model="queryForm" inline>
+			<div>
+				<el-form-item>
+					<!-- <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button> -->
+					<!-- <el-button @click="handleReset">重置</el-button> -->
+					<el-button type="success" :icon="Download" @click="handleExport">导出 Excel</el-button>
+				</el-form-item>
+			</div>
+		</el-form>
+
+		<my-table v-loading="tableLoading" :data="pagedTableData" :columns="columns">
 			<template #activitySatisfied="{ row }">
 				<el-tag :type="getSatisfactionType(row.activitySatisfied)">
 					{{ getSatisfactionLabel(row.activitySatisfied) }}
@@ -29,16 +39,25 @@
 				<span>{{ row.other || '-' }}</span>
 			</template>
 		</my-table>
+
+		<my-pagination
+			v-model:current-page="pagination.currentPage"
+			v-model:page-size="pagination.pageSize"
+			:total="tableData.length"
+		/>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ElMessage } from 'element-plus';
-import { onMounted, ref } from 'vue';
+import { Download } from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { onMounted, ref, reactive, computed } from 'vue';
 import MyTable from '@/components/MyTable/index.vue';
+import MyPagination from '@/components/MyPagination/index.vue';
 import type { TableColumn } from '@/components/MyTable/types';
 import { getAllUserFeedbackApi } from '@/api/admin';
 import type { Feedback } from '@/types/Feedback';
+import { exportExcel } from '@/utils/excel';
 
 const columns: TableColumn[] = [
 	{
@@ -96,8 +115,48 @@ const columns: TableColumn[] = [
 	}
 ];
 
+/* 查询条件 */
+const queryForm = ref({});
+
 const tableData = ref<Feedback[]>([]);
 const tableLoading = ref(false);
+const pagination = reactive({
+	currentPage: 1,
+	pageSize: 10
+});
+const sortState = reactive<{
+	prop: '' | 'createTime';
+	order: '' | 'ascending' | 'descending';
+}>({
+	prop: '',
+	order: ''
+});
+
+function parseDateTimeString(dateStr: string) {
+	return new Date(dateStr.replace(' ', 'T')).getTime();
+}
+
+const sortedTableData = computed(() => {
+	if (!sortState.prop || !sortState.order) {
+		return tableData.value;
+	}
+
+	const sortFactor = sortState.order === 'ascending' ? 1 : -1;
+	return [...tableData.value].sort((a, b) => {
+		switch (sortState.prop) {
+			case 'createTime':
+				return (parseDateTimeString(a.createTime) - parseDateTimeString(b.createTime)) * sortFactor;
+			default:
+				return 0;
+		}
+	});
+});
+
+const pagedTableData = computed(() => {
+	const start = (pagination.currentPage - 1) * pagination.pageSize;
+	const end = start + pagination.pageSize;
+	return sortedTableData.value.slice(start, end);
+});
 
 function getSatisfactionLabel(value: number | string) {
 	const normalizedValue = Number(value);
@@ -155,6 +214,58 @@ async function fetchFeedbackList() {
 		ElMessage.error((error as Error).message || '获取意见反馈失败');
 	} finally {
 		tableLoading.value = false;
+	}
+}
+
+function getExportRows(row: Feedback) {
+	return [{ ...row }];
+}
+
+/** 导出 Excel */
+async function handleExport() {
+	if (!tableData.value.length) {
+		ElMessage.warning('暂无可导出的数据');
+		return;
+	}
+
+	const exportColumns = columns
+		.filter((item) => item.prop && item.prop !== 'action')
+		.map((item) => ({
+			label: item.prop?.includes('Satisfied') ? `${item.label as string}（分数）` : (item.label as string),
+			prop: item.prop as string,
+			exportFormatter: item.exportFormatter
+		}));
+
+	let exportMode: 'current' | 'all' | null = null;
+
+	await ElMessageBox.confirm('请选择导出范围', '导出 Excel', {
+		confirmButtonText: '导出当前页',
+		cancelButtonText: '导出全部',
+		distinguishCancelAndClose: true,
+		closeOnClickModal: false,
+		type: 'info'
+	})
+		.then(() => {
+			exportMode = 'current';
+		})
+		.catch((action: 'cancel' | 'close') => {
+			if (action === 'cancel') {
+				exportMode = 'all';
+			}
+		});
+
+	if (!exportMode) return;
+
+	const sourceData = exportMode === 'current' ? pagedTableData.value : tableData.value;
+	const exportData = sourceData.flatMap((row) => getExportRows(row));
+
+	try {
+		exportExcel(exportColumns, exportData, exportMode === 'current' ? '意见反馈查询-当前页' : '意见反馈查询');
+
+		ElMessage.success('导出成功');
+	} catch (error) {
+		console.error(error);
+		ElMessage.error('导出失败');
 	}
 }
 
