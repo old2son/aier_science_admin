@@ -72,7 +72,12 @@
 				</el-table-column>
 			</el-table> -->
 
-			<my-table v-loading="tableLoading" :data="pagedTableData" :columns="columns" @sort-change="handleSortChange">
+			<my-table
+				v-loading="tableLoading"
+				:data="pagedTableData"
+				:columns="columns"
+				@sort-change="handleSortChange"
+			>
 				<template #surplusNumber="{ row }">
 					<el-tag :type="row.surplusNumber === 0 ? 'danger' : row.surplusNumber < 10 ? 'warning' : 'success'">
 						{{ row.surplusNumber }}
@@ -88,16 +93,11 @@
 				</template>
 			</my-table>
 
-			<div v-if="shouldShowPagination" class="pagination-wrap">
-				<el-pagination
-					v-model:current-page="pagination.currentPage"
-					v-model:page-size="pagination.pageSize"
-					:total="tableData.length"
-					:page-sizes="[10, 20, 50, 100]"
-					layout="total, sizes, prev, pager, next, jumper"
-					background
-				/>
-			</div>
+			<my-pagination
+				v-model:current-page="pagination.currentPage"
+				v-model:page-size="pagination.pageSize"
+				:total="sortedTableData.length"
+			/>
 		</div>
 
 		<!-- 添加场次弹窗 -->
@@ -220,6 +220,7 @@ import { Plus, Search } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import MyTable from '@/components/MyTable/index.vue';
+import MyPagination from '@/components/MyPagination/index.vue';
 import type { TableColumn } from '@/components/MyTable/types';
 import {
 	getAllScienceConfigurationApi,
@@ -248,8 +249,7 @@ const columns: TableColumn[] = [
 		prop: 'configId',
 		slot: false,
 		minWidth: 70,
-		align: 'center',
-		sortable: 'custom'
+		align: 'center'
 	},
 	{
 		label: '日期',
@@ -348,7 +348,7 @@ const pagination = reactive({
 	pageSize: 10
 });
 const sortState = reactive<{
-	prop: '' | 'configId' | 'dateTime' | 'startTime' | 'createTime' | 'surplusNumber';
+	prop: '' | 'dateTime' | 'startTime' | 'createTime' | 'surplusNumber';
 	order: '' | 'ascending' | 'descending';
 }>({
 	prop: '',
@@ -372,8 +372,6 @@ const sortedTableData = computed(() => {
 	const sortFactor = sortState.order === 'ascending' ? 1 : -1;
 	return [...tableData.value].sort((a, b) => {
 		switch (sortState.prop) {
-			case 'configId':
-				return (a.configId - b.configId) * sortFactor;
 			case 'dateTime':
 				return (parseDateString(a.dateTime).getTime() - parseDateString(b.dateTime).getTime()) * sortFactor;
 			case 'startTime':
@@ -393,8 +391,6 @@ const pagedTableData = computed(() => {
 	const end = start + pagination.pageSize;
 	return sortedTableData.value.slice(start, end);
 });
-
-const shouldShowPagination = computed(() => tableData.value.length > pagination.pageSize);
 
 async function fetchSessions() {
 	tableLoading.value = true;
@@ -537,8 +533,7 @@ async function handleSubmit() {
 
 			if (res.message === '该场次已存在，请勿重复添加！') {
 				ElMessage.warning(res.message);
-			}
-			else {
+			} else {
 				ElMessage.success(res.message);
 			}
 		});
@@ -573,16 +568,8 @@ function handleReset() {
 	fetchSessions();
 }
 
-function handleSortChange({
-	prop,
-	order
-}: {
-	prop: string;
-	order: 'ascending' | 'descending' | null;
-}) {
-	const sortableProps = ['configId', 'dateTime', 'startTime', 'createTime', 'surplusNumber'] as const;
-
-	console.log(sortableProps.includes(prop as (typeof sortableProps)[number]));
+function handleSortChange({ prop, order }: { prop: string; order: 'ascending' | 'descending' | null }) {
+	const sortableProps = ['dateTime', 'startTime', 'createTime', 'surplusNumber'] as const;
 
 	if (!sortableProps.includes(prop as (typeof sortableProps)[number])) {
 		sortState.prop = '';
@@ -590,7 +577,7 @@ function handleSortChange({
 		return;
 	}
 
-	sortState.prop = (prop as typeof sortableProps[number]) ?? '';
+	sortState.prop = (prop as (typeof sortableProps)[number]) ?? '';
 	sortState.order = order ?? '';
 	pagination.currentPage = 1;
 }
@@ -793,11 +780,3 @@ onMounted(() => {
 	fetchSessions();
 });
 </script>
-
-<style scoped>
-.pagination-wrap {
-	display: flex;
-	justify-content: flex-end;
-	margin-top: 16px;
-}
-</style>

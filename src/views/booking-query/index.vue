@@ -116,7 +116,12 @@
 				</el-table-column>
 			</el-table> -->
 
-			<my-table v-loading="tableLoading" :data="pagedTableData" :columns="columns">
+			<my-table
+				v-loading="tableLoading"
+				:data="pagedTableData"
+				:columns="columns"
+				@sort-change="handleSortChange"
+			>
 				<template #phone="{ row }">
 					{{ row.phone || '-' }}
 				</template>
@@ -189,16 +194,11 @@
 				</template>
 			</my-table>
 
-			<div v-if="shouldShowPagination" class="pagination-wrap">
-				<el-pagination
-					v-model:current-page="pagination.currentPage"
-					v-model:page-size="pagination.pageSize"
-					:total="tableData.length"
-					:page-sizes="[10, 20, 50, 100]"
-					layout="total, sizes, prev, pager, next, jumper"
-					background
-				/>
-			</div>
+			<my-pagination
+				v-model:current-page="pagination.currentPage"
+				v-model:page-size="pagination.pageSize"
+				:total="tableData.length"
+			/>
 		</div>
 	</div>
 </template>
@@ -208,6 +208,7 @@ import { Download, Search } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import MyTable from '@/components/MyTable/index.vue';
+import MyPagination from '@/components/MyPagination/index.vue';
 import type { TableColumn } from '@/components/MyTable/types';
 
 import {
@@ -244,13 +245,13 @@ const columns: TableColumn[] = [
 		label: '手机',
 		prop: 'phone',
 		slot: true,
-		minWidth: 120
+		minWidth: 110
 	},
 	{
 		label: '证件',
 		prop: 'idCard',
 		slot: true,
-		minWidth: 180
+		minWidth: 170
 	},
 	{
 		label: '年龄',
@@ -283,14 +284,16 @@ const columns: TableColumn[] = [
 		label: '日期',
 		prop: 'dateTime',
 		slot: false,
-		minWidth: 90
+		minWidth: 90,
+		sortable: 'custom'
 	},
 	{
 		label: '开始时间',
 		prop: 'startTime',
 		slot: false,
-		minWidth: 75,
-		align: 'center'
+		minWidth: 100,
+		align: 'center',
+		sortable: 'custom'
 	},
 	{
 		label: '结束时间',
@@ -311,7 +314,8 @@ const columns: TableColumn[] = [
 		label: '创建时间',
 		prop: 'createTime',
 		slot: false,
-		minWidth: 150
+		minWidth: 150,
+		sortable: 'custom'
 	},
 	{
 		label: '操作',
@@ -508,14 +512,48 @@ const pagination = reactive({
 	currentPage: 1,
 	pageSize: 10
 });
+const sortState = reactive<{
+	prop: '' | 'dateTime' | 'startTime' | 'createTime';
+	order: '' | 'ascending' | 'descending';
+}>({
+	prop: '',
+	order: ''
+});
+
+function parseDateTimeString(dateStr: string) {
+	return new Date(dateStr.replace(' ', 'T')).getTime();
+}
+
+function parseTimeString(timeStr: string) {
+	const [hour = 0, minute = 0] = timeStr.split(':').map(Number);
+	return hour * 60 + minute;
+}
+
+const sortedTableData = computed(() => {
+	if (!sortState.prop || !sortState.order) {
+		return tableData.value;
+	}
+
+	const sortFactor = sortState.order === 'ascending' ? 1 : -1;
+	return [...tableData.value].sort((a, b) => {
+		switch (sortState.prop) {
+			case 'dateTime':
+				return (parseDateString(a.dateTime).getTime() - parseDateString(b.dateTime).getTime()) * sortFactor;
+			case 'startTime':
+				return (parseTimeString(a.startTime) - parseTimeString(b.startTime)) * sortFactor;
+			case 'createTime':
+				return (parseDateTimeString(a.createTime) - parseDateTimeString(b.createTime)) * sortFactor;
+			default:
+				return 0;
+		}
+	});
+});
 
 const pagedTableData = computed(() => {
 	const start = (pagination.currentPage - 1) * pagination.pageSize;
 	const end = start + pagination.pageSize;
-	return tableData.value.slice(start, end);
+	return sortedTableData.value.slice(start, end);
 });
-
-const shouldShowPagination = computed(() => tableData.value.length > pagination.pageSize);
 
 function mapGroupTypeToApiValue(groupType: string) {
 	const groupTypeMap: Record<string, number> = {
@@ -600,6 +638,21 @@ function handleReset() {
 	};
 	fetchBookings();
 }
+
+function handleSortChange({ prop, order }: { prop: string; order: 'ascending' | 'descending' | null }) {
+	const sortableProps = ['dateTime', 'startTime', 'createTime'] as const;
+
+	if (!sortableProps.includes(prop as (typeof sortableProps)[number])) {
+		sortState.prop = '';
+		sortState.order = '';
+		return;
+	}
+
+	sortState.prop = (prop as (typeof sortableProps)[number]) ?? '';
+	sortState.order = order ?? '';
+	pagination.currentPage = 1;
+}
+
 
 /** 导出 Excel */
 async function handleExport() {
@@ -720,12 +773,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.pagination-wrap {
-	display: flex;
-	justify-content: flex-end;
-	margin-top: 16px;
-}
-
 .companion-list {
 	display: flex;
 	flex-direction: column;

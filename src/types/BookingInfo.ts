@@ -18,6 +18,7 @@ export interface BookingRow {
 	channel: string | null;
 	colleagueName: string | null;
 	colleagues: number;
+	createTime: string;
 	dateTime: string;
 	excelUrl: string | null;
 	expound: number;

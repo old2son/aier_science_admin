@@ -23,12 +23,10 @@
 				<template v-for="item in menuRoutes" :key="item.path">
 					<el-sub-menu v-if="getVisibleChildren(item).length" :index="normalizeMenuPath(item.path)">
 						<template #title>
-							<div class="admin-menu__submenu-title" @click="handleParentMenuClick(item)">
-								<el-icon>
-									<component :is="iconMap[item.meta?.icon as keyof typeof iconMap] ?? Calendar" />
-								</el-icon>
-								<span>{{ item.meta?.title }}</span>
-							</div>
+							<el-icon>
+								<component :is="iconMap[item.meta?.icon as keyof typeof iconMap] ?? Calendar" />
+							</el-icon>
+							<span>{{ item.meta?.title }}</span>
 						</template>
 
 						<el-menu-item
@@ -177,10 +175,6 @@ function resolveChildMenuPath(parentPath = '', childPath = '') {
 	return `${normalizedParentPath}/${childPath}`.replace(/\/+/g, '/');
 }
 
-function handleParentMenuClick(routeItem: RouteRecordRaw) {
-	router.push(normalizeMenuPath(routeItem.path));
-}
-
 function handleToggleTheme() {
 	themeMode.value = toggleTheme(themeMode.value);
 }
@@ -241,12 +235,5 @@ onMounted(() => {
 
 .admin-menu {
 	--el-menu-item-height: 48px;
-}
-
-.admin-menu__submenu-title {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	width: 100%;
 }
 </style>

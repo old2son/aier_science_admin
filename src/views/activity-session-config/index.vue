@@ -72,7 +72,12 @@
 				</el-table-column>
 			</el-table> -->
 
-			<my-table v-loading="tableLoading" :data="pagedTableData" :columns="columns">
+			<my-table
+				v-loading="tableLoading"
+				:data="pagedTableData"
+				:columns="columns"
+				@sort-change="handleSortChange"
+			>
 				<template #activityCoverUrl="{ row }">
 					<el-image
 						v-if="row.activityCoverUrl"
@@ -100,16 +105,11 @@
 				</template>
 			</my-table>
 
-			<div v-if="shouldShowPagination" class="pagination-wrap">
-				<el-pagination
-					v-model:current-page="pagination.currentPage"
-					v-model:page-size="pagination.pageSize"
-					:total="tableData.length"
-					:page-sizes="[10, 20, 50, 100]"
-					layout="total, sizes, prev, pager, next, jumper"
-					background
-				/>
-			</div>
+			<my-pagination
+				v-model:current-page="pagination.currentPage"
+				v-model:page-size="pagination.pageSize"
+				:total="tableData.length"
+			/>
 		</div>
 
 		<!-- 添加/编辑场次弹窗 -->
@@ -328,6 +328,7 @@ import { Download, Plus, Search } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadRequestOptions } from 'element-plus';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import MyTable from '@/components/MyTable/index.vue';
+import MyPagination from '@/components/MyPagination/index.vue';
 import type { TableColumn } from '@/components/MyTable/types';
 import { exportExcel, type ExportColumn } from '@/utils/excel';
 import {
@@ -355,14 +356,14 @@ const columns: TableColumn[] = [
 		label: '活动标题',
 		prop: 'activityName',
 		slot: false,
-		minWidth: 110,
+		minWidth: 90,
 		showOverflowTooltip: true
 	},
 	{
 		label: '活动背景',
 		prop: 'theBackground',
 		slot: false,
-		minWidth: 180,
+		minWidth: 120,
 		align: 'center',
 		showOverflowTooltip: true
 	},
@@ -370,34 +371,36 @@ const columns: TableColumn[] = [
 		label: '活动KV',
 		prop: 'activityCoverUrl',
 		slot: true,
-		minWidth: 110,
+		minWidth: 90,
 		align: 'center'
 	},
 	{
 		label: '活动地点',
 		prop: 'place',
 		slot: false,
-		minWidth: 140,
+		minWidth: 90,
 		showOverflowTooltip: true
 	},
 	{
 		label: '开始日期',
 		prop: 'activityTime',
 		slot: false,
-		minWidth: 100
+		minWidth: 90,
+		sortable: 'custom'
 	},
 	{
 		label: '结束日期',
 		prop: 'endDate',
 		slot: false,
-		minWidth: 100
+		minWidth: 90
 	},
 	{
 		label: '开始时间',
 		prop: 'startTime',
 		slot: false,
-		minWidth: 80,
-		align: 'center'
+		minWidth: 90,
+		align: 'center',
+		sortable: 'custom'
 	},
 	{
 		label: '结束时间',
@@ -410,7 +413,7 @@ const columns: TableColumn[] = [
 		label: '总号数',
 		prop: 'totalNumber',
 		slot: false,
-		minWidth: 75,
+		minWidth: 70,
 		align: 'center'
 	},
 	{
@@ -418,13 +421,15 @@ const columns: TableColumn[] = [
 		prop: 'surplusNumber',
 		slot: true,
 		minWidth: 75,
-		align: 'center'
+		align: 'center',
+		sortable: 'custom'
 	},
 	{
 		label: '创建时间',
 		prop: 'createTime',
 		slot: false,
-		minWidth: 160
+		minWidth: 150,
+		sortable: 'custom'
 	},
 	{
 		label: '操作人',
@@ -437,7 +442,7 @@ const columns: TableColumn[] = [
 		label: '操作',
 		prop: 'action',
 		slot: true,
-		minWidth: 180,
+		minWidth: 160,
 		align: 'center',
 		fixed: 'right'
 	}
@@ -471,14 +476,50 @@ const pagination = reactive({
 	currentPage: 1,
 	pageSize: 10
 });
+const sortState = reactive<{
+	prop: '' | 'activityTime' | 'startTime' | 'createTime' | 'surplusNumber';
+	order: '' | 'ascending' | 'descending';
+}>({
+	prop: '',
+	order: ''
+});
+
+function parseDateTimeString(dateStr: string) {
+	return new Date(dateStr.replace(' ', 'T')).getTime();
+}
+
+function parseTimeString(timeStr: string) {
+	const [hour = 0, minute = 0] = timeStr.split(':').map(Number);
+	return hour * 60 + minute;
+}
+
+const sortedTableData = computed(() => {
+	if (!sortState.prop || !sortState.order) {
+		return tableData.value;
+	}
+
+	const sortFactor = sortState.order === 'ascending' ? 1 : -1;
+	return [...tableData.value].sort((a, b) => {
+		switch (sortState.prop) {
+			case 'activityTime':
+				return (parseDateString(a.activityTime).getTime() - parseDateString(b.activityTime).getTime()) * sortFactor;
+			case 'startTime':
+				return (parseTimeString(a.startTime) - parseTimeString(b.startTime)) * sortFactor;
+			case 'createTime':
+				return (parseDateTimeString(a.createTime) - parseDateTimeString(b.createTime)) * sortFactor;
+			case 'surplusNumber':
+				return (a.surplusNumber - b.surplusNumber) * sortFactor;
+			default:
+				return 0;
+		}
+	});
+});
 
 const pagedTableData = computed(() => {
 	const start = (pagination.currentPage - 1) * pagination.pageSize;
 	const end = start + pagination.pageSize;
-	return tableData.value.slice(start, end);
+	return sortedTableData.value.slice(start, end);
 });
-
-const shouldShowPagination = computed(() => tableData.value.length > pagination.pageSize);
 
 async function fetchSessions() {
 	tableLoading.value = true;
@@ -763,6 +804,20 @@ function handleReset() {
 	queryForm.value.startDate = '';
 	queryForm.value.endDate = '';
 	fetchSessions();
+}
+
+function handleSortChange({ prop, order }: { prop: string; order: 'ascending' | 'descending' | null }) {
+	const sortableProps = ['activityTime', 'startTime', 'createTime', 'surplusNumber'] as const;
+
+	if (!sortableProps.includes(prop as (typeof sortableProps)[number])) {
+		sortState.prop = '';
+		sortState.order = '';
+		return;
+	}
+
+	sortState.prop = (prop as (typeof sortableProps)[number]) ?? '';
+	sortState.order = order ?? '';
+	pagination.currentPage = 1;
 }
 
 /** 余号清零 */
@@ -1109,12 +1164,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.pagination-wrap {
-	display: flex;
-	justify-content: flex-end;
-	margin-top: 16px;
-}
-
 .kv-uploader :deep(.el-upload) {
 	width: 280px;
 	height: 157px;
