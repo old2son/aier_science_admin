@@ -60,7 +60,8 @@ const routes: RouteRecordRaw[] = [
 						component: () => import('@/views/feedback-query/list.vue'),
 						meta: {
 							title: '意见反馈列表',
-							icon: 'List'
+							icon: 'List',
+							keepAlive: true
 						}
 					},
 					{
@@ -69,7 +70,8 @@ const routes: RouteRecordRaw[] = [
 						component: () => import('@/views/feedback-query/analytics.vue'),
 						meta: {
 							title: '意见反馈图表',
-							icon: 'TrendCharts'
+							icon: 'TrendCharts',
+							keepAlive: true
 						}
 					}
 				]
