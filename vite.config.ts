@@ -9,6 +9,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
 	const manualChunks = (id: string) => {
 		if (!id.includes('node_modules')) return;
 
+		if (id.includes('echarts') || id.includes('zrender')) return 'vendor-echarts';
 		if (id.includes('xlsx')) return 'vendor-xlsx';
 		if (id.includes('element-plus') || id.includes('@element-plus')) return 'vendor-element-plus';
 		if (id.includes('vue-router')) return 'vendor-vue-router';
