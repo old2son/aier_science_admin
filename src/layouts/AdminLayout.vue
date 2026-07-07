@@ -91,6 +91,7 @@
 						<template #dropdown>
 							<el-dropdown-menu>
 								<el-dropdown-item disabled>{{ userStore?.userInfo?.phone }}</el-dropdown-item>
+								<el-dropdown-item :icon="User" @click="handleUpdatePassword">修改密码</el-dropdown-item>
 								<el-dropdown-item :icon="SwitchButton" @click="handleLogout">退出登录</el-dropdown-item>
 							</el-dropdown-menu>
 						</template>
@@ -102,6 +103,49 @@
 				<RouterView />
 			</main>
 		</section>
+
+		<el-dialog
+			v-model="passwordDialogVisible"
+			title="修改密码"
+			width="420px"
+			destroy-on-close
+			@closed="resetPasswordForm"
+		>
+			<el-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules" label-position="top">
+				<el-form-item label="新密码" prop="password">
+					<el-input
+						v-model="passwordForm.password"
+						:prefix-icon="Lock"
+						maxlength="18"
+						show-password
+						type="password"
+						placeholder="请输入新密码"
+						clearable
+					/>
+				</el-form-item>
+				<el-form-item label="确认密码" prop="confirmPassword">
+					<el-input
+						v-model="passwordForm.confirmPassword"
+						:prefix-icon="Lock"
+						maxlength="18"
+						show-password
+						type="password"
+						placeholder="请再次输入新密码"
+						clearable
+						@keyup.enter="handleConfirmUpdatePassword"
+					/>
+				</el-form-item>
+			</el-form>
+
+			<template #footer>
+				<div class="flex justify-end gap-3">
+					<el-button @click="passwordDialogVisible = false">取消</el-button>
+					<el-button type="primary" :loading="passwordSubmitting" @click="handleConfirmUpdatePassword">
+						确认修改
+					</el-button>
+				</div>
+			</template>
+		</el-dialog>
 	</div>
 </template>
 
@@ -110,6 +154,7 @@ import {
 	Calendar,
 	Document,
 	Fold,
+	Lock,
 	Menu as MenuIcon,
 	Moon,
 	Setting,
@@ -121,21 +166,24 @@ import {
 	List,
 	TrendCharts
 } from '@element-plus/icons-vue';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter, type RouteRecordRaw } from 'vue-router';
 
 import { routes } from '@/router';
 import { useUserStore } from '@/stores/modules/user';
-import { ElMessage } from 'element-plus';
+import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { getTheme, toggleTheme, type ThemeMode } from '@/utils/theme';
 
-// import { getAdminInformationApi, adminLogoutApi } from '@/api/admin';
+import { updateAdminPasswordApi } from '@/api/admin';
 
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 const collapsed = ref(false);
 const themeMode = ref<ThemeMode>(getTheme());
+const passwordDialogVisible = ref(false);
+const passwordSubmitting = ref(false);
+const passwordFormRef = ref<FormInstance>();
 const activeMenuPath = computed(() => route.path);
 const openedMenuPaths = computed(() =>
 	route.matched.filter((item) => item.path !== '/' && item.children?.length).map((item) => item.path)
@@ -143,6 +191,41 @@ const openedMenuPaths = computed(() =>
 
 const menuRoutes = computed(() => routes.find((item) => item.path === '/')?.children ?? []);
 const userInitial = computed(() => (userStore.userInfo?.nickName?.slice(0, 1) || 'A').toUpperCase());
+const passwordForm = reactive({
+	password: '',
+	confirmPassword: ''
+});
+
+const passwordRules: FormRules<typeof passwordForm> = {
+	password: [
+		{ required: true, message: '请输入新密码', trigger: 'blur' },
+		{ min: 6, max: 18, message: '密码长度需为 6-18 位', trigger: 'blur' },
+		{
+			pattern: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,18}$/,
+			message: '密码必须包含数字和字母，且在6~18位之间',
+			trigger: 'blur'
+		}
+	],
+	confirmPassword: [
+		{ required: true, message: '请再次输入新密码', trigger: 'blur' },
+		{
+			validator: (_rule, value, callback) => {
+				if (!value) {
+					callback(new Error('请再次输入新密码'));
+					return;
+				}
+
+				if (value !== passwordForm.password) {
+					callback(new Error('两次输入的密码不一致'));
+					return;
+				}
+
+				callback();
+			},
+			trigger: 'blur'
+		}
+	]
+};
 
 /** 面包屑数据：[控制面板, 当前页面] */
 const breadcrumbs = computed(() => {
@@ -186,6 +269,33 @@ function resolveChildMenuPath(parentPath = '', childPath = '') {
 
 function handleToggleTheme() {
 	themeMode.value = toggleTheme(themeMode.value);
+}
+
+function handleUpdatePassword() {
+	passwordDialogVisible.value = true;
+}
+
+function resetPasswordForm() {
+	passwordForm.password = '';
+	passwordForm.confirmPassword = '';
+	passwordFormRef.value?.clearValidate();
+}
+
+async function handleConfirmUpdatePassword() {
+	if (!passwordFormRef.value) return;
+
+	const valid = await passwordFormRef.value.validate().catch(() => false);
+	if (!valid) return;
+
+	passwordSubmitting.value = true;
+
+	try {
+		const res = await updateAdminPasswordApi({ password: passwordForm.password });
+		ElMessage.primary(res.message);
+		passwordDialogVisible.value = false;
+	} finally {
+		passwordSubmitting.value = false;
+	}
 }
 
 async function handleLogout() {
