@@ -428,21 +428,21 @@ const columns: TableColumn[] = [
 		label: '创建时间',
 		prop: 'createTime',
 		slot: false,
-		minWidth: 150,
+		minWidth: 140,
 		sortable: 'custom'
 	},
 	{
 		label: '操作人',
 		prop: 'operatorName',
 		slot: false,
-		minWidth: 70,
+		minWidth: 80,
 		align: 'center'
 	},
 	{
 		label: '操作',
 		prop: 'action',
 		slot: true,
-		minWidth: 160,
+		minWidth: 150,
 		align: 'center',
 		fixed: 'right'
 	}

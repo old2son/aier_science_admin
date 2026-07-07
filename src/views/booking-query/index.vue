@@ -262,7 +262,8 @@ const columns: TableColumn[] = [
 		label: '证件',
 		prop: 'idCard',
 		slot: true,
-		minWidth: 170
+		minWidth: 150,
+		showOverflowTooltip: true
 	},
 	{
 		label: '年龄',
@@ -317,7 +318,7 @@ const columns: TableColumn[] = [
 		label: '状态',
 		prop: 'status',
 		slot: true,
-		minWidth: 100,
+		minWidth: 80,
 		align: 'center',
 		exportFormatter: (value: BookingStatus) => statusMap[value]?.label ?? value
 	},
