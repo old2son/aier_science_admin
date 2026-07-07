@@ -262,7 +262,7 @@ const columns: TableColumn[] = [
 		label: '证件',
 		prop: 'idCard',
 		slot: true,
-		minWidth: 150,
+		minWidth: 100,
 		showOverflowTooltip: true
 	},
 	{
