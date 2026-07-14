@@ -747,7 +747,6 @@ async function handleSubmit() {
 					endTime: formData.endTime,
 					totalNumber: formData.totalCount!,
 					operatorName: userStore.userInfo?.nickName || '当前用户'
-					// operatorName: '活动主持人莉莉丝'
 				}).then((res) => {
 					fetchSessions();
 					dialogVisible.value = false;
@@ -768,8 +767,7 @@ async function handleSubmit() {
 			startTime: formData.startTime,
 			endTime: formData.endTime,
 			totalNumber: formData.totalCount!,
-			// operatorName: userStore.userInfo?.nickName || '当前用户'
-			operatorName: '活动主持人莉莉丝'
+			operatorName: userStore.userInfo?.nickName || '当前用户'
 		}).then((res) => {
 			fetchSessions();
 			ElMessage.success(res.message);
@@ -1067,8 +1065,7 @@ async function handleBatchSubmit() {
 					activityCoverUrl: item.coverKey,
 					theBackground: batchFormData.background,
 					totalNumber: batchFormData.totalCount as number,
-					// operatorName: userStore.userInfo?.nickName || '当前用户',
-					operatorName: '活动主持人莉莉丝',
+					operatorName: userStore.userInfo?.nickName || '当前用户',
 					place: batchFormData.location || '',
 					activityTime,
 					endDate,
