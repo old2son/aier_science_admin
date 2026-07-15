@@ -479,7 +479,7 @@ function normalizeBookingRow(row: BookingRow): BookingViewRow {
 }
 
 const queryForm = ref({
-	...getDefaultQueryDateRange(6),
+	...getDefaultQueryDateRange(7),
 	timeSlot: '' as string,
 	name: '' as string,
 	phone: '' as string,
@@ -649,7 +649,7 @@ function handleSearch() {
 /** 重置查询条件与数据 */
 function handleReset() {
 	queryForm.value = {
-		...getDefaultQueryDateRange(6),
+		...getDefaultQueryDateRange(7),
 		timeSlot: '',
 		name: '',
 		phone: '',
