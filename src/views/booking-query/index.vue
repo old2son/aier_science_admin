@@ -297,14 +297,14 @@ const columns: TableColumn[] = [
 		label: '日期',
 		prop: 'dateTime',
 		slot: false,
-		minWidth: 90,
+		minWidth: 95,
 		sortable: 'custom'
 	},
 	{
 		label: '开始时间',
 		prop: 'startTime',
 		slot: false,
-		minWidth: 100,
+		minWidth: 95,
 		align: 'center',
 		sortable: 'custom'
 	},

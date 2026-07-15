@@ -133,7 +133,7 @@
 						placeholder="请输入活动背景介绍"
 					/>
 				</el-form-item>
-				<el-form-item label="活动 KV">
+				<el-form-item label="活动 KV" prop="coverUrl">
 					<el-upload
 						class="kv-uploader"
 						action="#"
@@ -148,7 +148,7 @@
 							<span class="mt-1 text-xs text-slate-400">上传活动 KV</span>
 						</div>
 					</el-upload>
-					<div class="mt-1 text-xs text-slate-400">建议尺寸 750×420，JPG/PNG，≤2MB</div>
+					<div class="mt-1 text-xs text-slate-400">图片限制 2MB 以内；建议尺寸 750×420</div>
 				</el-form-item>
 				<el-form-item label="活动地点">
 					<el-input v-model="formData.location" placeholder="请输入活动地点（选填）" clearable />
@@ -557,6 +557,7 @@ const formData = reactive({
 const rules = reactive<FormRules>({
 	title: [{ required: true, message: '请输入活动标题', trigger: 'blur' }],
 	background: [{ required: true, message: '请输入活动背景', trigger: 'blur' }],
+	coverUrl: [{ required: true, message: '请上传活动 KV', trigger: 'change' }],
 	startDate: [{ required: true, message: '请选择开始日期', trigger: 'change' }],
 	endDate: [{ required: true, message: '请选择结束日期', trigger: 'change' }],
 	startTime: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
@@ -640,6 +641,7 @@ async function handleUploadKV(options: UploadRequestOptions) {
 		const base64 = await fileToBase64(options.file as File);
 		formData.coverUrl = base64;
 		formData.coverKey = base64;
+		void formRef.value?.validateField('coverUrl');
 		ElMessage.success('图片上传成功');
 	} catch (error) {
 		ElMessage.error((error as Error).message || '图片处理失败');

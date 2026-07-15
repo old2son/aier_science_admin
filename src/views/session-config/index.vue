@@ -321,7 +321,7 @@ const columns: TableColumn[] = [
 ];
 
 const queryForm = ref({
-	...getDefaultQueryDateRange(7)
+	...getDefaultQueryDateRange(6)
 });
 
 function parseDateString(dateStr: string) {
@@ -562,7 +562,7 @@ async function handleSearch() {
 
 /** 重置查询条件与数据 */
 function handleReset() {
-	Object.assign(queryForm.value, getDefaultQueryDateRange(7));
+	Object.assign(queryForm.value, getDefaultQueryDateRange(6));
 	handleSearch();
 }
 
