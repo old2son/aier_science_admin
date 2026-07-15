@@ -204,6 +204,20 @@
 				:total="tableData.length"
 			/>
 		</div>
+
+		<div @click="">测试查看附件</div>
+
+		<OpenFileViewer
+			v-if="fileData"
+			:file="fileData"
+			:file-name="fileData.name"
+			width="100%"
+			height="640px"
+			fit="contain"
+			toolbar
+			theme="auto"
+			:plugins="plugins"
+		/>
 	</div>
 </template>
 
@@ -225,6 +239,31 @@ import {
 import { type BookingRow, type BookingStatus } from '@/types/BookingInfo';
 import { getDefaultQueryDateRange } from '@/utils/date';
 import { exportExcel } from '@/utils/excel';
+
+/** 查看附件开始 */
+
+const fileData = ref<File>();
+
+async function loadFile() {
+	const url = 'https://geducloud0617.oss-cn-shenzhen.aliyuncs.com/aier-applet/template_regist_team.xlsx';
+
+	const response = await fetch(url);
+
+	const blob = await response.blob();
+
+	fileData.value = new File([blob], 'test.xlsx', {
+		type: blob.type
+	});
+}
+
+import { OpenFileViewer } from '@open-file-viewer/vue';
+import { officePlugin } from '@open-file-viewer/core';
+import '@open-file-viewer/core/style.css';
+
+defineProps<{ file: File }>();
+
+const plugins = [officePlugin()];
+/** 查看附件结束 */
 
 type BookingViewRow = BookingRow & {
 	groupType: string;
@@ -673,7 +712,6 @@ function handleSortChange({ prop, order }: { prop: string; order: 'ascending' | 
 	pagination.currentPage = 1;
 }
 
-
 /** 导出 Excel */
 async function handleExport() {
 	if (!tableData.value.length) {
@@ -788,6 +826,7 @@ watch(
 );
 
 onMounted(() => {
+	loadFile();
 	fetchBookings(queryForm.value, true);
 });
 </script>
