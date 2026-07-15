@@ -233,6 +233,7 @@ import {
 } from '@/api/admin';
 import { type SessionRow } from '@/types/SessionInfo';
 import { useUserStore } from '@/stores/modules/user';
+import { formatDate, getDefaultQueryDateRange } from '@/utils/date';
 
 const userStore = useUserStore();
 
@@ -319,10 +320,8 @@ const columns: TableColumn[] = [
 	}
 ];
 
-/* 查询条件 */
 const queryForm = ref({
-	startDate: '' as string,
-	endDate: '' as string
+	...getDefaultQueryDateRange(7)
 });
 
 function parseDateString(dateStr: string) {
@@ -563,9 +562,8 @@ async function handleSearch() {
 
 /** 重置查询条件与数据 */
 function handleReset() {
-	queryForm.value.startDate = '';
-	queryForm.value.endDate = '';
-	fetchSessions();
+	Object.assign(queryForm.value, getDefaultQueryDateRange(7));
+	handleSearch();
 }
 
 function handleSortChange({ prop, order }: { prop: string; order: 'ascending' | 'descending' | null }) {
@@ -725,14 +723,6 @@ function generateBatchPreview(): BatchPreviewItem[] {
 	return result;
 }
 
-/** 日期格式化 YYYY-MM-DD */
-function formatDate(d: Date): string {
-	const y = d.getFullYear();
-	const m = String(d.getMonth() + 1).padStart(2, '0');
-	const day = String(d.getDate()).padStart(2, '0');
-	return `${y}-${m}-${day}`;
-}
-
 /** 打开批量添加弹窗 */
 function handleBatchAdd() {
 	batchDialogVisible.value = true;
@@ -777,6 +767,6 @@ async function handleBatchSubmit() {
 }
 
 onMounted(() => {
-	fetchSessions();
+	handleSearch();
 });
 </script>

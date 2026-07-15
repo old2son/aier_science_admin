@@ -223,6 +223,7 @@ import {
 	cancelAppointmentApi
 } from '@/api/admin';
 import { type BookingRow, type BookingStatus } from '@/types/BookingInfo';
+import { getDefaultQueryDateRange } from '@/utils/date';
 import { exportExcel } from '@/utils/excel';
 
 type BookingViewRow = BookingRow & {
@@ -477,10 +478,8 @@ function normalizeBookingRow(row: BookingRow): BookingViewRow {
 	// };
 }
 
-/* 查询条件 */
 const queryForm = ref({
-	startDate: '' as string,
-	endDate: '' as string,
+	...getDefaultQueryDateRange(6),
 	timeSlot: '' as string,
 	name: '' as string,
 	phone: '' as string,
@@ -650,15 +649,14 @@ function handleSearch() {
 /** 重置查询条件与数据 */
 function handleReset() {
 	queryForm.value = {
-		startDate: '',
-		endDate: '',
+		...getDefaultQueryDateRange(6),
 		timeSlot: '',
 		name: '',
 		phone: '',
 		groupType: '',
 		status: ''
 	};
-	fetchBookings();
+	fetchBookings(queryForm.value, true);
 }
 
 function handleSortChange({ prop, order }: { prop: string; order: 'ascending' | 'descending' | null }) {
@@ -790,7 +788,7 @@ watch(
 );
 
 onMounted(() => {
-	fetchBookings();
+	fetchBookings(queryForm.value, true);
 });
 </script>
 

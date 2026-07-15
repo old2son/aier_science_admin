@@ -341,6 +341,7 @@ import {
 } from '@/api/admin';
 import { type ActivitySessionRow } from '@/types/SessionInfo';
 import { useUserStore } from '@/stores/modules/user';
+import { getDefaultQueryDateRange } from '@/utils/date';
 
 const userStore = useUserStore();
 
@@ -448,10 +449,8 @@ const columns: TableColumn[] = [
 	}
 ];
 
-/* 查询条件 */
 const queryForm = ref({
-	startDate: '' as string,
-	endDate: '' as string
+	...getDefaultQueryDateRange(6)
 });
 
 function parseDateString(dateStr: string) {
@@ -799,9 +798,8 @@ async function handleSearch() {
 
 /** 重置查询条件与数据 */
 function handleReset() {
-	queryForm.value.startDate = '';
-	queryForm.value.endDate = '';
-	fetchSessions();
+	Object.assign(queryForm.value, getDefaultQueryDateRange(6));
+	handleSearch();
 }
 
 function handleSortChange({ prop, order }: { prop: string; order: 'ascending' | 'descending' | null }) {
@@ -1156,7 +1154,7 @@ async function handleExport() {
 }
 
 onMounted(() => {
-	fetchSessions();
+	handleSearch();
 });
 </script>
 
