@@ -1,4 +1,9 @@
-import { createRouter, /** createWebHistory, */ createWebHashHistory, type RouteRecordRaw } from 'vue-router';
+import { 
+	createRouter, 
+	// createWebHistory,
+	createWebHashHistory, 
+	type RouteRecordRaw 
+} from 'vue-router';
 
 import { useUserStore } from '@/stores/modules/user';
 
