@@ -62,7 +62,14 @@
 			</template>
 
 			<template #action="{ row }">
-				<el-button type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
+				<el-button
+					:type="Number(row.status ?? 0) === 1 ? 'primary' : 'warning'"
+					link
+					size="small"
+					@click="handleToggleStatus(row)"
+				>
+					{{ Number(row.status ?? 0) === 1 ? '恢复' : '无效反馈' }}
+				</el-button>
 				<el-divider direction="vertical" />
 				<el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
 			</template>
@@ -74,35 +81,12 @@
 			:total="tableData.length"
 		/>
 
-		<el-dialog v-model="dialogVisible" title="编辑意见反馈" width="420px" destroy-on-close @closed="handleDialogClosed">
-			<el-form ref="formRef" :model="editForm" :rules="formRules" label-width="90px">
-				<el-form-item label="姓名">
-					<span>{{ currentEditRow?.name || '-' }}</span>
-				</el-form-item>
-				<el-form-item label="手机号">
-					<span>{{ currentEditRow?.phone || '-' }}</span>
-				</el-form-item>
-				<el-form-item label="反馈状态" prop="status">
-					<el-radio-group v-model="editForm.status">
-						<el-radio :value="0">正常反馈</el-radio>
-						<el-radio :value="1">无效反馈</el-radio>
-					</el-radio-group>
-				</el-form-item>
-			</el-form>
-
-			<template #footer>
-				<div class="flex justify-end gap-3">
-					<el-button @click="dialogVisible = false">取消</el-button>
-					<el-button type="primary" :loading="editSubmitting" @click="handleConfirmEdit">保存</el-button>
-				</div>
-			</template>
-		</el-dialog>
 	</div>
 </template>
 
 <script setup lang="ts">
 import { Download, Search } from '@element-plus/icons-vue';
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { computed, onMounted, reactive, ref } from 'vue';
 
 import { deleteUserFeedbackApi, getAllUserFeedbackApi, searchUserFeedbackApi, updateUserFeedbackApi } from '@/api/admin';
@@ -182,24 +166,11 @@ const queryForm = ref({
 });
 const tableData = ref<Feedback[]>([]);
 const tableLoading = ref(false);
-const dialogVisible = ref(false);
-const editSubmitting = ref(false);
-const formRef = ref<FormInstance>();
-const currentEditRow = ref<Feedback | null>(null);
 
 const pagination = reactive({
 	currentPage: 1,
 	pageSize: 10
 });
-
-const editForm = reactive({
-	feedId: 0,
-	status: 0 as 0 | 1
-});
-
-const formRules: FormRules<typeof editForm> = {
-	status: [{ required: true, message: '请选择反馈状态', trigger: 'change' }]
-};
 
 const sortState = reactive<{
 	prop: '' | 'createTime';
@@ -334,40 +305,27 @@ function handleReset() {
 	fetchFeedbackList(queryForm.value);
 }
 
-function handleEdit(row: Feedback) {
-	currentEditRow.value = row;
-	editForm.feedId = row.feedId;
-	editForm.status = Number(row.status ?? 0) === 1 ? 1 : 0;
-	dialogVisible.value = true;
-}
-
-function handleDialogClosed() {
-	currentEditRow.value = null;
-	editForm.feedId = 0;
-	editForm.status = 0;
-	formRef.value?.clearValidate();
-}
-
-async function handleConfirmEdit() {
-	if (!formRef.value) return;
-
-	const valid = await formRef.value.validate().catch(() => false);
-	if (!valid) return;
-
-	editSubmitting.value = true;
+async function handleToggleStatus(row: Feedback) {
+	const currentStatus = Number(row.status ?? 0) === 1 ? 1 : 0;
+	const nextStatus: 0 | 1 = currentStatus === 1 ? 0 : 1;
+	const actionText = nextStatus === 1 ? '设为无效反馈' : '恢复为正常反馈';
 
 	try {
-		const res = await updateUserFeedbackApi({
-			feedId: editForm.feedId,
-			status: editForm.status
+		await ElMessageBox.confirm(`确认${actionText}吗？`, nextStatus === 1 ? '无效反馈确认' : '恢复确认', {
+			confirmButtonText: '确定',
+			cancelButtonText: '取消',
+			type: 'warning'
 		});
-		ElMessage.success(res.message || '修改成功');
-		dialogVisible.value = false;
-		await fetchFeedbackList();
+
+		const res = await updateUserFeedbackApi({
+			feedId: row.feedId,
+			status: nextStatus
+		});
+		ElMessage.success(res.message || '操作成功');
+		await fetchFeedbackList(queryForm.value);
 	} catch (error) {
-		ElMessage.error((error as Error).message || '修改失败');
-	} finally {
-		editSubmitting.value = false;
+		if (error === 'cancel' || error === 'close') return;
+		ElMessage.error((error as Error).message || '操作失败');
 	}
 }
 
@@ -382,7 +340,7 @@ async function handleDelete(row: Feedback) {
 
 		const res = await deleteUserFeedbackApi({ feedId: row.feedId });
 		ElMessage.success(res.message || '删除成功');
-		await fetchFeedbackList();
+		await fetchFeedbackList(queryForm.value);
 	} catch (error) {
 		if (error === 'cancel' || error === 'close') return;
 		ElMessage.error((error as Error).message || '删除失败');
