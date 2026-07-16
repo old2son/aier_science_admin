@@ -22,6 +22,19 @@ export interface ReservationActionParams {
 	reId: number;
 }
 
+export interface FeedbackActionParams {
+	feedId: number;
+}
+
+export interface SearchUserFeedbackParams {
+	startDate?: string;
+	endDate?: string;
+}
+
+export interface UpdateUserFeedbackParams extends FeedbackActionParams {
+	status: 0 | 1; // 0:正常反馈, 1:无效反馈
+}
+
 export interface SearchScienceReservationsParams {
 	endDate?: string;
 	groupType?: number | string;
@@ -128,6 +141,21 @@ export function getAllScienceReservationsApi() {
 /** 查询所有用户意见反馈 */
 export function getAllUserFeedbackApi() {
 	return request.post<unknown, UserFeedbackResponse>('/api/admin/getAllUserFeedback');
+}
+
+/** 筛选用户意见反馈 */
+export function searchUserFeedbackApi(data: SearchUserFeedbackParams) {
+	return request.post<unknown, UserFeedbackResponse>('/api/admin/searchUserFeedback', data);
+}
+
+/** 修改用户意见反馈 */
+export function updateUserFeedbackApi(data: UpdateUserFeedbackParams) {
+	return request.post<unknown, ApiResponse>('/api/admin/updateUserFeedback', data);
+}
+
+/** 删除用户意见反馈 */
+export function deleteUserFeedbackApi(data: FeedbackActionParams) {
+	return request.post<unknown, ApiResponse>('/api/admin/deleteUserFeedback', data);
 }
 
 /** 筛选预约信息 */

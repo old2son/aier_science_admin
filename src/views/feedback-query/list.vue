@@ -38,6 +38,10 @@
 			<template #other="{ row }">
 				<span>{{ row.other || '-' }}</span>
 			</template>
+
+			<template #action="{ row }">
+				<el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
+			</template>
 		</my-table>
 
 		<my-pagination
@@ -55,7 +59,7 @@ import { onMounted, ref, reactive, computed } from 'vue';
 import MyTable from '@/components/MyTable/index.vue';
 import MyPagination from '@/components/MyPagination/index.vue';
 import type { TableColumn } from '@/components/MyTable/types';
-import { getAllUserFeedbackApi } from '@/api/admin';
+import { deleteUserFeedbackApi, getAllUserFeedbackApi } from '@/api/admin';
 import type { Feedback } from '@/types/Feedback';
 import { exportExcel } from '@/utils/excel';
 
@@ -112,6 +116,14 @@ const columns: TableColumn[] = [
 		prop: 'createTime',
 		slot: false,
 		minWidth: 170
+	},
+	{
+		label: '操作',
+		prop: 'action',
+		slot: true,
+		minWidth: 90,
+		align: 'center',
+		fixed: 'right'
 	}
 ];
 
@@ -209,11 +221,30 @@ async function fetchFeedbackList() {
 
 	try {
 		const { data = [] } = await getAllUserFeedbackApi();
-		tableData.value = data;
+		tableData.value = data.filter((item) => Number(item.status ?? 0) !== 1);
+		pagination.currentPage = 1;
 	} catch (error) {
 		ElMessage.error((error as Error).message || '获取意见反馈失败');
 	} finally {
 		tableLoading.value = false;
+	}
+}
+
+async function handleDelete(row: Feedback) {
+	try {
+		await ElMessageBox.confirm('确认删除这条意见反馈吗？删除后不可恢复。', '删除确认', {
+			confirmButtonText: '确定删除',
+			cancelButtonText: '取消',
+			type: 'warning',
+			confirmButtonClass: 'el-button--danger'
+		});
+
+		const res = await deleteUserFeedbackApi({ feedId: row.feedId });
+		ElMessage.success(res.message || '删除成功');
+		await fetchFeedbackList();
+	} catch (error) {
+		if (error === 'cancel' || error === 'close') return;
+		ElMessage.error((error as Error).message || '删除失败');
 	}
 }
 
