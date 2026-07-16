@@ -32,12 +32,12 @@ export interface SearchUserFeedbackParams {
 }
 
 export interface UpdateUserFeedbackParams extends FeedbackActionParams {
-	activitySatisfied: number | string;
-	facSatisfied: number | string;
-	other: string;
-	recommend: string;
-	resSatisfied: number | string;
-	status: 0 | 1; // 0:正常反馈, 1:无效反馈
+	activitySatisfied?: number | string;
+	facSatisfied?: number | string;
+	other?: string;
+	recommend?: string;
+	resSatisfied?: number | string;
+	status?: 0 | 1; // 0:正常反馈, 1:无效反馈
 }
 
 export interface SearchScienceReservationsParams {

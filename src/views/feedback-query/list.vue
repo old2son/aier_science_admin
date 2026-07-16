@@ -32,7 +32,7 @@
 			</div>
 		</el-form>
 
-		<my-table v-loading="tableLoading" :data="pagedTableData" :columns="columns">
+		<my-table v-loading="tableLoading" :data="pagedTableData" :columns="columns" :row-class-name="getRowClassName">
 			<template #activitySatisfied="{ row }">
 				<el-tag :type="getSatisfactionType(row.activitySatisfied)">
 					{{ getSatisfactionLabel(row.activitySatisfied) }}
@@ -75,7 +75,7 @@
 		/>
 
 		<el-dialog v-model="dialogVisible" title="编辑意见反馈" width="560px" destroy-on-close @closed="handleDialogClosed">
-			<el-form ref="formRef" :model="editForm" :rules="formRules" label-width="110px">
+			<el-form ref="formRef" :model="editForm" :rules="formRules" label-width="130px">
 				<el-form-item label="姓名">
 					<span>{{ currentEditRow?.name || '-' }}</span>
 				</el-form-item>
@@ -363,13 +363,17 @@ async function fetchFeedbackList(params?: { startDate?: string; endDate?: string
 		const hasQuery = Boolean(params?.startDate || params?.endDate);
 		const response = hasQuery ? await searchUserFeedbackApi(params ?? {}) : await getAllUserFeedbackApi();
 		const { data = [] } = response;
-		tableData.value = data.filter((item) => Number(item.status ?? 0) !== 1);
+		tableData.value = data;
 		pagination.currentPage = 1;
 	} catch (error) {
 		ElMessage.error((error as Error).message || '获取意见反馈失败');
 	} finally {
 		tableLoading.value = false;
 	}
+}
+
+function getRowClassName({ row }: { row: Feedback; rowIndex: number }) {
+	return Number(row.status ?? 0) === 1 ? 'feedback-invalid-row' : '';
 }
 
 function handleSearch() {
@@ -464,8 +468,15 @@ function getExportRows(row: Feedback) {
 	return [{ ...row }];
 }
 
+function isValidFeedback(row: Feedback) {
+	return Number(row.status ?? 0) !== 1;
+}
+
 async function handleExport() {
-	if (!tableData.value.length) {
+	const validTableData = tableData.value.filter(isValidFeedback);
+	const validPagedTableData = pagedTableData.value.filter(isValidFeedback);
+
+	if (!validTableData.length) {
 		ElMessage.warning('暂无可导出的数据');
 		return;
 	}
@@ -498,7 +509,7 @@ async function handleExport() {
 
 	if (!exportMode) return;
 
-	const sourceData = exportMode === 'current' ? pagedTableData.value : tableData.value;
+	const sourceData = exportMode === 'current' ? validPagedTableData : validTableData;
 	const exportData = sourceData.flatMap((row) => getExportRows(row));
 
 	try {
@@ -514,3 +525,19 @@ onMounted(() => {
 	fetchFeedbackList(queryForm.value);
 });
 </script>
+
+<style scoped>
+:deep(.feedback-invalid-row) {
+	color: var(--el-text-color-placeholder);
+}
+
+:deep(.feedback-invalid-row .el-tag) {
+	--el-tag-bg-color: var(--el-fill-color-light);
+	--el-tag-border-color: var(--el-border-color-light);
+	--el-tag-text-color: var(--el-text-color-placeholder);
+}
+
+:deep(.feedback-invalid-row .el-button.is-link) {
+	color: var(--el-text-color-placeholder);
+}
+</style>

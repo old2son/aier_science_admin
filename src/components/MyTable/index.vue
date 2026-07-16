@@ -18,7 +18,15 @@
 		</el-table-column>
 	</el-table> -->
 
-	<el-table v-loading="loading" :data="data" border stripe style="width: 100%" @sort-change="handleSortChange">
+	<el-table
+		v-loading="loading"
+		:data="data"
+		:row-class-name="rowClassName"
+		border
+		stripe
+		style="width: 100%"
+		@sort-change="handleSortChange"
+	>
 		<el-table-column v-for="col in visibleColumns" :key="col.prop || col.type" v-bind="col">
 			<template v-if="col.slot" #default="scope">
 				<slot :name="col.prop" v-bind="scope" />
@@ -40,6 +48,7 @@ const props = defineProps<{
 	loading?: boolean;
 	data: any[];
 	columns: TableColumn[];
+	rowClassName?: (payload: { row: any; rowIndex: number }) => string;
 }>();
 
 const emit = defineEmits<{
