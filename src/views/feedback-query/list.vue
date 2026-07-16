@@ -62,16 +62,18 @@
 			</template>
 
 			<template #action="{ row }">
-				<el-button
-					:type="Number(row.status ?? 0) === 1 ? 'primary' : 'warning'"
-					link
-					size="small"
-					@click="handleToggleStatus(row)"
-				>
-					{{ Number(row.status ?? 0) === 1 ? '恢复' : '无效反馈' }}
-				</el-button>
-				<el-divider direction="vertical" />
-				<el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
+				<div class="feedback-action-group">
+					<el-button
+						:type="Number(row.status ?? 0) === 1 ? 'primary' : 'warning'"
+						link
+						size="small"
+						@click="handleToggleStatus(row)"
+					>
+						{{ Number(row.status ?? 0) === 1 ? '恢复' : '无效反馈' }}
+					</el-button>
+					<el-divider direction="vertical" />
+					<el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
+				</div>
 			</template>
 		</my-table>
 
@@ -420,7 +422,19 @@ onMounted(() => {
 	--el-tag-text-color: var(--el-text-color-placeholder);
 }
 
-:deep(.feedback-invalid-row .el-button.is-link) {
-	color: var(--el-text-color-placeholder);
+:deep(.feedback-invalid-row .feedback-action-group .el-button--primary.is-link) {
+	color: var(--el-color-primary);
+}
+
+:deep(.feedback-invalid-row .feedback-action-group .el-button--warning.is-link) {
+	color: var(--el-color-warning);
+}
+
+:deep(.feedback-invalid-row .feedback-action-group .el-button--danger.is-link) {
+	color: var(--el-color-danger);
+}
+
+:deep(.feedback-invalid-row .feedback-action-group .el-divider--vertical) {
+	border-color: var(--el-border-color);
 }
 </style>
