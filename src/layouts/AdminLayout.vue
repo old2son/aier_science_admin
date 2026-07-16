@@ -100,7 +100,12 @@
 			</header>
 
 			<main class="min-h-0 flex-1 overflow-auto">
-				<RouterView />
+				<!-- <RouterView v-slot="{ Component, route: currentRoute }">
+					<transition name="page-fade-slide" mode="out-in" appear>
+						<component :is="Component" :key="currentRoute.fullPath" />
+					</transition>
+				</RouterView> -->
+				<RouterView></RouterView>
 			</main>
 		</section>
 
@@ -356,7 +361,22 @@ onMounted(() => {
 	--el-menu-item-height: 48px;
 }
 
-/* .admin-menu :deep(.el-sub-menu .el-menu-item) {
-	font-size: 13px;
-} */
+.page-fade-slide-enter-active,
+.page-fade-slide-leave-active {
+	transition:
+		opacity 0.18s ease,
+		transform 0.18s ease;
+}
+
+.page-fade-slide-enter-from,
+.page-fade-slide-leave-to {
+	opacity: 0;
+	transform: translateY(8px);
+}
+
+.page-fade-slide-enter-to,
+.page-fade-slide-leave-from {
+	opacity: 1;
+	transform: translateY(0);
+}
 </style>
