@@ -74,55 +74,13 @@
 			:total="tableData.length"
 		/>
 
-		<el-dialog v-model="dialogVisible" title="编辑意见反馈" width="560px" destroy-on-close @closed="handleDialogClosed">
-			<el-form ref="formRef" :model="editForm" :rules="formRules" label-width="130px">
+		<el-dialog v-model="dialogVisible" title="编辑意见反馈" width="420px" destroy-on-close @closed="handleDialogClosed">
+			<el-form ref="formRef" :model="editForm" :rules="formRules" label-width="90px">
 				<el-form-item label="姓名">
 					<span>{{ currentEditRow?.name || '-' }}</span>
 				</el-form-item>
 				<el-form-item label="手机号">
 					<span>{{ currentEditRow?.phone || '-' }}</span>
-				</el-form-item>
-				<el-form-item label="活动满意度" prop="activitySatisfied">
-					<el-select v-model="editForm.activitySatisfied" placeholder="请选择活动满意度" class="w-full">
-						<el-option v-for="item in satisfactionOptions" :key="item.value" :label="item.label" :value="item.value" />
-					</el-select>
-				</el-form-item>
-				<el-form-item label="讲解服务满意度" prop="resSatisfied">
-					<el-select v-model="editForm.resSatisfied" placeholder="请选择讲解服务满意度" class="w-full">
-						<el-option
-							v-for="item in satisfactionOptions"
-							:key="`res-${item.value}`"
-							:label="item.label"
-							:value="item.value"
-						/>
-					</el-select>
-				</el-form-item>
-				<el-form-item label="场馆设施满意度" prop="facSatisfied">
-					<el-select v-model="editForm.facSatisfied" placeholder="请选择场馆设施满意度" class="w-full">
-						<el-option
-							v-for="item in satisfactionOptions"
-							:key="`fac-${item.value}`"
-							:label="item.label"
-							:value="item.value"
-						/>
-					</el-select>
-				</el-form-item>
-				<el-form-item label="推荐内容" prop="recommend">
-					<el-radio-group v-model="editForm.recommend">
-						<el-radio value="会主动推荐">会主动推荐</el-radio>
-						<el-radio value="当有人问起时，会给予正面评价">当有人问起时，会给予正面评价</el-radio>
-						<el-radio value="不会推荐">不会推荐</el-radio>
-					</el-radio-group>
-				</el-form-item>
-				<el-form-item label="其他意见" prop="other">
-					<el-input
-						v-model="editForm.other"
-						type="textarea"
-						:rows="4"
-						placeholder="请输入其他意见"
-						maxlength="300"
-						show-word-limit
-					/>
 				</el-form-item>
 				<el-form-item label="反馈状态" prop="status">
 					<el-radio-group v-model="editForm.status">
@@ -236,28 +194,10 @@ const pagination = reactive({
 
 const editForm = reactive({
 	feedId: 0,
-	activitySatisfied: '' as number | string,
-	resSatisfied: '' as number | string,
-	facSatisfied: '' as number | string,
-	recommend: '',
-	other: '',
 	status: 0 as 0 | 1
 });
 
-const satisfactionOptions = [
-	{ label: '很不满意', value: 1 },
-	{ label: '不满意', value: 2 },
-	{ label: '一般', value: 3 },
-	{ label: '满意', value: 4 },
-	{ label: '很满意', value: 5 }
-];
-
 const formRules: FormRules<typeof editForm> = {
-	activitySatisfied: [{ required: true, message: '请选择活动满意度', trigger: 'change' }],
-	resSatisfied: [{ required: true, message: '请选择讲解服务满意度', trigger: 'change' }],
-	facSatisfied: [{ required: true, message: '请选择场馆设施满意度', trigger: 'change' }],
-	recommend: [{ required: true, message: '请选择推荐内容', trigger: 'change' }],
-	other: [{ required: true, message: '请输入其他意见', trigger: 'blur' }],
 	status: [{ required: true, message: '请选择反馈状态', trigger: 'change' }]
 };
 
@@ -397,11 +337,6 @@ function handleReset() {
 function handleEdit(row: Feedback) {
 	currentEditRow.value = row;
 	editForm.feedId = row.feedId;
-	editForm.activitySatisfied = Number(row.activitySatisfied) || '';
-	editForm.resSatisfied = Number(row.resSatisfied) || '';
-	editForm.facSatisfied = Number(row.facSatisfied) || '';
-	editForm.recommend = getRecommendLabel(row.recommend);
-	editForm.other = row.other || '';
 	editForm.status = Number(row.status ?? 0) === 1 ? 1 : 0;
 	dialogVisible.value = true;
 }
@@ -409,11 +344,6 @@ function handleEdit(row: Feedback) {
 function handleDialogClosed() {
 	currentEditRow.value = null;
 	editForm.feedId = 0;
-	editForm.activitySatisfied = '';
-	editForm.resSatisfied = '';
-	editForm.facSatisfied = '';
-	editForm.recommend = '';
-	editForm.other = '';
 	editForm.status = 0;
 	formRef.value?.clearValidate();
 }
@@ -429,11 +359,6 @@ async function handleConfirmEdit() {
 	try {
 		const res = await updateUserFeedbackApi({
 			feedId: editForm.feedId,
-			activitySatisfied: editForm.activitySatisfied,
-			resSatisfied: editForm.resSatisfied,
-			facSatisfied: editForm.facSatisfied,
-			recommend: editForm.recommend,
-			other: editForm.other.trim(),
 			status: editForm.status
 		});
 		ElMessage.success(res.message || '修改成功');
