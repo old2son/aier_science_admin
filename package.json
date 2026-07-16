@@ -12,6 +12,8 @@
 	},
 	"dependencies": {
 		"@element-plus/icons-vue": "^2.3.1",
+		"@open-file-viewer/core": "^0.1.19",
+		"@open-file-viewer/vue": "^0.1.19",
 		"@vitejs/plugin-vue": "^6.0.0",
 		"axios": "^1.7.9",
 		"countup.js": "^2.10.1",
