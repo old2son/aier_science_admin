@@ -1,10 +1,32 @@
 <template>
 	<div class="page-panel">
 		<el-form :model="queryForm" inline>
+			<el-form-item label="开始日期">
+				<el-date-picker
+					v-model="queryForm.startDate"
+					type="date"
+					placeholder="选择开始日期"
+					value-format="YYYY-MM-DD"
+					:disabled-date="disableQueryStartDate"
+					clearable
+					style="width: 170px"
+				/>
+			</el-form-item>
+			<el-form-item label="结束日期">
+				<el-date-picker
+					v-model="queryForm.endDate"
+					type="date"
+					placeholder="选择结束日期"
+					value-format="YYYY-MM-DD"
+					:disabled-date="disableQueryEndDate"
+					clearable
+					style="width: 170px"
+				/>
+			</el-form-item>
 			<div>
 				<el-form-item>
-					<!-- <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button> -->
-					<!-- <el-button @click="handleReset">重置</el-button> -->
+					<el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
+					<el-button @click="handleReset">重置</el-button>
 					<el-button type="success" :icon="Download" @click="handleExport">导出 Excel</el-button>
 				</el-form-item>
 			</div>
@@ -40,6 +62,8 @@
 			</template>
 
 			<template #action="{ row }">
+				<el-button type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
+				<el-divider direction="vertical" />
 				<el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
 			</template>
 		</my-table>
@@ -49,18 +73,86 @@
 			v-model:page-size="pagination.pageSize"
 			:total="tableData.length"
 		/>
+
+		<el-dialog v-model="dialogVisible" title="编辑意见反馈" width="560px" destroy-on-close @closed="handleDialogClosed">
+			<el-form ref="formRef" :model="editForm" :rules="formRules" label-width="110px">
+				<el-form-item label="姓名">
+					<span>{{ currentEditRow?.name || '-' }}</span>
+				</el-form-item>
+				<el-form-item label="手机号">
+					<span>{{ currentEditRow?.phone || '-' }}</span>
+				</el-form-item>
+				<el-form-item label="活动满意度" prop="activitySatisfied">
+					<el-select v-model="editForm.activitySatisfied" placeholder="请选择活动满意度" class="w-full">
+						<el-option v-for="item in satisfactionOptions" :key="item.value" :label="item.label" :value="item.value" />
+					</el-select>
+				</el-form-item>
+				<el-form-item label="讲解服务满意度" prop="resSatisfied">
+					<el-select v-model="editForm.resSatisfied" placeholder="请选择讲解服务满意度" class="w-full">
+						<el-option
+							v-for="item in satisfactionOptions"
+							:key="`res-${item.value}`"
+							:label="item.label"
+							:value="item.value"
+						/>
+					</el-select>
+				</el-form-item>
+				<el-form-item label="场馆设施满意度" prop="facSatisfied">
+					<el-select v-model="editForm.facSatisfied" placeholder="请选择场馆设施满意度" class="w-full">
+						<el-option
+							v-for="item in satisfactionOptions"
+							:key="`fac-${item.value}`"
+							:label="item.label"
+							:value="item.value"
+						/>
+					</el-select>
+				</el-form-item>
+				<el-form-item label="推荐内容" prop="recommend">
+					<el-radio-group v-model="editForm.recommend">
+						<el-radio value="会主动推荐">会主动推荐</el-radio>
+						<el-radio value="当有人问起时，会给予正面评价">当有人问起时，会给予正面评价</el-radio>
+						<el-radio value="不会推荐">不会推荐</el-radio>
+					</el-radio-group>
+				</el-form-item>
+				<el-form-item label="其他意见" prop="other">
+					<el-input
+						v-model="editForm.other"
+						type="textarea"
+						:rows="4"
+						placeholder="请输入其他意见"
+						maxlength="300"
+						show-word-limit
+					/>
+				</el-form-item>
+				<el-form-item label="反馈状态" prop="status">
+					<el-radio-group v-model="editForm.status">
+						<el-radio :value="0">正常反馈</el-radio>
+						<el-radio :value="1">无效反馈</el-radio>
+					</el-radio-group>
+				</el-form-item>
+			</el-form>
+
+			<template #footer>
+				<div class="flex justify-end gap-3">
+					<el-button @click="dialogVisible = false">取消</el-button>
+					<el-button type="primary" :loading="editSubmitting" @click="handleConfirmEdit">保存</el-button>
+				</div>
+			</template>
+		</el-dialog>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { Download } from '@element-plus/icons-vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { onMounted, ref, reactive, computed } from 'vue';
-import MyTable from '@/components/MyTable/index.vue';
+import { Download, Search } from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
+import { computed, onMounted, reactive, ref } from 'vue';
+
+import { deleteUserFeedbackApi, getAllUserFeedbackApi, searchUserFeedbackApi, updateUserFeedbackApi } from '@/api/admin';
 import MyPagination from '@/components/MyPagination/index.vue';
+import MyTable from '@/components/MyTable/index.vue';
 import type { TableColumn } from '@/components/MyTable/types';
-import { deleteUserFeedbackApi, getAllUserFeedbackApi } from '@/api/admin';
 import type { Feedback } from '@/types/Feedback';
+import { getDefaultQueryDateRange } from '@/utils/date';
 import { exportExcel } from '@/utils/excel';
 
 const columns: TableColumn[] = [
@@ -121,21 +213,54 @@ const columns: TableColumn[] = [
 		label: '操作',
 		prop: 'action',
 		slot: true,
-		minWidth: 90,
+		minWidth: 120,
 		align: 'center',
 		fixed: 'right'
 	}
 ];
 
-/* 查询条件 */
-const queryForm = ref({});
-
+const queryForm = ref({
+	...getDefaultQueryDateRange(7)
+});
 const tableData = ref<Feedback[]>([]);
 const tableLoading = ref(false);
+const dialogVisible = ref(false);
+const editSubmitting = ref(false);
+const formRef = ref<FormInstance>();
+const currentEditRow = ref<Feedback | null>(null);
+
 const pagination = reactive({
 	currentPage: 1,
 	pageSize: 10
 });
+
+const editForm = reactive({
+	feedId: 0,
+	activitySatisfied: '' as number | string,
+	resSatisfied: '' as number | string,
+	facSatisfied: '' as number | string,
+	recommend: '',
+	other: '',
+	status: 0 as 0 | 1
+});
+
+const satisfactionOptions = [
+	{ label: '很不满意', value: 1 },
+	{ label: '不满意', value: 2 },
+	{ label: '一般', value: 3 },
+	{ label: '满意', value: 4 },
+	{ label: '很满意', value: 5 }
+];
+
+const formRules: FormRules<typeof editForm> = {
+	activitySatisfied: [{ required: true, message: '请选择活动满意度', trigger: 'change' }],
+	resSatisfied: [{ required: true, message: '请选择讲解服务满意度', trigger: 'change' }],
+	facSatisfied: [{ required: true, message: '请选择场馆设施满意度', trigger: 'change' }],
+	recommend: [{ required: true, message: '请选择推荐内容', trigger: 'change' }],
+	other: [{ required: true, message: '请输入其他意见', trigger: 'blur' }],
+	status: [{ required: true, message: '请选择反馈状态', trigger: 'change' }]
+};
+
 const sortState = reactive<{
 	prop: '' | 'createTime';
 	order: '' | 'ascending' | 'descending';
@@ -146,6 +271,21 @@ const sortState = reactive<{
 
 function parseDateTimeString(dateStr: string) {
 	return new Date(dateStr.replace(' ', 'T')).getTime();
+}
+
+function parseDateString(dateStr: string) {
+	const [year, month, day] = dateStr.split('-').map(Number);
+	return new Date(year, (month || 1) - 1, day || 1);
+}
+
+function disableQueryStartDate(date: Date) {
+	if (!queryForm.value.endDate) return false;
+	return date.getTime() > parseDateString(queryForm.value.endDate).getTime();
+}
+
+function disableQueryEndDate(date: Date) {
+	if (!queryForm.value.startDate) return false;
+	return date.getTime() < parseDateString(queryForm.value.startDate).getTime();
 }
 
 const sortedTableData = computed(() => {
@@ -216,17 +356,89 @@ function getRecommendType(value: number | string): 'primary' | 'success' | 'warn
 	return undefined;
 }
 
-async function fetchFeedbackList() {
+async function fetchFeedbackList(params?: { startDate?: string; endDate?: string }) {
 	tableLoading.value = true;
 
 	try {
-		const { data = [] } = await getAllUserFeedbackApi();
+		const hasQuery = Boolean(params?.startDate || params?.endDate);
+		const response = hasQuery ? await searchUserFeedbackApi(params ?? {}) : await getAllUserFeedbackApi();
+		const { data = [] } = response;
 		tableData.value = data.filter((item) => Number(item.status ?? 0) !== 1);
 		pagination.currentPage = 1;
 	} catch (error) {
 		ElMessage.error((error as Error).message || '获取意见反馈失败');
 	} finally {
 		tableLoading.value = false;
+	}
+}
+
+function handleSearch() {
+	const { startDate, endDate } = queryForm.value;
+
+	if (startDate && endDate && parseDateString(startDate).getTime() > parseDateString(endDate).getTime()) {
+		ElMessage.warning('开始日期不可大于结束日期');
+		return;
+	}
+
+	fetchFeedbackList(queryForm.value);
+}
+
+function handleReset() {
+	queryForm.value = {
+		...getDefaultQueryDateRange(7)
+	};
+	fetchFeedbackList(queryForm.value);
+}
+
+function handleEdit(row: Feedback) {
+	currentEditRow.value = row;
+	editForm.feedId = row.feedId;
+	editForm.activitySatisfied = Number(row.activitySatisfied) || '';
+	editForm.resSatisfied = Number(row.resSatisfied) || '';
+	editForm.facSatisfied = Number(row.facSatisfied) || '';
+	editForm.recommend = getRecommendLabel(row.recommend);
+	editForm.other = row.other || '';
+	editForm.status = Number(row.status ?? 0) === 1 ? 1 : 0;
+	dialogVisible.value = true;
+}
+
+function handleDialogClosed() {
+	currentEditRow.value = null;
+	editForm.feedId = 0;
+	editForm.activitySatisfied = '';
+	editForm.resSatisfied = '';
+	editForm.facSatisfied = '';
+	editForm.recommend = '';
+	editForm.other = '';
+	editForm.status = 0;
+	formRef.value?.clearValidate();
+}
+
+async function handleConfirmEdit() {
+	if (!formRef.value) return;
+
+	const valid = await formRef.value.validate().catch(() => false);
+	if (!valid) return;
+
+	editSubmitting.value = true;
+
+	try {
+		const res = await updateUserFeedbackApi({
+			feedId: editForm.feedId,
+			activitySatisfied: editForm.activitySatisfied,
+			resSatisfied: editForm.resSatisfied,
+			facSatisfied: editForm.facSatisfied,
+			recommend: editForm.recommend,
+			other: editForm.other.trim(),
+			status: editForm.status
+		});
+		ElMessage.success(res.message || '修改成功');
+		dialogVisible.value = false;
+		await fetchFeedbackList();
+	} catch (error) {
+		ElMessage.error((error as Error).message || '修改失败');
+	} finally {
+		editSubmitting.value = false;
 	}
 }
 
@@ -252,7 +464,6 @@ function getExportRows(row: Feedback) {
 	return [{ ...row }];
 }
 
-/** 导出 Excel */
 async function handleExport() {
 	if (!tableData.value.length) {
 		ElMessage.warning('暂无可导出的数据');
@@ -292,7 +503,6 @@ async function handleExport() {
 
 	try {
 		exportExcel(exportColumns, exportData, exportMode === 'current' ? '意见反馈查询-当前页' : '意见反馈查询');
-
 		ElMessage.success('导出成功');
 	} catch (error) {
 		console.error(error);
@@ -301,6 +511,6 @@ async function handleExport() {
 }
 
 onMounted(() => {
-	fetchFeedbackList();
+	fetchFeedbackList(queryForm.value);
 });
 </script>

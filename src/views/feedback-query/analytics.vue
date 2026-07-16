@@ -1,17 +1,46 @@
 <template>
 	<div class="page-panel">
+		<el-form :model="queryForm" inline class="feedback-query-form">
+			<el-form-item label="开始日期">
+				<el-date-picker
+					v-model="queryForm.startDate"
+					type="date"
+					placeholder="选择开始日期"
+					value-format="YYYY-MM-DD"
+					:disabled-date="disableQueryStartDate"
+					clearable
+					style="width: 170px"
+				/>
+			</el-form-item>
+			<el-form-item label="结束日期">
+				<el-date-picker
+					v-model="queryForm.endDate"
+					type="date"
+					placeholder="选择结束日期"
+					value-format="YYYY-MM-DD"
+					:disabled-date="disableQueryEndDate"
+					clearable
+					style="width: 170px"
+				/>
+			</el-form-item>
+			<el-form-item>
+				<el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
+				<el-button @click="handleReset">重置</el-button>
+			</el-form-item>
+		</el-form>
+
 		<div class="feedback-overview">
 			<div class="feedback-stat-card">
 				<div class="feedback-stat-card__label">反馈总数</div>
-				<div class="feedback-stat-card__value" ref="totalEl"></div>
+				<div ref="totalEl" class="feedback-stat-card__value"></div>
 			</div>
 			<div class="feedback-stat-card">
 				<div class="feedback-stat-card__label">平均满意度</div>
-				<div class="feedback-stat-card__value" ref="avgEl"></div>
+				<div ref="avgEl" class="feedback-stat-card__value"></div>
 			</div>
 			<div class="feedback-stat-card">
 				<div class="feedback-stat-card__label">正向推荐率</div>
-				<div class="feedback-stat-card__value" ref="rateEl"></div>
+				<div ref="rateEl" class="feedback-stat-card__value"></div>
 			</div>
 		</div>
 
@@ -29,24 +58,31 @@
 </template>
 
 <script setup lang="ts">
+import { Search } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import * as echarts from 'echarts';
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { getAllUserFeedbackApi } from '@/api/admin';
-import type { Feedback } from '@/types/Feedback';
 import { CountUp } from 'countup.js';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+
+import { getAllUserFeedbackApi, searchUserFeedbackApi } from '@/api/admin';
+import type { Feedback } from '@/types/Feedback';
+import { getDefaultQueryDateRange } from '@/utils/date';
 
 defineOptions({
 	name: 'FeedbackQueryAnalytics'
 });
 
+const queryForm = ref({
+	...getDefaultQueryDateRange(7)
+});
 const tableData = ref<Feedback[]>([]);
 const tableLoading = ref(false);
 const satisfactionChartRef = ref<HTMLDivElement>();
 const recommendChartRef = ref<HTMLDivElement>();
-const totalEl = ref();
-const avgEl = ref();
-const rateEl = ref();
+const totalEl = ref<HTMLElement>();
+const avgEl = ref<HTMLElement>();
+const rateEl = ref<HTMLElement>();
+
 let satisfactionChart: echarts.ECharts | null = null;
 let recommendChart: echarts.ECharts | null = null;
 
@@ -75,8 +111,8 @@ const feedbackStats = computed(() => {
 	const facilityTotal = tableData.value.reduce((sum, item) => sum + toSatisfactionNumber(item.facSatisfied), 0);
 
 	const positiveRecommendCount = tableData.value.filter((item) => {
-		const r = normalizeRecommendValue(item.recommend);
-		return r === '会主动推荐' || r === '当有人问起时，会给予正面评价';
+		const recommend = normalizeRecommendValue(item.recommend);
+		return recommend === '会主动推荐' || recommend === '当有人问起时，会给予正面评价';
 	}).length;
 
 	const avgSatisfaction = (activityTotal + serviceTotal + facilityTotal) / (total * 3);
@@ -115,10 +151,9 @@ const recommendChartData = computed(() => {
 	};
 
 	tableData.value.forEach((item) => {
-		const recommendLabel = normalizeRecommendValue(item.recommend);
-
-		if (recommendLabel in recommendCountMap) {
-			recommendCountMap[recommendLabel as keyof typeof recommendCountMap] += 1;
+		const recommend = normalizeRecommendValue(item.recommend);
+		if (recommend in recommendCountMap) {
+			recommendCountMap[recommend as keyof typeof recommendCountMap] += 1;
 		}
 	});
 
@@ -133,19 +168,40 @@ watch(
 	(newVal) => {
 		if (!newVal) return;
 
-		new CountUp(totalEl.value, newVal.total).start();
+		if (totalEl.value) {
+			new CountUp(totalEl.value, newVal.total).start();
+		}
 
-		new CountUp(avgEl.value, newVal.avgSatisfaction, {
-			decimalPlaces: 1
-		}).start();
+		if (avgEl.value) {
+			new CountUp(avgEl.value, newVal.avgSatisfaction, {
+				decimalPlaces: 1
+			}).start();
+		}
 
-		new CountUp(rateEl.value, newVal.positiveRecommendRate, {
-			decimalPlaces: 1,
-			suffix: '%'
-		}).start();
+		if (rateEl.value) {
+			new CountUp(rateEl.value, newVal.positiveRecommendRate, {
+				decimalPlaces: 1,
+				suffix: '%'
+			}).start();
+		}
 	},
 	{ immediate: true }
 );
+
+function parseDateString(dateStr: string) {
+	const [year, month, day] = dateStr.split('-').map(Number);
+	return new Date(year, (month || 1) - 1, day || 1);
+}
+
+function disableQueryStartDate(date: Date) {
+	if (!queryForm.value.endDate) return false;
+	return date.getTime() > parseDateString(queryForm.value.endDate).getTime();
+}
+
+function disableQueryEndDate(date: Date) {
+	if (!queryForm.value.startDate) return false;
+	return date.getTime() < parseDateString(queryForm.value.startDate).getTime();
+}
 
 function normalizeRecommendValue(value: number | string) {
 	const normalizedValue = String(value ?? '').trim();
@@ -281,12 +337,14 @@ function handleChartResize() {
 	recommendChart?.resize();
 }
 
-async function fetchFeedbackList() {
+async function fetchFeedbackList(params?: { startDate?: string; endDate?: string }) {
 	tableLoading.value = true;
 
 	try {
-		const { data = [] } = await getAllUserFeedbackApi();
-		tableData.value = data;
+		const hasQuery = Boolean(params?.startDate || params?.endDate);
+		const response = hasQuery ? await searchUserFeedbackApi(params ?? {}) : await getAllUserFeedbackApi();
+		const { data = [] } = response;
+		tableData.value = data.filter((item) => Number(item.status ?? 0) !== 1);
 	} catch (error) {
 		ElMessage.error((error as Error).message || '获取意见反馈失败');
 	} finally {
@@ -294,12 +352,30 @@ async function fetchFeedbackList() {
 	}
 }
 
+function handleSearch() {
+	const { startDate, endDate } = queryForm.value;
+
+	if (startDate && endDate && parseDateString(startDate).getTime() > parseDateString(endDate).getTime()) {
+		ElMessage.warning('开始日期不可大于结束日期');
+		return;
+	}
+
+	fetchFeedbackList(queryForm.value);
+}
+
+function handleReset() {
+	queryForm.value = {
+		...getDefaultQueryDateRange(7)
+	};
+	fetchFeedbackList(queryForm.value);
+}
+
 onMounted(() => {
 	window.addEventListener('resize', handleChartResize);
 	nextTick(() => {
 		renderCharts();
 	});
-	fetchFeedbackList();
+	fetchFeedbackList(queryForm.value);
 });
 
 onBeforeUnmount(() => {
@@ -322,6 +398,10 @@ watch(
 </script>
 
 <style scoped>
+.feedback-query-form {
+	margin-bottom: 16px;
+}
+
 .feedback-overview {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
