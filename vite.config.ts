@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv, ConfigEnv, UserConfig, type Plugin, type PluginOption } from 'vite';
 import { fileURLToPath, URL } from 'node:url';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 import vue from '@vitejs/plugin-vue';
 
@@ -9,6 +10,17 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
 	const manualChunks = (id: string) => {
 		if (!id.includes('node_modules')) return;
 
+		if (
+			id.includes('@open-file-viewer') ||
+			id.includes('ag-psd') ||
+			id.includes('pdfjs-dist') ||
+			id.includes('mammoth') ||
+			id.includes('jszip') ||
+			id.includes('utif') ||
+			id.includes('tiff')
+		) {
+			return 'vendor-open-file-viewer';
+		}
 		if (id.includes('echarts') || id.includes('zrender')) return 'vendor-echarts';
 		if (id.includes('xlsx')) return 'vendor-xlsx';
 		if (id.includes('element-plus') || id.includes('@element-plus')) return 'vendor-element-plus';
@@ -25,7 +37,15 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
 
 		base: '/',
 
-		plugins: [vue()],
+		plugins: [
+			vue(),
+
+			visualizer({
+				filename: 'stats.html',
+				open: true,
+				gzipSize: true
+			})
+		],
 		resolve: {
 			alias: {
 				'@': fileURLToPath(new URL('./src', import.meta.url))
