@@ -159,6 +159,7 @@
 						type="date"
 						placeholder="选择开始日期"
 						value-format="YYYY-MM-DD"
+						:disabled-date="disableFormStartDate"
 						style="width: 100%"
 					/>
 				</el-form-item>
@@ -168,6 +169,7 @@
 						type="date"
 						placeholder="选择结束日期"
 						value-format="YYYY-MM-DD"
+						:disabled-date="disableFormEndDate"
 						style="width: 100%"
 					/>
 				</el-form-item>
@@ -466,6 +468,16 @@ function disableQueryStartDate(date: Date) {
 function disableQueryEndDate(date: Date) {
 	if (!queryForm.value.startDate) return false;
 	return date.getTime() < parseDateString(queryForm.value.startDate).getTime();
+}
+
+function disableFormStartDate(date: Date) {
+	if (!formData.endDate) return false;
+	return date.getTime() > parseDateString(formData.endDate).getTime();
+}
+
+function disableFormEndDate(date: Date) {
+	if (!formData.startDate) return false;
+	return date.getTime() < parseDateString(formData.startDate).getTime();
 }
 
 /** 表格展示数据（默认全部，查询后为过滤结果） */
