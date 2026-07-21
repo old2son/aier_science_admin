@@ -28,12 +28,32 @@
 				<el-form-item label="时间段">
 					<el-select v-model="queryForm.timeSlot" placeholder="全部" clearable style="width: 170px">
 						<el-option
-							v-for="opt in timeSlotOptions"
+							v-for="opt in displayTimeSlotOptions"
 							:key="opt.value"
 							:label="opt.label"
 							:value="opt.value"
 						/>
 					</el-select>
+				</el-form-item>
+				<el-form-item label="开始时间">
+					<el-time-picker
+						v-model="queryForm.customStartTime"
+						placeholder="选择开始时间"
+						value-format="HH:mm"
+						format="HH:mm"
+						clearable
+						style="width: 150px"
+					/>
+				</el-form-item>
+				<el-form-item label="结束时间">
+					<el-time-picker
+						v-model="queryForm.customEndTime"
+						placeholder="选择结束时间"
+						value-format="HH:mm"
+						format="HH:mm"
+						clearable
+						style="width: 150px"
+					/>
 				</el-form-item>
 				<el-form-item label="姓名">
 					<el-input v-model="queryForm.name" placeholder="请输入姓名" clearable style="width: 140px" />
@@ -231,6 +251,7 @@ import MyTable from '@/components/MyTable/index.vue';
 import MyPagination from '@/components/MyPagination/index.vue';
 import type { TableColumn } from '@/components/MyTable/types';
 import { STORAGE_KEY } from '@/constants/storage';
+import { TIME_SLOT_OPTIONS } from '@/constants/timeSlots';
 
 import {
 	getAllScienceReservationsApi,
@@ -548,6 +569,8 @@ function normalizeBookingRow(row: BookingRow): BookingViewRow {
 const queryForm = ref({
 	...getDefaultQueryDateRange(7),
 	timeSlot: '' as string,
+	customStartTime: '' as string,
+	customEndTime: '' as string,
 	name: '' as string,
 	phone: '' as string,
 	groupType: '' as string,
@@ -578,12 +601,16 @@ const groupTypeOptions = [
 ];
 
 /** 时间段选项（固定 4 档） */
-const timeSlotOptions = [
-	{ label: '09:00 - 10:00', value: '09:00-10:00' },
-	{ label: '10:30 - 11:30', value: '10:30-11:30' },
-	{ label: '14:30 - 15:30', value: '14:30-15:30' },
-	{ label: '16:00 - 17:00', value: '16:00-17:00' }
-];
+const timeSlotOptions = TIME_SLOT_OPTIONS;
+const CUSTOM_TIME_SLOT_VALUE = '__custom__';
+
+const displayTimeSlotOptions = computed(() => {
+	if (queryForm.value.timeSlot === CUSTOM_TIME_SLOT_VALUE) {
+		return [...timeSlotOptions, { label: '自定义时间', value: CUSTOM_TIME_SLOT_VALUE }];
+	}
+
+	return timeSlotOptions;
+});
 
 /** 状态选项 */
 const statusOptions = [
@@ -615,6 +642,20 @@ function parseDateTimeString(dateStr: string) {
 function parseTimeString(timeStr: string) {
 	const [hour = 0, minute = 0] = timeStr.split(':').map(Number);
 	return hour * 60 + minute;
+}
+
+function getQueryTimeRange(params = queryForm.value) {
+	const { customStartTime, customEndTime, timeSlot } = params;
+
+	if (customStartTime && customEndTime) {
+		return `${customStartTime}-${customEndTime}`;
+	}
+
+	if (timeSlot === CUSTOM_TIME_SLOT_VALUE) {
+		return '';
+	}
+
+	return timeSlot;
 }
 
 const sortedTableData = computed(() => {
@@ -656,10 +697,11 @@ function mapGroupTypeToApiValue(groupType: string) {
 
 function buildSearchParams(params = queryForm.value): SearchScienceReservationsParams {
 	const requestParams: SearchScienceReservationsParams = {};
+	const queryTimeRange = getQueryTimeRange(params);
 
 	if (params.startDate) requestParams.startDate = params.startDate;
 	if (params.endDate) requestParams.endDate = params.endDate;
-	if (params.timeSlot) requestParams.timeRange = params.timeSlot;
+	if (queryTimeRange) requestParams.timeRange = queryTimeRange;
 	if (params.name) requestParams.name = params.name;
 	if (params.phone) requestParams.phone = params.phone;
 	if (params.status !== '') requestParams.status = Number(params.status);
@@ -703,10 +745,20 @@ async function fetchBookings(params = queryForm.value, useSearch = false) {
 
 /** 点击查询：多条件组合过滤 */
 function handleSearch() {
-	const { startDate, endDate } = queryForm.value;
+	const { startDate, endDate, customStartTime, customEndTime } = queryForm.value;
 
 	if (startDate && endDate && parseDateString(startDate).getTime() > parseDateString(endDate).getTime()) {
 		ElMessage.warning('开始日期不可大于结束日期');
+		return;
+	}
+
+	if ((customStartTime && !customEndTime) || (!customStartTime && customEndTime)) {
+		ElMessage.warning('开始时间和结束时间需要同时选择');
+		return;
+	}
+
+	if (customStartTime && customEndTime && parseTimeString(customStartTime) > parseTimeString(customEndTime)) {
+		ElMessage.warning('开始时间不可大于结束时间');
 		return;
 	}
 
@@ -718,6 +770,8 @@ function handleReset() {
 	queryForm.value = {
 		...getDefaultQueryDateRange(7),
 		timeSlot: '',
+		customStartTime: '',
+		customEndTime: '',
 		name: '',
 		phone: '',
 		groupType: '',
@@ -842,6 +896,32 @@ function handleCancel(reId: number) {
 function getStatusInfo(status: BookingStatus) {
 	return statusMap[status];
 }
+
+watch(
+	() => queryForm.value.timeSlot,
+	(newValue) => {
+		if (!newValue || newValue === CUSTOM_TIME_SLOT_VALUE) return;
+
+		queryForm.value.customStartTime = '';
+		queryForm.value.customEndTime = '';
+	}
+);
+
+watch(
+	() => [queryForm.value.customStartTime, queryForm.value.customEndTime],
+	([startTime, endTime]) => {
+		if (startTime || endTime) {
+			if (queryForm.value.timeSlot !== CUSTOM_TIME_SLOT_VALUE) {
+				queryForm.value.timeSlot = CUSTOM_TIME_SLOT_VALUE;
+			}
+			return;
+		}
+
+		if (queryForm.value.timeSlot === CUSTOM_TIME_SLOT_VALUE) {
+			queryForm.value.timeSlot = '';
+		}
+	}
+);
 
 watch(
 	() => [tableData.value.length, pagination.pageSize],

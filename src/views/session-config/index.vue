@@ -222,6 +222,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import MyTable from '@/components/MyTable/index.vue';
 import MyPagination from '@/components/MyPagination/index.vue';
 import type { TableColumn } from '@/components/MyTable/types';
+import { TIME_SLOT_OPTIONS } from '@/constants/timeSlots';
 import {
 	getAllScienceConfigurationApi,
 	searchScienceConfigurationApi,
@@ -411,12 +412,7 @@ const submitLoading = ref(false);
 const editId = ref<number | null>(null);
 
 /** 固定时间段选项 */
-const timeSlotOptions = [
-	{ label: '09:00 - 10:30', value: '09:00-10:30' },
-	{ label: '10:30 - 12:00', value: '10:30-12:00' },
-	{ label: '14:30 - 16:00', value: '14:30-16:00' },
-	{ label: '16:00 - 17:00', value: '16:00-17:00' }
-];
+const timeSlotOptions = TIME_SLOT_OPTIONS;
 
 /** 表单数据 */
 const formData = reactive({
