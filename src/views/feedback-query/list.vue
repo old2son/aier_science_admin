@@ -113,14 +113,7 @@ const columns: TableColumn[] = [
 		minWidth: 130
 	},
 	{
-		label: '活动满意度',
-		prop: 'activitySatisfied',
-		slot: true,
-		minWidth: 110,
-		align: 'center'
-	},
-	{
-		label: '讲解服务满意度',
+		label: '预约流程满意度',
 		prop: 'resSatisfied',
 		slot: true,
 		minWidth: 130,
@@ -134,7 +127,14 @@ const columns: TableColumn[] = [
 		align: 'center'
 	},
 	{
-		label: '推荐内容',
+		label: '科普活动满意度',
+		prop: 'activitySatisfied',
+		slot: true,
+		minWidth: 110,
+		align: 'center'
+	},
+	{
+		label: '推荐意向',
 		prop: 'recommend',
 		slot: true,
 		minWidth: 220,

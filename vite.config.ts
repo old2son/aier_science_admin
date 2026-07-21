@@ -52,9 +52,71 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
 			}
 		},
 		build: {
-			rollupOptions: {
+			rolldownOptions: {
 				output: {
-					manualChunks
+					codeSplitting: {
+						minSize: 20000,
+						groups: [
+							{
+								name: 'vendor-echarts',
+								test: /echarts/,
+								priority: 30
+							},
+							{
+								name: 'vendor-zrender',
+								test: /zrender/,
+								priority: 30
+							},
+							{
+								name: 'vendor-open-file-viewer',
+								test: /open-file-viewer/,
+								priority: 20
+							},
+							{
+								name: 'vendor-xlsx',
+								test: /xlsx/,
+								priority: 20
+							},
+							{
+								name: 'vendor-element-plus',
+								test: /element-plus/,
+								priority: 20
+							},
+							{
+								name: 'vendor-vue-router',
+								test: /vue-router/,
+								priority: 20
+							},
+							{
+								name: 'vendor-pinia',
+								test: /pinia/,
+								priority: 20
+							},
+							{
+								name: 'vendor-axios',
+								test: /axios/,
+								priority: 20
+							},
+							{
+								name: 'vendor-vue',
+								test: /vue/,
+								priority: 20
+							},
+							{
+								name: 'vendor',
+								test: /[\\/]node_modules[\\/]/,
+								priority: 10,
+								minSize: 30000,
+							},
+
+							{
+								name: 'common',
+								minShareCount: 2,
+								minSize: 10000,
+								priority: 5
+							}
+						]
+					},
 				}
 			}
 		},
