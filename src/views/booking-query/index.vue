@@ -480,6 +480,14 @@ function getBookingVisitLabel(row: BookingRow) {
 	if (Number(row.activityId) !== 0) {
 		return row.activityName || '-';
 	}
+
+	if (row.type === 1) {
+		return '个人预约';
+	}
+
+	if (row.type === 2) {
+		return '团队预约';
+	}
 }
 
 function getBookingMemberCount(row: BookingRow) {
