@@ -459,30 +459,27 @@ function hasMembers(row: BookingRow) {
 }
 
 function getBookingGroupType(row: BookingRow) {
-	const isActivity = Number(row.activityId) !== 0;
-	const isPersonal = hasMembers(row);
+	if (row.type === 1) {
+		return '个人预约';
+	} 
 
-	if (isActivity && isPersonal) {
+	if (row.type === 2) {
+		return '团队预约';
+	}
+
+	if (row.type === 3) {
 		return '活动预约（个人）';
 	}
 
-	if (isActivity && !isPersonal) {
+	if (row.type === 4) {
 		return '活动预约（团队）';
 	}
-
-	if (!isActivity && isPersonal) {
-		return '个人预约';
-	}
-
-	return '团队预约';
 }
 
 function getBookingVisitLabel(row: BookingRow) {
 	if (Number(row.activityId) !== 0) {
 		return row.activityName || '-';
 	}
-
-	return hasMembers(row) ? '个人预约' : '团队预约';
 }
 
 function getBookingMemberCount(row: BookingRow) {
@@ -534,7 +531,7 @@ function getExportRows(row: BookingRow) {
 
 function normalizeBookingRow(row: BookingRow): BookingViewRow {
 	// const primaryCompanion = getPrimaryCompanion(row);
-	const groupType = getBookingGroupType(row);
+	const groupType = getBookingGroupType(row) as string;
 	const [startTime, endTime] = (row.timeSlot || '').split('-');
 
 	return {
