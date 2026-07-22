@@ -196,11 +196,11 @@
 
 				<template #excelUrl="{ row }">
 					<span v-if="row?.excelUrl">
-						<!-- <el-link :href="row.excelUrl" target="_blank" type="primary" underline="never">
+						<el-link :href="row.excelUrl" target="_blank" type="primary" underline="never">
 							查看附件
-						</el-link> -->
+						</el-link>
 
-						<el-link type="primary" underline="never" @click="openExcel(row.excelUrl, row.name)"> 查看附件 </el-link>
+						<!-- <el-link type="primary" underline="never" @click="openExcel(row.excelUrl, row.name)"> 查看附件 </el-link> -->
 					</span>
 					<span v-else class="text-slate-400">-</span>
 				</template>
@@ -227,7 +227,7 @@
 			/>
 		</div>
 
-		<el-dialog v-model="dialogVisible" align-center>
+		<!-- <el-dialog v-model="dialogVisible" align-center>
 			<OpenFileViewer
 				v-if="fileData"
 				:file="fileData"
@@ -239,7 +239,7 @@
 				:theme="theme"
 				:plugins="plugins"
 			/>
-		</el-dialog>
+		</el-dialog> -->
 	</div>
 </template>
 
@@ -250,7 +250,7 @@ import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import MyTable from '@/components/MyTable/index.vue';
 import MyPagination from '@/components/MyPagination/index.vue';
 import type { TableColumn } from '@/components/MyTable/types';
-import { STORAGE_KEY } from '@/constants/storage';
+// import { STORAGE_KEY } from '@/constants/storage';
 import { TIME_SLOT_OPTIONS } from '@/constants/timeSlots';
 
 import {
@@ -266,52 +266,52 @@ import { exportExcel } from '@/utils/excel';
 
 
 /** 查看附件开始 */
-import { OpenFileViewer } from '@open-file-viewer/vue';
-import { officePlugin } from '@open-file-viewer/core';
-import '@open-file-viewer/core/style.css';
+// import { OpenFileViewer } from '@open-file-viewer/vue';
+// import { officePlugin } from '@open-file-viewer/core';
+// import '@open-file-viewer/core/style.css';
 
-const dialogVisible = ref(false);
-const fileData = ref<File>();
-const theme = ref<'light' | 'dark' | 'auto'>('auto');
-const plugins = [officePlugin()];
+// const dialogVisible = ref(false);
+// const fileData = ref<File>();
+// const theme = ref<'light' | 'dark' | 'auto'>('auto');
+// const plugins = [officePlugin()];
 
 
-const toolbarConfig = {
-	zoom: true,
-	rotate: true,
-	download: true,
-	fullscreen: true,
-	search: true,
-	labels: {
-		download: '下载文件',
-		print: '打印',
-		fullscreen: '全屏',
-		search: '搜索'
-	}
-};
+// const toolbarConfig = {
+// 	zoom: true,
+// 	rotate: true,
+// 	download: true,
+// 	fullscreen: true,
+// 	search: true,
+// 	labels: {
+// 		download: '下载文件',
+// 		print: '打印',
+// 		fullscreen: '全屏',
+// 		search: '搜索'
+// 	}
+// };
 
-async function loadFile(url: string, name: string) {
-	// 测试用
-	// const url = 'https://geducloud0617.oss-cn-shenzhen.aliyuncs.com/aier-applet/template_regist_team.xlsx';
+// async function loadFile(url: string, name: string) {
+// 	// 测试用
+// 	// const url = 'https://geducloud0617.oss-cn-shenzhen.aliyuncs.com/aier-applet/template_regist_team.xlsx';
 
-	try {
-		const response = await fetch(url);
+// 	try {
+// 		const response = await fetch(url);
 
-		const blob = await response.blob();
+// 		const blob = await response.blob();
 
-		fileData.value = new File([blob], `${name}.xlsx`, {
-			type: blob.type
-		});
-	} catch (error) {
-		ElMessage.error('文件加载失败');
-	}
-}
+// 		fileData.value = new File([blob], `${name}.xlsx`, {
+// 			type: blob.type
+// 		});
+// 	} catch (error) {
+// 		ElMessage.error('文件加载失败');
+// 	}
+// }
 
-function openExcel(url: string, name: string) {
-	loadFile(url, name);
-	theme.value = (localStorage.getItem(STORAGE_KEY.THEME_KEY) ?? 'auto') as 'light' | 'dark' | 'auto';
-	dialogVisible.value = true;
-}
+// function openExcel(url: string, name: string) {
+// 	loadFile(url, name);
+// 	theme.value = (localStorage.getItem(STORAGE_KEY.THEME_KEY) ?? 'auto') as 'light' | 'dark' | 'auto';
+// 	dialogVisible.value = true;
+// }
 /** 查看附件结束 */
 
 type BookingViewRow = BookingRow & {
