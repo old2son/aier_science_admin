@@ -14,7 +14,7 @@ export interface ApiResponse<T = unknown> {
 
 let messageTimer: number | null = null;
 
-let isHandling401 = false;
+let isRedirecting = false;
 
 const showError = (message: string) => {
 	if (messageTimer) return;
@@ -27,11 +27,11 @@ const showError = (message: string) => {
 };
 
 const handleLoginExpired = async () => {
-	if (isHandling401) {
+	if (isRedirecting) {
 		return;
 	}
 
-	isHandling401 = true;
+	isRedirecting = true;
 
 	try {
 		const userStore = useUserStore();
