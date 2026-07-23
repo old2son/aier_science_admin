@@ -7,7 +7,7 @@
 * [ ] 增加 `isRedirecting` 标识
 * [ ] 防止多个接口同时登录失效时重复执行 `router.replace`
 * [x] 防止重复执行 `logout`
-* [ ] 防止重复清除 Token
+* [x] 防止重复清除 Token
 
 ### 请求中断（后续优化）
 

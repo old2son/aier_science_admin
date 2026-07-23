@@ -9,6 +9,7 @@ import { STORAGE_KEY } from '@/constants/storage';
 export const useUserStore = defineStore('user', () => {
 	const token = ref(localStorage.getItem(STORAGE_KEY.TOKEN) ?? '');
 	const userInfo = ref<AdminUserInfo | null>(null);
+	const isLoggingOut = ref(false);
 
 	const isLoggedIn = computed(() => Boolean(token.value));
 
@@ -30,6 +31,12 @@ export const useUserStore = defineStore('user', () => {
 	}
 
 	async function logout() {
+		if (isLoggingOut.value) {
+			return;
+		}
+		
+		isLoggingOut.value = true;
+
 		try {
 			await adminLogoutApi();
 		} catch (error) {
