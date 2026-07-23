@@ -111,6 +111,15 @@ router.beforeEach((to) => {
 		return true;
 	}
 
+	if (to.name === 'Login' && userStore.isLoggedIn) {
+		return {
+			path: '/',
+			query: {
+				redirect: to.fullPath
+			}
+		};
+	}
+
 	if (!userStore.isLoggedIn) {
 		return {
 			path: '/login',
