@@ -14,6 +14,8 @@ export interface ApiResponse<T = unknown> {
 
 let messageTimer: number | null = null;
 
+let isHandling401 = false;
+
 const showError = (message: string) => {
 	if (messageTimer) return;
 
@@ -24,11 +26,22 @@ const showError = (message: string) => {
 	}, 2000);
 };
 
-const toLogout = async () => {
-	const userStore = useUserStore();
+const handleLoginExpired = async () => {
+	if (isHandling401) {
+		return;
+	}
 
-	await userStore.logout();
-	router.replace({ name: 'Login' });
+	isHandling401 = true;
+
+	try {
+		const userStore = useUserStore();
+
+		await userStore.logout();
+
+		router.replace('/login');
+	} catch (error) {
+		console.error(error);
+	}
 };
 
 const isLoginExpired = (message: string) => {
@@ -55,7 +68,7 @@ request.interceptors.response.use(
 	(response) => {
 		if (response.data.code === 0 && response.data.message === '登录失效，请重新登录') {
 			showError(response.data.message ?? '请求失败');
-			toLogout();
+			handleLoginExpired();
 			return Promise.reject(new Error(response.data.message ?? '请求失败'));
 		}
 
@@ -71,7 +84,7 @@ request.interceptors.response.use(
 
 		if (isLoginExpired(message)) {
 			showError('登录已过期，请重新登录');
-			toLogout();
+			handleLoginExpired();
 			return Promise.reject(error);
 		}
 
