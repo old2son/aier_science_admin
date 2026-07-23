@@ -14,7 +14,7 @@ export interface ApiResponse<T = unknown> {
 
 let messageTimer: number | null = null;
 
-let isRedirecting = false;
+let isRedirecting = false; // 防止重复跳转锁
 
 const showError = (message: string) => {
 	if (messageTimer) return;

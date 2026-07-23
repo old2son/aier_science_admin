@@ -9,7 +9,7 @@ import { STORAGE_KEY } from '@/constants/storage';
 export const useUserStore = defineStore('user', () => {
 	const token = ref(localStorage.getItem(STORAGE_KEY.TOKEN) ?? '');
 	const userInfo = ref<AdminUserInfo | null>(null);
-	const isLoggingOut = ref(false);
+	const isLoggingOut = ref(false); // 控制主动登出的锁
 
 	const isLoggedIn = computed(() => Boolean(token.value));
 
@@ -45,6 +45,8 @@ export const useUserStore = defineStore('user', () => {
 			token.value = '';
 			userInfo.value = null;
 			localStorage.removeItem(STORAGE_KEY.TOKEN);
+
+			isLoggingOut.value = false;
 		}
 	}
 
