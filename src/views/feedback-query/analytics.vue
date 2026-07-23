@@ -129,17 +129,17 @@ const satisfactionChartData = computed(() => {
 
 	return [
 		{
-			label: '活动满意度',
-			value: tableData.value.reduce((sum, item) => sum + toSatisfactionNumber(item.activitySatisfied), 0) / total
-		},
-		{
-			label: '讲解服务满意度',
+			label: '预约流程满意度',
 			value: tableData.value.reduce((sum, item) => sum + toSatisfactionNumber(item.resSatisfied), 0) / total
 		},
 		{
 			label: '场馆设施满意度',
 			value: tableData.value.reduce((sum, item) => sum + toSatisfactionNumber(item.facSatisfied), 0) / total
-		}
+		},
+		{
+			label: '科普活动满意度',
+			value: tableData.value.reduce((sum, item) => sum + toSatisfactionNumber(item.activitySatisfied), 0) / total
+		},
 	];
 });
 
