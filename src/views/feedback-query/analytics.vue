@@ -106,16 +106,28 @@ const feedbackStats = computed(() => {
 		};
 	}
 
-	const activityTotal = tableData.value.reduce((sum, item) => sum + toSatisfactionNumber(item.activitySatisfied), 0);
-	const serviceTotal = tableData.value.reduce((sum, item) => sum + toSatisfactionNumber(item.resSatisfied), 0);
-	const facilityTotal = tableData.value.reduce((sum, item) => sum + toSatisfactionNumber(item.facSatisfied), 0);
+	// const activityTotal = tableData.value.reduce((sum, item) => sum + toSatisfactionNumber(item.activitySatisfied), 0);
+	// const serviceTotal = tableData.value.reduce((sum, item) => sum + toSatisfactionNumber(item.resSatisfied), 0);
+	// const facilityTotal = tableData.value.reduce((sum, item) => sum + toSatisfactionNumber(item.facSatisfied), 0);
+
+	const activitySatisfiedCount = tableData.value.filter((item) => isSatisfied(item.activitySatisfied)).length;
+	const serviceSatisfiedCount = tableData.value.filter((item) => isSatisfied(item.resSatisfied)).length;
+	const facilitySatisfiedCount = tableData.value.filter((item) => isSatisfied(item.facSatisfied)).length;
+
+	// 三个项目满意度占比得分
+	const activityScore = (activitySatisfiedCount / total) * 5;
+	const serviceScore = (serviceSatisfiedCount / total) * 5;
+	const facilityScore = (facilitySatisfiedCount / total) * 5;
 
 	const positiveRecommendCount = tableData.value.filter((item) => {
 		const recommend = normalizeRecommendValue(item.recommend);
 		return recommend === '会主动推荐' || recommend === '当有人问起时，会给予正面评价';
 	}).length;
 
-	const avgSatisfaction = (activityTotal + serviceTotal + facilityTotal) / (total * 3);
+	// const avgSatisfaction = (activityTotal + serviceTotal + facilityTotal) / (total * 3);
+
+	// 总平均满意度
+	const avgSatisfaction = (activityScore + serviceScore + facilityScore) / 3;
 
 	return {
 		total,
@@ -139,7 +151,7 @@ const satisfactionChartData = computed(() => {
 		{
 			label: '科普活动满意度',
 			value: tableData.value.reduce((sum, item) => sum + toSatisfactionNumber(item.activitySatisfied), 0) / total
-		},
+		}
 	];
 });
 
@@ -187,6 +199,10 @@ watch(
 	},
 	{ immediate: true }
 );
+
+function isSatisfied(value: string | number) {
+	return value === '4' || value === '5';
+}
 
 function parseDateString(dateStr: string) {
 	const [year, month, day] = dateStr.split('-').map(Number);
