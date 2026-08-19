@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>爱尔科普馆预约后台 · 原型图</title>
+<style>
+  :root {
+    --brand: #2563eb;
+    --brand-700: #1d4ed8;
+    --brand-soft: #eff4ff;
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --surface-2: #f8fafc;
+    --border: #e5e7eb;
+    --border-light: #eef0f3;
+    --text: #1f2937;
+    --text-2: #64748b;
+    --text-3: #94a3b8;
+    --green: #22c55e;
+    --green-soft: #dcfce7;
+    --red: #ef4444;
+    --red-soft: #fee2e2;
+    --amber: #f59e0b;
+    --amber-soft: #fef3c7;
+    --slate-soft: #f1f5f9;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(15,23,42,.08), 0 8px 24px rgba(15,23,42,.06);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+    background: #eef1f5;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  /* ============ 原型顶部导航 ============ */
+  .proto-bar {
+    position: sticky; top: 0; z-index: 50;
+    background: #111827;
+    color: #fff;
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+  .proto-bar .title { font-weight: 700; letter-spacing: .5px; margin-right: 8px; }
+  .proto-bar .title span { color: #60a5fa; }
+  .proto-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.14);
+    color: #e5e7eb;
+    padding: 5px 12px; border-radius: 999px;
+    cursor: pointer; font-size: 12.5px; transition: .15s;
+  }
+  .chip:hover { background: rgba(255,255,255,.2); }
+  .chip.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+  /* ============ 屏幕容器 ============ */
+  .stage { padding: 22px; display: flex; justify-content: center; }
+  .screen { display: none; width: 100%; max-width: 1320px; }
+  .screen.active { display: block; animation: fade .25s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* ============ 登录页 ============ */
+  .login { display: grid; grid-template-columns: 1fr 420px; min-height: 620px; border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); background: var(--surface); }
+  .login__hero { background: linear-gradient(135deg, #1e3a8a, #2563eb); color: #fff; padding: 42px; display: flex; flex-direction: column; justify-content: space-between; }
+  .login__hero h1 { font-size: 38px; line-height: 1.25; font-weight: 700; margin: 0; }
+  .login__hero p { font-size: 16px; line-height: 1.7; opacity: .9; margin-top: 18px; max-width: 460px; }
+  .login__hero .small { font-size: 13px; opacity: .8; }
+  .login__panel { display: flex; align-items: center; justify-content: center; padding: 40px; }
+  .login__form { width: 100%; max-width: 300px; }
+  .login__form h2 { font-size: 24px; margin: 0 0 28px; }
+  .field { margin-bottom: 18px; }
+  .field input { width: 100%; height: 44px; border: 1px solid var(--border); border-radius: 8px; padding: 0 14px; font-size: 14px; outline: none; }
+  .field input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+  .btn { height: 42px; border-radius: 8px; border: 1px solid transparent; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 16px; transition: .15s; }
+  .btn--primary { background: var(--brand); color: #fff; }
+  .btn--primary:hover { background: var(--brand-700); }
+  .btn--block { width: 100%; }
+  .btn--success { background: var(--green); color: #fff; }
+  .btn--ghost { background: var(--surface); border-color: var(--border); color: var(--text); }
+  .btn--ghost:hover { background: var(--surface-2); }
+  .btn--sm { height: 34px; padding: 0 12px; font-size: 13px; }
+
+  /* ============ 后台框架 ============ */
+  .admin { display: flex; min-height: 640px; border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); background: var(--bg); }
+  .sidebar { width: 232px; background: var(--surface); border-right: 1px solid var(--border); flex-shrink: 0; display: flex; flex-direction: column; }
+  .brand { height: 64px; display: flex; align-items: center; gap: 10px; padding: 0 18px; border-bottom: 1px solid var(--border-light); }
+  .brand .logo { width: 34px; height: 34px; border-radius: 8px; background: var(--brand); color: #fff; font-weight: 700; display: grid; place-items: center; font-size: 16px; }
+  .brand .name { font-weight: 600; font-size: 15px; }
+  .menu { padding: 10px; flex: 1; }
+  .menu-item { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 8px; color: var(--text-2); cursor: pointer; font-size: 14px; margin-bottom: 2px; }
+  .menu-item:hover { background: var(--surface-2); color: var(--text); }
+  .menu-item.active { background: var(--brand-soft); color: var(--brand); font-weight: 600; }
+  .menu-item .ico { width: 18px; text-align: center; }
+  .menu-sub { padding-left: 18px; }
+  .menu-sub .menu-item { font-size: 13px; padding: 9px 12px; }
+  .content-col { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar { height: 64px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+  .topbar .left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .icon-btn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); display: grid; place-items: center; cursor: pointer; color: var(--text-2); }
+  .icon-btn:hover { background: var(--surface-2); color: var(--text); }
+  .breadcrumb { font-size: 13px; color: var(--text-3); }
+  .breadcrumb b { color: var(--text); font-weight: 600; }
+  .breadcrumb .sub { color: var(--text-3); font-size: 12px; margin-top: 2px; }
+  .topbar .right { display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; font-size: 13px; font-weight: 600; }
+  .main { flex: 1; overflow: auto; padding: 20px; }
+
+  /* ============ 页面面板/工具条/查询 ============ */
+  .page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .page-head .ttl { font-size: 17px; font-weight: 700; }
+  .panel { background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 18px; }
+  .query { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px 18px; margin-bottom: 18px; }
+  .q-item { display: flex; flex-direction: column; gap: 6px; }
+  .q-item label { font-size: 12.5px; color: var(--text-2); }
+  .q-control { height: 38px; border: 1px solid var(--border); border-radius: 8px; padding: 0 12px; font-size: 13.5px; color: var(--text-3); display: flex; align-items: center; min-width: 130px; background: var(--surface); }
+  .q-control.w170 { min-width: 170px; }
+  .q-control.w150 { min-width: 150px; }
+  .q-actions { display: flex; gap: 10px; }
+  .ql { display: flex; gap: 10px; align-items: center; }
+
+  /* ============ 表格 ============ */
+  .table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .table th { background: var(--surface-2); color: var(--text-2); font-weight: 600; text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .table th.center, .table td.center { text-align: center; }
+  .table td { padding: 11px 12px; border-bottom: 1px solid var(--border-light); color: var(--text); }
+  .table tbody tr:hover { background: #fafcff; }
+  .table .fixed { position: sticky; right: 0; background: var(--surface); box-shadow: -8px 0 12px -10px rgba(0,0,0,.12); }
+  .table tbody tr:hover .fixed { background: #fafcff; }
+  .mono { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 12.5px; color: var(--text-2); }
+
+  .tag { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+  .tag--green { background: var(--green-soft); color: #15803d; }
+  .tag--red { background: var(--red-soft); color: #b91c1c; }
+  .tag--amber { background: var(--amber-soft); color: #b45309; }
+  .tag--slate { background: var(--slate-soft); color: var(--text-2); }
+  .tag--brand { background: var(--brand-soft); color: var(--brand); }
+  .tag--blue { background: #dbeafe; color: #1d4ed8; }
+  .link { color: var(--brand); cursor: pointer; background: none; border: none; font-size: 13px; padding: 0 2px; }
+  .link--danger { color: var(--red); }
+  .divider { color: var(--border); margin: 0 4px; }
+
+  .pager { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 16px; font-size: 13px; color: var(--text-2); }
+  .pager .pg { min-width: 30px; height: 30px; border: 1px solid var(--border); border-radius: 6px; display: grid; place-items: center; cursor: pointer; }
+  .pager .pg.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .pager select { height: 30px; border: 1px solid var(--border); border-radius: 6px; }
+
+  .kv-thumb { width: 84px; height: 48px; border: 1px solid var(--border); border-radius: 6px; background: linear-gradient(135deg,#dbeafe,#bfdbfe); display: block; margin: 0 auto; }
+  /* 二维码缩略图（列表内） */
+  .qr-thumb { width: 46px; height: 46px; border: 1px solid var(--border); border-radius: 4px; background: #fff; display: inline-block; cursor: pointer; transition: transform .15s, box-shadow .15s; }
+  .qr-thumb:hover { transform: scale(1.08); box-shadow: 0 4px 12px rgba(15,23,42,.16); }
+  /* 二维码大图弹窗 */
+  .qr-box { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 8px 0 4px; }
+  .qr-box svg { width: 220px; height: 220px; border: 1px solid var(--border); border-radius: 8px; background: #fff; padding: 8px; }
+  .qr-box .qr-meta { font-size: 13px; color: var(--text-2); text-align: center; }
+  .qr-box .qr-meta b { color: var(--text-1); }
+
+  /* ============ 统计卡片 / 图表 ============ */
+  .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 16px; }
+  .stat { background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 16px 18px; }
+  .stat .lbl { font-size: 13px; color: var(--text-2); }
+  .stat .val { font-size: 28px; font-weight: 700; margin-top: 6px; }
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .chart-card { background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 16px; }
+  .chart-card .ct { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 40px; height: 280px; padding: 10px 20px 0; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+  .bar { width: 64px; border-radius: 8px 8px 0 0; background: linear-gradient(180deg,#60a5fa,#2563eb); }
+  .bar-col .bl { margin-top: 10px; font-size: 12.5px; color: var(--text-2); text-align: center; }
+  .bar-col .bv { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .pie { width: 220px; height: 220px; border-radius: 50%; margin: 20px auto; background: conic-gradient(#22c55e 0 55%, #f59e0b 55% 85%, #94a3b8 85% 100%); }
+  .legend { display: flex; flex-direction: column; gap: 8px; align-items: center; font-size: 13px; color: var(--text-2); }
+  .legend .row { display: flex; align-items: center; gap: 8px; }
+  .legend .dot { width: 10px; height: 10px; border-radius: 3px; }
+
+  /* ============ 弹窗 ============ */
+  .overlay { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .overlay.show { display: flex; }
+  .modal { background: var(--surface); border-radius: 12px; width: 560px; max-width: 100%; max-height: 90vh; overflow: auto; box-shadow: 0 20px 60px rgba(15,23,42,.3); }
+  .modal--sm { width: 440px; }
+  .modal__head { padding: 18px 22px; border-bottom: 1px solid var(--border-light); font-size: 16px; font-weight: 700; }
+  .modal__body { padding: 20px 22px; }
+  .modal__foot { padding: 14px 22px; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end; gap: 10px; }
+  .form-row { display: flex; gap: 14px; margin-bottom: 16px; }
+  .form-row > .col { flex: 1; }
+  .form-item { margin-bottom: 16px; }
+  .form-item label { display: block; font-size: 13px; color: var(--text-2); margin-bottom: 7px; }
+  .form-control { width: 100%; height: 38px; border: 1px solid var(--border); border-radius: 8px; padding: 0 12px; font-size: 13.5px; color: var(--text); background: var(--surface); }
+  textarea.form-control { height: auto; padding: 9px 12px; resize: vertical; font-family: inherit; }
+  .form-hint { font-size: 12px; color: var(--text-3); margin-top: 6px; }
+
+  .kv-upload { width: 100%; height: 150px; border: 1px dashed var(--border); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-3); cursor: pointer; background: var(--surface-2); }
+  .kv-upload .plus { font-size: 26px; }
+  .kv-preview { width: 100%; height: 150px; border: 1px dashed var(--border); border-radius: 8px; background: linear-gradient(135deg,#dbeafe,#bfdbfe); }
+
+  .time-card { border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 12px; background: var(--surface); }
+  .time-card__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light); }
+  .time-card__title { font-weight: 600; color: var(--brand); font-size: 13.5px; }
+  .preview-box { border: 1px solid var(--border); border-radius: 8px; padding: 12px; max-height: 180px; overflow: auto; font-size: 13px; }
+  .preview-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--border-light); }
+  .preview-total { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-light); font-weight: 600; color: var(--brand); }
+
+  .note { font-size: 12.5px; color: var(--text-3); line-height: 1.7; }
+  .help { max-width: 1320px; margin: 0 auto 18px; background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; border-radius: 10px; padding: 12px 16px; font-size: 13px; line-height: 1.7; }
+  @media (max-width: 920px) {
+    .login { grid-template-columns: 1fr; }
+    .login__hero { display: none; }
+    .stat-grid, .chart-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 复用：二维码占位图（列表缩略图与大图弹窗共用） -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="qr-ico" viewBox="0 0 7 7" shape-rendering="crispEdges">
+    <rect width="7" height="7" fill="#fff"/>
+    <rect x="0" y="0" width="3" height="3" fill="#0f172a"/><rect x="1" y="1" width="1" height="1" fill="#fff"/>
+    <rect x="4" y="0" width="3" height="3" fill="#0f172a"/><rect x="5" y="1" width="1" height="1" fill="#fff"/>
+    <rect x="0" y="4" width="3" height="3" fill="#0f172a"/><rect x="1" y="5" width="1" height="1" fill="#fff"/>
+    <rect x="4" y="4" width="1" height="1" fill="#0f172a"/><rect x="6" y="4" width="1" height="1" fill="#0f172a"/>
+    <rect x="5" y="5" width="1" height="1" fill="#0f172a"/><rect x="4" y="6" width="1" height="1" fill="#0f172a"/>
+    <rect x="6" y="6" width="1" height="1" fill="#0f172a"/><rect x="3" y="3" width="1" height="1" fill="#0f172a"/>
+    <rect x="4" y="3" width="1" height="1" fill="#0f172a"/><rect x="3" y="4" width="1" height="1" fill="#0f172a"/>
+    <rect x="2" y="3" width="1" height="1" fill="#0f172a"/><rect x="3" y="5" width="1" height="1" fill="#0f172a"/>
+    <rect x="5" y="3" width="1" height="1" fill="#0f172a"/><rect x="6" y="2" width="1" height="1" fill="#0f172a"/>
+    <rect x="2" y="5" width="1" height="1" fill="#0f172a"/><rect x="6" y="3" width="1" height="1" fill="#0f172a"/>
+  </symbol>
+</svg>
+
+<!-- ===== 原型导航栏 ===== -->
+<div class="proto-bar">
+  <div class="title">爱尔科普馆预约后台 · <span>原型图</span></div>
+  <div class="proto-chips" id="chips">
+    <div class="chip" data-screen="login">登录页</div>
+    <div class="chip" data-screen="session-config">科普馆场次配置</div>
+    <div class="chip" data-screen="booking-query">科普馆预约查询</div>
+    <div class="chip" data-screen="activity-session-config">活动场次配置</div>
+    <div class="chip" data-screen="feedback-list">意见反馈·列表</div>
+    <div class="chip" data-screen="feedback-analytics">意见反馈·图表</div>
+    <div class="chip" data-screen="users">用户管理</div>
+  </div>
+</div>
+
+<div class="help">
+  原型说明：本原型依据 <code>src/</code> 当前代码（Vue3 + Element Plus + Pinia）还原各页面布局与交互，含登录页、后台框架、4 个主模块及关键弹窗（添加/编辑场次、批量添加、修改密码）。点击左上角导航或页面内菜单切换视图，点击「添加场次 / 批量添加 / 修改密码」可预览对应弹窗。
+</div>
+
+<div class="stage">
+
+  <!-- ============ 登录页 ============ -->
+  <section class="screen" id="login">
+    <div class="login">
+      <div class="login__hero">
+        <div style="font-size:18px;font-weight:600;">爱尔科普馆后台管理</div>
+        <div>
+          <h1>高效、清晰、可扩展的后台管理体验</h1>
+          <p>业务流程的可视化和管理，让你的后台管理更加简单、高效。</p>
+        </div>
+        <div class="small">Copyright © 2026 爱尔科普馆</div>
+      </div>
+      <div class="login__panel">
+        <div class="login__form">
+          <h2>登录后台</h2>
+          <div class="field"><input placeholder="账号" /></div>
+          <div class="field"><input type="password" placeholder="密码" /></div>
+          <button class="btn btn--primary btn--block">登录</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 科普馆场次配置 ============ -->
+  <section class="screen" id="session-config">
+    <div class="admin">
+      <aside class="sidebar">
+        <div class="brand"><div class="logo">爱</div><div class="name">爱尔科普馆管理后台</div></div>
+        <div class="menu" id="menu-session">
+          <div class="menu-item active" data-screen="session-config"><span class="ico">▦</span> 科普馆场次配置</div>
+          <div class="menu-item" data-screen="booking-query"><span class="ico">☰</span> 科普馆预约查询</div>
+          <div class="menu-item" data-screen="activity-session-config"><span class="ico">🎫</span> 活动场次配置</div>
+          <div class="menu-item has-sub" data-toggle="fb"><span class="ico">❏</span> 意见反馈查询 <span style="margin-left:auto">▾</span></div>
+          <div class="menu-sub" data-sub="fb">
+            <div class="menu-item" data-screen="feedback-list">意见反馈列表</div>
+            <div class="menu-item" data-screen="feedback-analytics">意见反馈图表</div>
+          </div>
+        </div>
+      </aside>
+      <div class="content-col">
+        <header class="topbar">
+          <div class="left">
+            <div class="icon-btn">☰</div>
+            <div>
+              <div class="breadcrumb"><b>控制面板</b> / 科普馆场次配置</div>
+              <div class="sub">后台管理系统</div>
+            </div>
+          </div>
+          <div class="right">
+            <div class="icon-btn" title="切换主题">☾</div>
+            <div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="openModal('modal-pwd')">
+              <div class="avatar">管</div><span style="font-size:13px;">管理员</span>
+            </div>
+          </div>
+        </header>
+        <main class="main">
+          <div class="page-head">
+            <div class="ttl">科普馆场次配置</div>
+            <div class="ql">
+              <button class="btn btn--primary btn--sm" onclick="openModal('modal-session-add')">＋ 添加场次</button>
+              <button class="btn btn--success btn--sm" onclick="openModal('modal-session-batch')">＋ 批量添加</button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="query">
+              <div class="q-item"><label>开始日期</label><div class="q-control w170">2026-08-12 ▾</div></div>
+              <div class="q-item"><label>结束日期</label><div class="q-control w170">2026-08-19 ▾</div></div>
+              <div class="q-actions">
+                <button class="btn btn--primary btn--sm">查询</button>
+                <button class="btn btn--ghost btn--sm">重置</button>
+              </div>
+            </div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th class="center">场次id</th><th>日期</th><th class="center">开始时间</th><th class="center">结束时间</th>
+                  <th class="center">总号数</th><th class="center">需要讲解服务人数</th><th class="center">余号</th>
+                  <th>创建时间</th><th class="center">操作人</th><th class="center fixed">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="center">1001</td><td>2026-08-12</td><td class="center">09:00</td><td class="center">10:30</td><td class="center">50</td><td class="center">12</td><td class="center"><span class="tag tag--green">38</span></td><td>2026-08-10 09:12</td><td class="center">管理员</td><td class="center fixed"><button class="link">余号清零</button><span class="divider">|</span><button class="link">编辑</button><span class="divider">|</span><button class="link link--danger">删除</button></td></tr>
+                <tr><td class="center">1002</td><td>2026-08-12</td><td class="center">10:30</td><td class="center">12:00</td><td class="center">50</td><td class="center">8</td><td class="center"><span class="tag tag--amber">6</span></td><td>2026-08-10 09:12</td><td class="center">管理员</td><td class="center fixed"><button class="link">余号清零</button><span class="divider">|</span><button class="link">编辑</button><span class="divider">|</span><button class="link link--danger">删除</button></td></tr>
+                <tr><td class="center">1003</td><td>2026-08-13</td><td class="center">14:30</td><td class="center">16:00</td><td class="center">40</td><td class="center">5</td><td class="center"><span class="tag tag--red">0</span></td><td>2026-08-10 10:01</td><td class="center">小李</td><td class="center fixed"><button class="link">余号清零</button><span class="divider">|</span><button class="link">编辑</button><span class="divider">|</span><button class="link link--danger">删除</button></td></tr>
+                <tr><td class="center">1004</td><td>2026-08-14</td><td class="center">16:00</td><td class="center">17:00</td><td class="center">30</td><td class="center">3</td><td class="center"><span class="tag tag--green">27</span></td><td>2026-08-11 14:22</td><td class="center">小李</td><td class="center fixed"><button class="link">余号清零</button><span class="divider">|</span><button class="link">编辑</button><span class="divider">|</span><button class="link link--danger">删除</button></td></tr>
+              </tbody>
+            </table>
+            <div class="pager"><span>共 4 条</span><select><option>10 条/页</option></select><div class="pg active">1</div></div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 科普馆预约查询 ============ -->
+  <section class="screen" id="booking-query">
+    <div class="admin">
+      <aside class="sidebar">
+        <div class="brand"><div class="logo">爱</div><div class="name">爱尔科普馆管理后台</div></div>
+        <div class="menu">
+          <div class="menu-item" data-screen="session-config"><span class="ico">▦</span> 科普馆场次配置</div>
+          <div class="menu-item active" data-screen="booking-query"><span class="ico">☰</span> 科普馆预约查询</div>
+          <div class="menu-item" data-screen="activity-session-config"><span class="ico">🎫</span> 活动场次配置</div>
+          <div class="menu-item has-sub" data-toggle="fb2"><span class="ico">❏</span> 意见反馈查询 <span style="margin-left:auto">▾</span></div>
+          <div class="menu-sub" data-sub="fb2">
+            <div class="menu-item" data-screen="feedback-list">意见反馈列表</div>
+            <div class="menu-item" data-screen="feedback-analytics">意见反馈图表</div>
+          </div>
+        </div>
+      </aside>
+      <div class="content-col">
+        <header class="topbar">
+          <div class="left">
+            <div class="icon-btn">☰</div>
+            <div><div class="breadcrumb"><b>控制面板</b> / 科普馆预约查询</div><div class="sub">后台管理系统</div></div>
+          </div>
+          <div class="right"><div class="icon-btn">☾</div><div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="openModal('modal-pwd')"><div class="avatar">管</div><span style="font-size:13px;">管理员</span></div></div>
+        </header>
+        <main class="main">
+          <div class="page-head"><div class="ttl">科普馆预约查询</div></div>
+          <div class="panel">
+            <div class="query">
+              <div class="q-item"><label>开始日期</label><div class="q-control w170">2026-08-12 ▾</div></div>
+              <div class="q-item"><label>结束日期</label><div class="q-control w170">2026-08-19 ▾</div></div>
+              <div class="q-item"><label>时间段</label><div class="q-control w170">全部 ▾</div></div>
+              <div class="q-item"><label>开始时间</label><div class="q-control w150">--:-- ▾</div></div>
+              <div class="q-item"><label>结束时间</label><div class="q-control w150">--:-- ▾</div></div>
+              <div class="q-item"><label>姓名</label><div class="q-control w140">请输入</div></div>
+              <div class="q-item"><label>手机</label><div class="q-control w160">请输入</div></div>
+              <div class="q-item"><label>成团方式</label><div class="q-control w120">全部 ▾</div></div>
+              <div class="q-item"><label>状态</label><div class="q-control w120">全部 ▾</div></div>
+              <div class="q-actions"><button class="btn btn--primary btn--sm">查询</button><button class="btn btn--ghost btn--sm">重置</button><button class="btn btn--success btn--sm">导出 Excel</button></div>
+            </div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th class="center">预约id</th><th>预约参观</th><th>姓名</th><th>手机</th><th>证件</th><th class="center">成团方式</th><th class="center">人数</th><th>附件</th><th>日期</th><th class="center">开始</th><th class="center">结束</th><th class="center">状态</th><th>创建时间</th><th class="center fixed">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="center">501</td><td>个人预约</td><td>张伟</td><td>138****0021</td><td class="mono">4401**********1234</td><td class="center"><span class="tag tag--blue">个人预约</span></td><td class="center">1</td><td><span style="color:var(--text-3)">-</span></td><td>2026-08-12</td><td class="center">09:00</td><td class="center">10:30</td><td class="center"><span class="tag tag--amber">未使用</span></td><td>2026-08-09 11:20</td><td class="center fixed"><button class="link">确认参观</button><span class="divider">|</span><button class="link link--danger">取消参观</button></td></tr>
+                <tr><td class="center">502</td><td>团队预约</td><td>王芳</td><td>139****8820</td><td class="mono">4401**********5678</td><td class="center"><span class="tag tag--brand">团队预约</span></td><td class="center"><button class="link">6 ▾</button></td><td><span style="color:var(--text-3)">-</span></td><td>2026-08-12</td><td class="center">10:30</td><td class="center">12:00</td><td class="center"><span class="tag tag--green">已使用</span></td><td>2026-08-09 15:40</td><td class="center fixed"><span style="color:var(--text-3)">-</span></td></tr>
+                <tr><td class="center">503</td><td>科普之光讲座</td><td>李娜</td><td>137****3344</td><td class="mono">4401**********9012</td><td class="center"><span class="tag tag--slate">活动(个人)</span></td><td class="center">1</td><td><button class="link">查看附件</button></td><td>2026-08-13</td><td class="center">14:30</td><td class="center">16:00</td><td class="center"><span class="tag tag--amber">未使用</span></td><td>2026-08-10 09:05</td><td class="center fixed"><button class="link">确认参观</button><span class="divider">|</span><button class="link link--danger">取消参观</button></td></tr>
+                <tr><td class="center">504</td><td>个人预约</td><td>陈强</td><td>135****7711</td><td class="mono">4401**********3456</td><td class="center"><span class="tag tag--blue">个人预约</span></td><td class="center">1</td><td><span style="color:var(--text-3)">-</span></td><td>2026-08-14</td><td class="center">16:00</td><td class="center">17:00</td><td class="center"><span class="tag tag--red">已取消</span></td><td>2026-08-10 18:12</td><td class="center fixed"><span style="color:var(--text-3)">-</span></td></tr>
+              </tbody>
+            </table>
+            <div class="pager"><span>共 4 条</span><select><option>10 条/页</option></select><div class="pg active">1</div></div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 活动场次配置 ============ -->
+  <section class="screen" id="activity-session-config">
+    <div class="admin">
+      <aside class="sidebar">
+        <div class="brand"><div class="logo">爱</div><div class="name">爱尔科普馆管理后台</div></div>
+        <div class="menu">
+          <div class="menu-item" data-screen="session-config"><span class="ico">▦</span> 科普馆场次配置</div>
+          <div class="menu-item" data-screen="booking-query"><span class="ico">☰</span> 科普馆预约查询</div>
+          <div class="menu-item active" data-screen="activity-session-config"><span class="ico">🎫</span> 活动场次配置</div>
+          <div class="menu-item has-sub" data-toggle="fb3"><span class="ico">❏</span> 意见反馈查询 <span style="margin-left:auto">▾</span></div>
+          <div class="menu-sub" data-sub="fb3">
+            <div class="menu-item" data-screen="feedback-list">意见反馈列表</div>
+            <div class="menu-item" data-screen="feedback-analytics">意见反馈图表</div>
+          </div>
+        </div>
+      </aside>
+      <div class="content-col">
+        <header class="topbar">
+          <div class="left"><div class="icon-btn">☰</div><div><div class="breadcrumb"><b>控制面板</b> / 活动场次配置</div><div class="sub">后台管理系统</div></div></div>
+          <div class="right"><div class="icon-btn">☾</div><div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="openModal('modal-pwd')"><div class="avatar">管</div><span style="font-size:13px;">管理员</span></div></div>
+        </header>
+        <main class="main">
+          <div class="page-head">
+            <div class="ttl">活动场次配置</div>
+            <div class="ql">
+              <button class="btn btn--primary btn--sm" onclick="openModal('modal-activity-add')">＋ 添加场次</button>
+              <button class="btn btn--success btn--sm" onclick="openModal('modal-activity-batch')">＋ 批量添加</button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="query">
+              <div class="q-item"><label>开始日期</label><div class="q-control w170">2026-08-12 ▾</div></div>
+              <div class="q-item"><label>结束日期</label><div class="q-control w170">2026-08-19 ▾</div></div>
+              <div class="q-actions"><button class="btn btn--primary btn--sm">查询</button><button class="btn btn--ghost btn--sm">重置</button><button class="btn btn--success btn--sm">导出 Excel</button></div>
+            </div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th class="center">活动id</th><th>活动标题</th><th class="center">活动KV</th><th class="center">二维码</th><th>活动地点</th><th>活动日期</th><th class="center">开始</th><th class="center">结束</th><th class="center">总号数</th><th class="center">余号</th><th>创建时间</th><th class="center">操作人</th><th class="center fixed">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="center">201</td><td title="科普之光讲座">科普之光讲座</td><td class="center"><div class="kv-thumb"></div></td><td class="center"><svg class="qr-thumb" onclick="openActivityQr('科普之光讲座','2026-08-13 14:30-16:00')"><use href="#qr-ico"/></svg></td><td>报告厅</td><td>2026-08-13</td><td class="center">14:30</td><td class="center">16:00</td><td class="center">60</td><td class="center"><span class="tag tag--green">42</span></td><td>2026-08-08 10:00</td><td class="center">管理员</td><td class="center fixed"><button class="link" onclick="openActivityQr('科普之光讲座','2026-08-13 14:30-16:00')">查看二维码</button><span class="divider">|</span><button class="link">余号清零</button><span class="divider">|</span><button class="link">编辑</button><span class="divider">|</span><button class="link link--danger">删除</button></td></tr>
+                <tr><td class="center">202</td><td title="爱眼护眼工作坊">爱眼护眼工作坊</td><td class="center"><div class="kv-thumb"></div></td><td class="center"><svg class="qr-thumb" onclick="openActivityQr('爱眼护眼工作坊','2026-08-14~08-16 09:00-11:00')"><use href="#qr-ico"/></svg></td><td><span style="color:var(--text-3)">-</span></td><td>2026-08-14 ~ 08-16</td><td class="center">09:00</td><td class="center">11:00</td><td class="center">40</td><td class="center"><span class="tag tag--amber">9</span></td><td>2026-08-08 11:30</td><td class="center">小李</td><td class="center fixed"><button class="link" onclick="openActivityQr('爱眼护眼工作坊','2026-08-14~08-16 09:00-11:00')">查看二维码</button><span class="divider">|</span><button class="link">余号清零</button><span class="divider">|</span><button class="link">编辑</button><span class="divider">|</span><button class="link link--danger">删除</button></td></tr>
+              </tbody>
+            </table>
+            <div class="pager"><span>共 2 条</span><select><option>10 条/页</option></select><div class="pg active">1</div></div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 意见反馈·列表 ============ -->
+  <section class="screen" id="feedback-list">
+    <div class="admin">
+      <aside class="sidebar">
+        <div class="brand"><div class="logo">爱</div><div class="name">爱尔科普馆管理后台</div></div>
+        <div class="menu">
+          <div class="menu-item" data-screen="session-config"><span class="ico">▦</span> 科普馆场次配置</div>
+          <div class="menu-item" data-screen="booking-query"><span class="ico">☰</span> 科普馆预约查询</div>
+          <div class="menu-item" data-screen="activity-session-config"><span class="ico">🎫</span> 活动场次配置</div>
+          <div class="menu-item has-sub active" data-toggle="fb4"><span class="ico">❏</span> 意见反馈查询 <span style="margin-left:auto">▴</span></div>
+          <div class="menu-sub" data-sub="fb4" style="display:block">
+            <div class="menu-item active" data-screen="feedback-list">意见反馈列表</div>
+            <div class="menu-item" data-screen="feedback-analytics">意见反馈图表</div>
+          </div>
+        </div>
+      </aside>
+      <div class="content-col">
+        <header class="topbar">
+          <div class="left"><div class="icon-btn">☰</div><div><div class="breadcrumb"><b>控制面板</b> / 意见反馈查询 / 意见反馈列表</div><div class="sub">后台管理系统</div></div></div>
+          <div class="right"><div class="icon-btn">☾</div><div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="openModal('modal-pwd')"><div class="avatar">管</div><span style="font-size:13px;">管理员</span></div></div>
+        </header>
+        <main class="main">
+          <div class="page-head"><div class="ttl">意见反馈查询</div></div>
+          <div class="panel">
+            <div class="query">
+              <div class="q-item"><label>开始日期</label><div class="q-control w170">2026-08-12 ▾</div></div>
+              <div class="q-item"><label>结束日期</label><div class="q-control w170">2026-08-19 ▾</div></div>
+              <div class="q-actions"><button class="btn btn--primary btn--sm">查询</button><button class="btn btn--ghost btn--sm">重置</button><button class="btn btn--success btn--sm">导出 Excel</button></div>
+            </div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>姓名</th><th>手机号</th><th class="center">预约流程满意度</th><th class="center">场馆设施满意度</th><th class="center">科普活动满意度</th><th>推荐意向</th><th>其他意见</th><th>提交时间</th><th class="center fixed">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>张伟</td><td>138****0021</td><td class="center"><span class="tag tag--green">很满意</span></td><td class="center"><span class="tag tag--green">满意</span></td><td class="center"><span class="tag tag--green">很满意</span></td><td>会主动推荐</td><td>讲解很专业</td><td>2026-08-12 11:30</td><td class="center fixed"><button class="link">无效反馈</button><span class="divider">|</span><button class="link link--danger">删除</button></td></tr>
+                <tr><td>王芳</td><td>139****8820</td><td class="center"><span class="tag tag--amber">一般</span></td><td class="center"><span class="tag tag--green">满意</span></td><td class="center"><span class="tag tag--amber">一般</span></td><td>当有人问起时正面评价</td><td>排队时间偏长</td><td>2026-08-12 15:40</td><td class="center fixed"><button class="link">无效反馈</button><span class="divider">|</span><button class="link link--danger">删除</button></td></tr>
+                <tr><td>李娜</td><td>137****3344</td><td class="center"><span class="tag tag--green">满意</span></td><td class="center"><span class="tag tag--green">很满意</span></td><td class="center"><span class="tag tag--green">很满意</span></td><td>会主动推荐</td><td><span style="color:var(--text-3)">-</span></td><td>2026-08-13 09:05</td><td class="center fixed"><button class="link">无效反馈</button><span class="divider">|</span><button class="link link--danger">删除</button></td></tr>
+                <tr style="color:var(--text-3)"><td>陈强</td><td>135****7711</td><td class="center"><span class="tag tag--slate">很不满意</span></td><td class="center"><span class="tag tag--slate">不满意</span></td><td class="center"><span class="tag tag--slate">一般</span></td><td>不会推荐</td><td>设施陈旧</td><td>2026-08-14 18:12</td><td class="center fixed"><button class="link link--danger">恢复</button><span class="divider">|</span><button class="link link--danger">删除</button></td></tr>
+              </tbody>
+            </table>
+            <div class="pager"><span>共 4 条</span><select><option>10 条/页</option></select><div class="pg active">1</div></div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 意见反馈·图表 ============ -->
+  <section class="screen" id="feedback-analytics">
+    <div class="admin">
+      <aside class="sidebar">
+        <div class="brand"><div class="logo">爱</div><div class="name">爱尔科普馆管理后台</div></div>
+        <div class="menu">
+          <div class="menu-item" data-screen="session-config"><span class="ico">▦</span> 科普馆场次配置</div>
+          <div class="menu-item" data-screen="booking-query"><span class="ico">☰</span> 科普馆预约查询</div>
+          <div class="menu-item" data-screen="activity-session-config"><span class="ico">🎫</span> 活动场次配置</div>
+          <div class="menu-item has-sub active" data-toggle="fb5"><span class="ico">❏</span> 意见反馈查询 <span style="margin-left:auto">▴</span></div>
+          <div class="menu-sub" data-sub="fb5" style="display:block">
+            <div class="menu-item" data-screen="feedback-list">意见反馈列表</div>
+            <div class="menu-item active" data-screen="feedback-analytics">意见反馈图表</div>
+          </div>
+        </div>
+      </aside>
+      <div class="content-col">
+        <header class="topbar">
+          <div class="left"><div class="icon-btn">☰</div><div><div class="breadcrumb"><b>控制面板</b> / 意见反馈查询 / 意见反馈图表</div><div class="sub">后台管理系统</div></div></div>
+          <div class="right"><div class="icon-btn">☾</div><div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="openModal('modal-pwd')"><div class="avatar">管</div><span style="font-size:13px;">管理员</span></div></div>
+        </header>
+        <main class="main">
+          <div class="page-head"><div class="ttl">意见反馈图表</div></div>
+          <div class="panel">
+            <div class="query">
+              <div class="q-item"><label>开始日期</label><div class="q-control w170">2026-08-12 ▾</div></div>
+              <div class="q-item"><label>结束日期</label><div class="q-control w170">2026-08-19 ▾</div></div>
+              <div class="q-actions"><button class="btn btn--primary btn--sm">查询</button><button class="btn btn--ghost btn--sm">重置</button></div>
+            </div>
+            <div class="stat-grid">
+              <div class="stat"><div class="lbl">反馈总数</div><div class="val">128</div></div>
+              <div class="stat"><div class="lbl">平均满意度</div><div class="val">4.2</div></div>
+              <div class="stat"><div class="lbl">正向推荐率</div><div class="val">85.0%</div></div>
+            </div>
+            <div class="chart-grid">
+              <div class="chart-card">
+                <div class="ct">满意度概览</div>
+                <div class="bar-chart">
+                  <div class="bar-col"><div class="bv">4.1</div><div class="bar" style="height:82%"></div><div class="bl">预约流程<br>满意度</div></div>
+                  <div class="bar-col"><div class="bv">4.3</div><div class="bar" style="height:86%"></div><div class="bl">场馆设施<br>满意度</div></div>
+                  <div class="bar-col"><div class="bv">4.2</div><div class="bar" style="height:84%"></div><div class="bl">科普活动<br>满意度</div></div>
+                </div>
+              </div>
+              <div class="chart-card">
+                <div class="ct">推荐率分布</div>
+                <div class="pie"></div>
+                <div class="legend">
+                  <div class="row"><span class="dot" style="background:#22c55e"></span> 会主动推荐（55%）</div>
+                  <div class="row"><span class="dot" style="background:#f59e0b"></span> 当有人问起时正面评价（30%）</div>
+                  <div class="row"><span class="dot" style="background:#94a3b8"></span> 不会推荐（15%）</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 用户管理（代码中暂未挂载路由） ============ -->
+  <section class="screen" id="users">
+    <div class="admin">
+      <aside class="sidebar">
+        <div class="brand"><div class="logo">爱</div><div class="name">爱尔科普馆管理后台</div></div>
+        <div class="menu">
+          <div class="menu-item" data-screen="session-config"><span class="ico">▦</span> 科普馆场次配置</div>
+          <div class="menu-item" data-screen="booking-query"><span class="ico">☰</span> 科普馆预约查询</div>
+          <div class="menu-item" data-screen="activity-session-config"><span class="ico">🎫</span> 活动场次配置</div>
+          <div class="menu-item has-sub" data-toggle="fb6"><span class="ico">❏</span> 意见反馈查询 <span style="margin-left:auto">▾</span></div>
+          <div class="menu-sub" data-sub="fb6"><div class="menu-item" data-screen="feedback-list">意见反馈列表</div><div class="menu-item" data-screen="feedback-analytics">意见反馈图表</div></div>
+          <div class="menu-item active" data-screen="users"><span class="ico">👤</span> 用户管理</div>
+        </div>
+      </aside>
+      <div class="content-col">
+        <header class="topbar">
+          <div class="left"><div class="icon-btn">☰</div><div><div class="breadcrumb"><b>控制面板</b> / 用户管理</div><div class="sub">后台管理系统</div></div></div>
+          <div class="right"><div class="icon-btn">☾</div><div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="openModal('modal-pwd')"><div class="avatar">管</div><span style="font-size:13px;">管理员</span></div></div>
+        </header>
+        <main class="main">
+          <div class="page-head"><div class="ttl">用户管理</div></div>
+          <div class="panel">
+            <div class="query">
+              <div class="q-item" style="flex:1;max-width:320px"><label>搜索</label><div class="q-control">搜索姓名、部门或角色</div></div>
+              <div class="q-actions" style="margin-left:auto"><button class="btn btn--primary btn--sm">＋ 新增用户</button></div>
+            </div>
+            <table class="table">
+              <thead><tr><th>ID</th><th>姓名</th><th>部门</th><th>角色</th><th class="center">状态</th><th class="center fixed">操作</th></tr></thead>
+              <tbody>
+                <tr><td>1001</td><td>陈晨</td><td>运营部</td><td>运营经理</td><td class="center"><span class="tag tag--green">启用</span></td><td class="center fixed"><button class="link">编辑</button><span class="divider">|</span><button class="link link--danger">删除</button></td></tr>
+                <tr><td>1002</td><td>李明</td><td>产品部</td><td>产品专员</td><td class="center"><span class="tag tag--green">启用</span></td><td class="center fixed"><button class="link">编辑</button><span class="divider">|</span><button class="link link--danger">删除</button></td></tr>
+                <tr><td>1003</td><td>王晓</td><td>客服部</td><td>客服主管</td><td class="center"><span class="tag tag--slate">停用</span></td><td class="center fixed"><button class="link">编辑</button><span class="divider">|</span><button class="link link--danger">删除</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note" style="margin-top:14px;">注：用户管理页在 src/views/users/index.vue 已存在，但 router/index.ts 中对应路由被注释，尚未挂载到菜单。</p>
+        </main>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /stage -->
+
+<!-- ============ 弹窗：修改密码 ============ -->
+<div class="overlay" id="modal-pwd">
+  <div class="modal modal--sm">
+    <div class="modal__head">修改密码</div>
+    <div class="modal__body">
+      <div class="form-item"><label>新密码</label><input class="form-control" type="password" placeholder="请输入新密码（6-18 位，含字母和数字）" /></div>
+      <div class="form-item"><label>确认密码</label><input class="form-control" type="password" placeholder="请再次输入新密码" /></div>
+    </div>
+    <div class="modal__foot"><button class="btn btn--ghost btn--sm" onclick="closeModal('modal-pwd')">取消</button><button class="btn btn--primary btn--sm" onclick="closeModal('modal-pwd')">确认修改</button></div>
+  </div>
+</div>
+
+<!-- ============ 弹窗：科普馆场次·添加/编辑 ============ -->
+<div class="overlay" id="modal-session-add">
+  <div class="modal">
+    <div class="modal__head">添加场次</div>
+    <div class="modal__body">
+      <div class="form-row">
+        <div class="col form-item"><label>日期</label><div class="form-control">选择日期 ▾</div></div>
+        <div class="col form-item"><label>时间段</label><div class="form-control">请选择时间段 ▾</div></div>
+      </div>
+      <div class="form-item"><label>总号数</label><div class="form-control">请输入总号数（1-9999）</div></div>
+      <p class="form-hint">固定时间段：09:00-10:30 / 10:30-12:00 / 14:30-16:00 / 16:00-17:00</p>
+    </div>
+    <div class="modal__foot"><button class="btn btn--ghost btn--sm" onclick="closeModal('modal-session-add')">取消</button><button class="btn btn--primary btn--sm" onclick="closeModal('modal-session-add')">确定</button></div>
+  </div>
+</div>
+
+<!-- ============ 弹窗：科普馆场次·批量添加 ============ -->
+<div class="overlay" id="modal-session-batch">
+  <div class="modal">
+    <div class="modal__head">批量添加场次</div>
+    <div class="modal__body">
+      <div class="form-item"><label>日期范围</label><div class="form-control">开始日期 至 结束日期 ▾</div></div>
+      <div class="form-item"><label>时间段（可多选）</label>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;">
+          <span class="tag tag--brand">☑ 09:00-10:30</span><span class="tag tag--brand">☑ 10:30-12:00</span><span class="tag tag--slate">☐ 14:30-16:00</span><span class="tag tag--slate">☐ 16:00-17:00</span>
+        </div>
+        <p class="form-hint">可多选，每个选中日期 × 选中时间段 = 生成场次数</p>
+      </div>
+      <div class="form-item"><label>总号数</label><div class="form-control">请输入总号数</div></div>
+      <div class="form-item"><label>预览</label>
+        <div class="preview-box">
+          <div class="preview-row"><span>2026-08-12 09:00-10:30</span><span class="tag tag--green">50 号</span></div>
+          <div class="preview-row"><span>2026-08-12 10:30-12:00</span><span class="tag tag--green">50 号</span></div>
+          <div class="preview-total">共 2 场次</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal__foot"><button class="btn btn--ghost btn--sm" onclick="closeModal('modal-session-batch')">取消</button><button class="btn btn--primary btn--sm" onclick="closeModal('modal-session-batch')">确认添加 (2)</button></div>
+  </div>
+</div>
+
+<!-- ============ 弹窗：活动场次·添加/编辑 ============ -->
+<div class="overlay" id="modal-activity-add">
+  <div class="modal">
+    <div class="modal__head">添加场次</div>
+    <div class="modal__body">
+      <div class="form-item"><label>活动标题</label><input class="form-control" placeholder="请输入活动标题" /></div>
+      <div class="form-item"><label>活动背景</label><textarea class="form-control" rows="3" placeholder="请输入活动背景介绍"></textarea></div>
+      <div class="form-item"><label>活动 KV</label>
+        <div class="kv-upload"><div class="plus">＋</div><div>上传活动 KV</div></div>
+        <p class="form-hint">图片限制 2MB 以内；建议尺寸 750×420</p>
+      </div>
+      <div class="form-item"><label>活动地点（选填）</label><input class="form-control" placeholder="请输入活动地点（选填）" /></div>
+      <div class="form-row">
+        <div class="col form-item"><label>开始日期</label><div class="form-control">选择日期 ▾</div></div>
+        <div class="col form-item"><label>结束日期</label><div class="form-control">选择日期 ▾</div></div>
+      </div>
+      <div class="form-row">
+        <div class="col form-item"><label>开始时间</label><div class="form-control">--:-- ▾</div></div>
+        <div class="col form-item"><label>结束时间</label><div class="form-control">--:-- ▾</div></div>
+      </div>
+      <div class="form-item"><label>总号数</label><div class="form-control">请输入总号数（1-9999）</div></div>
+    </div>
+    <div class="modal__foot"><button class="btn btn--ghost btn--sm" onclick="closeModal('modal-activity-add')">取消</button><button class="btn btn--primary btn--sm" onclick="closeModal('modal-activity-add')">确定</button></div>
+  </div>
+</div>
+
+<!-- ============ 弹窗：活动场次·批量添加 ============ -->
+<div class="overlay" id="modal-activity-batch">
+  <div class="modal">
+    <div class="modal__head">批量添加场次</div>
+    <div class="modal__body">
+      <div class="form-item"><label>活动标题</label><input class="form-control" placeholder="请输入活动标题" /></div>
+      <div class="form-item"><label>活动背景</label><textarea class="form-control" rows="3" placeholder="请输入活动背景介绍"></textarea></div>
+      <div class="form-item"><label>活动地点（选填）</label><input class="form-control" placeholder="请输入活动地点（选填）" /></div>
+      <div class="form-item"><label>日期范围</label><div class="form-control">开始日期 至 结束日期 ▾</div></div>
+      <div class="form-item"><label>时间配置</label>
+        <div class="time-card">
+          <div class="time-card__head"><span class="time-card__title">时间段 1</span><span class="link link--danger">删除</span></div>
+          <div class="form-row" style="margin-bottom:10px">
+            <div class="col"><div class="form-control">开始时间 ▾</div></div>
+            <div class="col"><div class="form-control">结束时间 ▾</div></div>
+          </div>
+          <div class="kv-upload" style="height:120px"><div class="plus">＋</div><div>上传该时间段 KV</div></div>
+        </div>
+        <button class="btn btn--ghost btn--sm" style="border-style:dashed">＋ 新增时间段</button>
+      </div>
+      <div class="form-item"><label>总号数</label><div class="form-control">请输入总号数</div></div>
+      <div class="form-item"><label>预览</label>
+        <div class="preview-box"><div class="preview-row"><span>2026-08-15 09:00-11:00</span><span class="tag tag--green">40 号</span></div><div class="preview-total">共 1 场次</div></div>
+      </div>
+    </div>
+    <div class="modal__foot"><button class="btn btn--ghost btn--sm" onclick="closeModal('modal-activity-batch')">取消</button><button class="btn btn--primary btn--sm" onclick="closeModal('modal-activity-batch')">确认添加 (1)</button></div>
+  </div>
+</div>
+
+<!-- ============ 弹窗：活动场次·查看二维码 ============ -->
+<div class="overlay" id="modal-activity-qr">
+  <div class="modal" style="max-width:320px">
+    <div class="modal__head">活动二维码</div>
+    <div class="modal__body">
+      <div class="qr-box">
+        <svg viewBox="0 0 7 7"><use href="#qr-ico"/></svg>
+        <div class="qr-meta">活动：<b id="qr-title">—</b><br>场次：<b id="qr-time">—</b></div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn btn--ghost btn--sm" onclick="closeModal('modal-activity-qr')">关闭</button>
+      <button class="btn btn--primary btn--sm">下载二维码</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 切换屏幕
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('#chips .chip').forEach(c => c.classList.toggle('active', c.dataset.screen === id));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  document.querySelectorAll('#chips .chip').forEach(chip => {
+    chip.addEventListener('click', () => showScreen(chip.dataset.screen));
+  });
+  // 页面内菜单跳转
+  document.querySelectorAll('.menu-item[data-screen]').forEach(item => {
+    item.addEventListener('click', (e) => {
+      const sub = item.closest('.menu-sub');
+      if (sub) return; // 子菜单仅高亮，由父级控制
+      showScreen(item.dataset.screen);
+    });
+  });
+  // 折叠子菜单
+  document.querySelectorAll('.menu-item.has-sub').forEach(item => {
+    item.addEventListener('click', () => {
+      const key = item.dataset.toggle;
+      const sub = document.querySelector('[data-sub="' + key + '"]');
+      if (sub) sub.style.display = sub.style.display === 'block' ? 'none' : 'block';
+    });
+  });
+  // 弹窗
+  function openModal(id) { document.getElementById(id).classList.add('show'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+  function openActivityQr(title, time) {
+    document.getElementById('qr-title').textContent = title;
+    document.getElementById('qr-time').textContent = time;
+    openModal('modal-activity-qr');
+  }
+  document.querySelectorAll('.overlay').forEach(o => {
+    o.addEventListener('click', (e) => { if (e.target === o) o.classList.remove('show'); });
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show')); });
+  // 默认进入登录页
+  showScreen('login');
+</script>
+</body>
+</html>

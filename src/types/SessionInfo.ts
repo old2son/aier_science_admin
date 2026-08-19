@@ -19,6 +19,7 @@ export interface SessionQuery {
 export interface ActivitySessionRow {
 	activityBannerUrl: string;
 	activityCoverUrl: string;
+	qrCodeUrl: string;
 	activityId: number;
 	activityName: string;
 	activityTime: string;

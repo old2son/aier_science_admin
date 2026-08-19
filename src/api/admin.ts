@@ -117,6 +117,7 @@ export type ScienceReservationsResponse = ApiResponse<BookingRow[]>;
 export type ScienceConfigurationResponse = ApiResponse<SessionRow[]>;
 export type ActivityConfigurationResponse = ApiResponse<ActivitySessionRow[]>;
 export type UserFeedbackResponse = ApiResponse<Feedback[]>;
+export type ActivityQrCodeResponse = ApiResponse<string>;
 
 /** 登录后台管理系统 */
 export function adminPasswordLoginApi(data: AdminPasswordLoginParams) {
@@ -206,6 +207,11 @@ export function updateScienceConfigurationApi(data: UpdateScienceConfigurationPa
 /** 余号清零 */
 export function zeroClearingConfigurationApi(data: ScienceConfigurationActionParams) {
 	return request.post<unknown, ApiResponse>('/api/admin/zeroClearingConfiguration', data);
+}
+
+/** 活动场次生成二维码 */
+export function activityQrCodeUrlApi(data: ActivityConfigurationActionParams) {
+	return request.post<unknown, ActivityQrCodeResponse>('/api/admin/activityQrCodeUrl', data);
 }
 
 /** 删除场次配置 */

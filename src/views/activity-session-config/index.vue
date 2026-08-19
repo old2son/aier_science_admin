@@ -90,6 +90,18 @@
 					<span v-else class="text-slate-400">-</span>
 				</template>
 
+				<template #qrCodeUrl="{ row }">
+					<el-image
+						v-if="row.qrCodeUrl"
+						:src="row.qrCodeUrl"
+						:preview-src-list="[row.qrCodeUrl]"
+						fit="contain"
+						preview-teleported
+						class="qr-code-thumb"
+					/>
+					<span v-else class="text-slate-400">-</span>
+				</template>
+
 				<template #surplusNumber="{ row }">
 					<el-tag :type="row.surplusNumber === 0 ? 'danger' : row.surplusNumber < 10 ? 'warning' : 'success'">
 						{{ row.surplusNumber }}
@@ -97,11 +109,44 @@
 				</template>
 
 				<template #action="{ row }">
-					<el-button type="primary" link size="small" @click="handleResetCount(row)">余号清零</el-button>
-					<el-divider direction="vertical" />
-					<el-button type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
-					<el-divider direction="vertical" />
-					<el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
+					<div class="action-grid">
+						<el-button
+							class="action-grid__button"
+							type="primary"
+							@click="handleQrCode(row)"
+							link
+							size="small"
+						>
+							生成二维码
+						</el-button>
+						<el-button
+							class="action-grid__button"
+							type="primary"
+							link
+							size="small"
+							@click="handleResetCount(row)"
+						>
+							余号清零
+						</el-button>
+						<el-button
+							class="action-grid__button"
+							type="primary"
+							link
+							size="small"
+							@click="handleEdit(row)"
+						>
+							编辑
+						</el-button>
+						<el-button
+							class="action-grid__button"
+							type="danger"
+							link
+							size="small"
+							@click="handleDelete(row)"
+						>
+							删除
+						</el-button>
+					</div>
 				</template>
 			</my-table>
 
@@ -337,6 +382,7 @@ import {
 	getAllActivityConfigurationApi,
 	searchActivityConfigurationApi,
 	addActivityConfigurationApi,
+	activityQrCodeUrlApi,
 	updateActivityConfigurationApi,
 	clearingActivityConfigurationApi,
 	deleteActivityConfigurationApi
@@ -378,10 +424,17 @@ const columns: TableColumn[] = [
 		align: 'center'
 	},
 	{
+		label: '活动二维码',
+		prop: 'qrCodeUrl',
+		slot: true,
+		minWidth: 80,
+		align: 'center'
+	},
+	{
 		label: '活动地点',
 		prop: 'place',
 		slot: false,
-		minWidth: 90,
+		minWidth: 70,
 		showOverflowTooltip: true
 	},
 	{
@@ -431,7 +484,7 @@ const columns: TableColumn[] = [
 		label: '创建时间',
 		prop: 'createTime',
 		slot: false,
-		minWidth: 140,
+		minWidth: 100,
 		sortable: 'custom'
 	},
 	{
@@ -445,7 +498,7 @@ const columns: TableColumn[] = [
 		label: '操作',
 		prop: 'action',
 		slot: true,
-		minWidth: 150,
+		minWidth: 140,
 		align: 'center',
 		fixed: 'right'
 	}
@@ -513,7 +566,9 @@ const sortedTableData = computed(() => {
 	return [...tableData.value].sort((a, b) => {
 		switch (sortState.prop) {
 			case 'activityTime':
-				return (parseDateString(a.activityTime).getTime() - parseDateString(b.activityTime).getTime()) * sortFactor;
+				return (
+					(parseDateString(a.activityTime).getTime() - parseDateString(b.activityTime).getTime()) * sortFactor
+				);
 			case 'startTime':
 				return (parseTimeString(a.startTime) - parseTimeString(b.startTime)) * sortFactor;
 			case 'createTime':
@@ -551,7 +606,10 @@ const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
 const editId = ref<number | null>(null);
 
-/** 表单数据 */
+/**
+ * 表单数据
+ * 生成过的二维码不能再修改
+ */
 const formData = reactive({
 	title: '',
 	background: '',
@@ -828,6 +886,37 @@ function handleSortChange({ prop, order }: { prop: string; order: 'ascending' | 
 	sortState.prop = (prop as (typeof sortableProps)[number]) ?? '';
 	sortState.order = order ?? '';
 	pagination.currentPage = 1;
+}
+
+async function handleQrCode(row: ActivitySessionRow) {
+	if (row.qrCodeUrl) {
+		ElMessage.warning('当前场次已存在二维码，无需重复生成');
+		return;
+	}
+
+	try {
+		await ElMessageBox.confirm(
+			`确认生成「${row.activityName}」${row.activityTime}~${row.endDate} ${row.startTime}-${row.endTime} 的二维码吗？`,
+			'生成确认',
+			{
+				confirmButtonText: '确定生成',
+				cancelButtonText: '取消',
+				type: 'warning'
+			}
+		);
+
+		const res = await activityQrCodeUrlApi({ activityId: row.activityId });
+		if (res.code === 200 && res.data) {
+			ElMessage.success(res.message);
+			fetchSessions();
+		}
+
+		if (res.code === 200 && !res?.data) {
+			ElMessage.error(res.message);
+		}
+	} catch {
+		// 用户取消，不做操作
+	}
 }
 
 /** 余号清零 */
@@ -1114,6 +1203,11 @@ async function handleExport() {
 			exportFormatter: (value: string) => value || '-'
 		},
 		{
+			label: '活动二维码',
+			prop: 'qrCodeUrl',
+			exportFormatter: (value: string) => value || '-'
+		},
+		{
 			label: '活动地点',
 			prop: 'place',
 			exportFormatter: (value: string) => value || '-'
@@ -1218,6 +1312,40 @@ onMounted(() => {
 	background: var(--el-fill-color-light);
 	cursor: pointer;
 	overflow: hidden;
+}
+
+.qr-code-thumb {
+	display: block;
+	width: 52px;
+	height: 52px;
+	margin: 0 auto;
+	padding: 3px;
+	border: 1px solid var(--el-border-color);
+	border-radius: 8px;
+	background: #fff;
+	box-sizing: border-box;
+	cursor: pointer;
+}
+
+.qr-code-thumb :deep(.el-image__error) {
+	padding: 3px;
+	background-color: #fff;
+}
+
+.action-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 4px 8px;
+	justify-items: center;
+}
+
+.action-grid :deep(.el-button + .el-button) {
+	margin-left: 0;
+}
+
+.action-grid__button {
+	min-width: 54px;
+	justify-content: center;
 }
 
 .kv-placeholder {
