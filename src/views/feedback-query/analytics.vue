@@ -67,6 +67,8 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { getAllUserFeedbackApi, searchUserFeedbackApi } from '@/api/admin';
 import type { Feedback } from '@/types/Feedback';
 import { getDefaultQueryDateRange } from '@/utils/date';
+import { isAuthInvalidatedRequestError } from '@/utils/requestAuth';
+import { isRequestCanceledError } from '@/utils/requestCancel';
 
 defineOptions({
 	name: 'FeedbackQueryAnalytics'
@@ -362,6 +364,14 @@ async function fetchFeedbackList(params?: { startDate?: string; endDate?: string
 		const { data = [] } = response;
 		tableData.value = data.filter((item) => Number(item.status ?? 0) !== 1);
 	} catch (error) {
+                if (isAuthInvalidatedRequestError(error)) {
+                        return;
+                }
+
+                if (isRequestCanceledError(error)) {
+                        return;
+                }
+
 		ElMessage.error((error as Error).message || '获取意见反馈失败');
 	} finally {
 		tableLoading.value = false;

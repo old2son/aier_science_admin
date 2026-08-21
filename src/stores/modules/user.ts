@@ -5,6 +5,8 @@ import { adminPasswordLoginApi, getAdminInformationApi, adminLogoutApi } from '@
 import { AdminUserInfo } from '@/types/AdminUserInfo';
 
 import { STORAGE_KEY } from '@/constants/storage';
+import { isAuthInvalidatedRequestError, resetAuthInvalidated } from '@/utils/requestAuth';
+import { isRequestCanceledError } from '@/utils/requestCancel';
 
 export const useUserStore = defineStore('user', () => {
 	const token = ref(localStorage.getItem(STORAGE_KEY.TOKEN) ?? '');
@@ -26,34 +28,52 @@ export const useUserStore = defineStore('user', () => {
 
 		token.value = res?.data?.userToken ?? '';
 		localStorage.setItem(STORAGE_KEY.TOKEN, token.value);
+		resetAuthInvalidated();
 
 		return res;
 	}
 
-	async function logout() {
+	async function logout(options?: { preserveAuthInvalidated?: boolean }) {
 		if (isLoggingOut.value) {
 			return;
 		}
-		
+
 		isLoggingOut.value = true;
 
 		try {
 			await adminLogoutApi();
 		} catch (error) {
-			console.error(error);
+			if (!isAuthInvalidatedRequestError(error)) {
+				console.error(error);
+			}
 		} finally {
 			token.value = '';
 			userInfo.value = null;
 			localStorage.removeItem(STORAGE_KEY.TOKEN);
+
+			if (!options?.preserveAuthInvalidated) {
+				resetAuthInvalidated();
+			}
 
 			isLoggingOut.value = false;
 		}
 	}
 
 	async function getAdminInfo() {
-		getAdminInformationApi().then((res) => {
+		try {
+			const res = await getAdminInformationApi();
 			userInfo.value = res.data ?? null;
-		});
+		} catch (error) {
+			if (isAuthInvalidatedRequestError(error)) {
+				return;
+			}
+
+			if (isRequestCanceledError(error)) {
+				return;
+			}
+
+			console.error(error);
+		}
 	}
 
 	return {

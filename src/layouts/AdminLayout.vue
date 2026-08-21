@@ -180,6 +180,8 @@ import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { getTheme, toggleTheme, type ThemeMode } from '@/utils/theme';
 
 import { updateAdminPasswordApi } from '@/api/admin';
+import { isAuthInvalidatedRequestError } from '@/utils/requestAuth';
+import { isRequestCanceledError } from '@/utils/requestCancel';
 
 const route = useRoute();
 const router = useRouter();
@@ -298,6 +300,10 @@ async function handleConfirmUpdatePassword() {
 		const res = await updateAdminPasswordApi({ password: passwordForm.password });
 		ElMessage.primary(res.message);
 		passwordDialogVisible.value = false;
+        } catch (error) {
+                if (isAuthInvalidatedRequestError(error) || isRequestCanceledError(error)) {
+                        return;
+                }
 	} finally {
 		passwordSubmitting.value = false;
 	}

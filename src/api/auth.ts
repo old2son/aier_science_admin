@@ -11,5 +11,7 @@ export interface LoginResponse {
 }
 
 export function loginApi(data: { username: string; password: string }) {
-	return request.post<unknown, LoginResponse>('/auth/login', data);
+        return request.post<unknown, LoginResponse>('/auth/login', data, {
+                allowWhenAuthInvalidated: true
+        });
 }

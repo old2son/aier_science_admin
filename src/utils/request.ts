@@ -3,6 +3,18 @@ import { ElMessage } from 'element-plus';
 
 import router from '@/router';
 import { useUserStore } from '@/stores/modules/user';
+import {
+	createAuthInvalidatedRequestError,
+	isAuthInvalidated,
+	isAuthInvalidatedRequestError,
+	markAuthInvalidated
+} from '@/utils/requestAuth';
+import {
+	cancelAllPendingRequests,
+	cleanupCancelableRequest,
+	isRequestCanceledError,
+	registerCancelableRequest
+} from '@/utils/requestCancel';
 // import { getRequestBaseUrl } from '@/utils/mock';
 const requestBaseUrl = import.meta.env.VITE_API_URL_TARGET;
 
@@ -27,6 +39,9 @@ const showError = (message: string) => {
 };
 
 const handleLoginExpired = async () => {
+	markAuthInvalidated();
+	cancelAllPendingRequests();
+
 	if (isRedirecting) {
 		return;
 	}
@@ -36,7 +51,7 @@ const handleLoginExpired = async () => {
 	try {
 		const userStore = useUserStore();
 
-		await userStore.logout();
+		await userStore.logout({ preserveAuthInvalidated: true });
 
 		router.replace('/login');
 	} catch (error) {
@@ -57,15 +72,23 @@ const request = axios.create({
 request.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 	const userStore = useUserStore();
 
-	if (userStore.token) {
-		config.headers.token = userStore.token;
+	if (isAuthInvalidated() && !config.allowWhenAuthInvalidated) {
+		return Promise.reject(createAuthInvalidatedRequestError());
 	}
 
-	return config;
+	const nextConfig = registerCancelableRequest(config);
+
+	if (userStore.token) {
+		nextConfig.headers.token = userStore.token;
+	}
+
+	return nextConfig;
 });
 
 request.interceptors.response.use(
 	(response) => {
+		cleanupCancelableRequest(response.config);
+
 		if (response.data.code === 0 && response.data.message === '登录失效，请重新登录') {
 			showError(response.data.message ?? '请求失败');
 			handleLoginExpired();
@@ -80,6 +103,16 @@ request.interceptors.response.use(
 		return response.data;
 	},
 	(error: AxiosError<{ message?: string }>) => {
+		cleanupCancelableRequest(error.config);
+
+		if (isAuthInvalidatedRequestError(error)) {
+			return Promise.reject(error);
+		}
+
+		if (isRequestCanceledError(error)) {
+			return Promise.reject(error);
+		}
+
 		const message = error.response?.data?.message ?? error.message ?? '请求失败';
 
 		if (isLoginExpired(message)) {

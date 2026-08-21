@@ -98,6 +98,8 @@ import type { TableColumn } from '@/components/MyTable/types';
 import type { Feedback } from '@/types/Feedback';
 import { getDefaultQueryDateRange } from '@/utils/date';
 import { exportExcel } from '@/utils/excel';
+import { isAuthInvalidatedRequestError } from '@/utils/requestAuth';
+import { isRequestCanceledError } from '@/utils/requestCancel';
 
 const columns: TableColumn[] = [
 	{
@@ -279,6 +281,14 @@ async function fetchFeedbackList(params?: { startDate?: string; endDate?: string
 		tableData.value = data;
 		pagination.currentPage = 1;
 	} catch (error) {
+                if (isAuthInvalidatedRequestError(error)) {
+                        return;
+                }
+
+                if (isRequestCanceledError(error)) {
+                        return;
+                }
+
 		ElMessage.error((error as Error).message || '获取意见反馈失败');
 	} finally {
 		tableLoading.value = false;
@@ -327,6 +337,8 @@ async function handleToggleStatus(row: Feedback) {
 		await fetchFeedbackList(queryForm.value);
 	} catch (error) {
 		if (error === 'cancel' || error === 'close') return;
+                if (isAuthInvalidatedRequestError(error)) return;
+                if (isRequestCanceledError(error)) return;
 		ElMessage.error((error as Error).message || '操作失败');
 	}
 }
@@ -345,6 +357,8 @@ async function handleDelete(row: Feedback) {
 		await fetchFeedbackList(queryForm.value);
 	} catch (error) {
 		if (error === 'cancel' || error === 'close') return;
+                if (isAuthInvalidatedRequestError(error)) return;
+                if (isRequestCanceledError(error)) return;
 		ElMessage.error((error as Error).message || '删除失败');
 	}
 }

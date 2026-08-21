@@ -391,6 +391,8 @@ import {
 import { type ActivitySessionRow } from '@/types/SessionInfo';
 import { useUserStore } from '@/stores/modules/user';
 import { getDefaultQueryDateRange } from '@/utils/date';
+import { isAuthInvalidatedRequestError } from '@/utils/requestAuth';
+import { isRequestCanceledError } from '@/utils/requestCancel';
 
 const userStore = useUserStore();
 
@@ -596,6 +598,16 @@ async function fetchSessions() {
 		const { data = [] } = await getAllActivityConfigurationApi();
 		tableData.value = data;
 		pagination.currentPage = 1;
+        } catch (error) {
+                if (isAuthInvalidatedRequestError(error)) {
+                        return;
+                }
+
+                if (isRequestCanceledError(error)) {
+                        return;
+                }
+
+                ElMessage.error((error as Error).message || '获取活动场次失败');
 	} finally {
 		tableLoading.value = false;
 	}
@@ -865,9 +877,21 @@ async function handleSearch() {
 		return;
 	}
 
-	const { data = [] } = await searchActivityConfigurationApi({ startDate, endDate });
-	tableData.value = data;
-	pagination.currentPage = 1;
+        try {
+                const { data = [] } = await searchActivityConfigurationApi({ startDate, endDate });
+                tableData.value = data;
+                pagination.currentPage = 1;
+        } catch (error) {
+                if (isAuthInvalidatedRequestError(error)) {
+                        return;
+                }
+
+                if (isRequestCanceledError(error)) {
+                        return;
+                }
+
+                ElMessage.error((error as Error).message || '查询活动场次失败');
+        }
 }
 
 /** 重置查询条件与数据 */

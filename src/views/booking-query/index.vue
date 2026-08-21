@@ -263,6 +263,8 @@ import {
 import { type BookingRow, type BookingStatus } from '@/types/BookingInfo';
 import { getDefaultQueryDateRange } from '@/utils/date';
 import { exportExcel } from '@/utils/excel';
+import { isAuthInvalidatedRequestError } from '@/utils/requestAuth';
+import { isRequestCanceledError } from '@/utils/requestCancel';
 
 
 /** 查看附件开始 */
@@ -741,6 +743,16 @@ async function fetchBookings(params = queryForm.value, useSearch = false) {
 			return;
 		}
 		await loadAllBookings();
+        } catch (error) {
+                if (isAuthInvalidatedRequestError(error)) {
+                        return;
+                }
+
+                if (isRequestCanceledError(error)) {
+                        return;
+                }
+
+                ElMessage.error((error as Error).message || '获取预约数据失败');
 	} finally {
 		nextTick(() => {
 			tableLoading.value = false;

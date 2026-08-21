@@ -121,22 +121,31 @@ export type ActivityQrCodeResponse = ApiResponse<string>;
 
 /** 登录后台管理系统 */
 export function adminPasswordLoginApi(data: AdminPasswordLoginParams) {
-	return request.post<unknown, AdminPasswordLoginResponse>('/api/admin/passWordLogin', data);
+	return request.post<unknown, AdminPasswordLoginResponse>('/api/admin/passWordLogin', data, {
+		allowWhenAuthInvalidated: true
+	});
 }
 
 /** 获取登录信息 */
 export function getAdminInformationApi() {
-	return request.post<unknown, AdminInformationResponse>('/api/admin/getAdminInforMation');
+	return request.post<unknown, AdminInformationResponse>('/api/admin/getAdminInforMation', undefined, {
+		cancelOnRouteChange: false
+	});
 }
 
 /** 修改登录密码 */
 export function updateAdminPasswordApi(data: UpdateAdminPasswordParams) {
-	return request.post<unknown, AdminCommonResponse>('/api/admin/updatePassWord', data);
+	return request.post<unknown, AdminCommonResponse>('/api/admin/updatePassWord', data, {
+		cancelOnRouteChange: false
+	});
 }
 
 /** 退出后台管理系统登录 */
 export function adminLogoutApi() {
-	return request.post<unknown, ApiResponse>('/api/admin/adminLogout');
+	return request.post<unknown, ApiResponse>('/api/admin/adminLogout', undefined, {
+		allowWhenAuthInvalidated: true,
+		cancelOnRouteChange: false
+	});
 }
 
 /** 查询所有预约信息 */

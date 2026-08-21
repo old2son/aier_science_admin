@@ -1,11 +1,12 @@
-import { 
-	createRouter, 
+import {
+	createRouter,
 	// createWebHistory,
-	createWebHashHistory, 
-	type RouteRecordRaw 
+	createWebHashHistory,
+	type RouteRecordRaw
 } from 'vue-router';
 
 import { useUserStore } from '@/stores/modules/user';
+import { cancelRouteChangePendingRequests } from '@/utils/requestCancel';
 
 const routes: RouteRecordRaw[] = [
 	{
@@ -102,10 +103,14 @@ const router = createRouter({
 	routes
 });
 
-router.beforeEach((to) => {
+router.beforeEach((to, from) => {
 	const userStore = useUserStore();
 
 	document.title = `${String(to.meta.title ?? '后台管理')} - Aier Admin`;
+
+	if (from.fullPath && to.fullPath !== from.fullPath) {
+		cancelRouteChangePendingRequests();
+	}
 
 	if (to.meta.public) {
 		return true;

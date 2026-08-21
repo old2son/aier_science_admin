@@ -57,6 +57,8 @@ import { reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { useUserStore } from '@/stores/modules/user';
+import { isAuthInvalidatedRequestError } from '@/utils/requestAuth';
+import { isRequestCanceledError } from '@/utils/requestCancel';
 
 const router = useRouter();
 const route = useRoute();
@@ -78,6 +80,14 @@ async function handleLogin() {
 		ElMessage.success('登录成功');
 		router.replace((route.query.redirect as string) || '/session-config');
 	} catch (error) {
+                if (isAuthInvalidatedRequestError(error)) {
+                        return;
+                }
+
+                if (isRequestCanceledError(error)) {
+                        return;
+                }
+
 		ElMessage.error((error as Error).message);
 	} finally {
 		loading.value = false;
