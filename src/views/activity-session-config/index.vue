@@ -114,6 +114,7 @@
 							class="action-grid__button"
 							type="primary"
 							@click="handleQrCode(row)"
+							:loading="qrCodeLoadingId === row.activityId"
 							link
 							size="small"
 						>
@@ -536,6 +537,7 @@ function disableFormEndDate(date: Date) {
 /** 表格展示数据（默认全部，查询后为过滤结果） */
 const tableData = ref<ActivitySessionRow[]>([]);
 const tableLoading = ref(false);
+const qrCodeLoadingId = ref<number | null>(null);
 const pagination = reactive({
 	currentPage: 1,
 	pageSize: 10
@@ -905,10 +907,11 @@ async function handleQrCode(row: ActivitySessionRow) {
 			}
 		);
 
+		qrCodeLoadingId.value = row.activityId;
 		const res = await activityQrCodeUrlApi({ activityId: row.activityId });
 		if (res.code === 200 && res.data) {
 			ElMessage.success(res.message);
-			fetchSessions();
+			await fetchSessions();
 		}
 
 		if (res.code === 200 && !res?.data) {
@@ -916,6 +919,10 @@ async function handleQrCode(row: ActivitySessionRow) {
 		}
 	} catch {
 		// 用户取消，不做操作
+	} finally {
+		if (qrCodeLoadingId.value === row.activityId) {
+			qrCodeLoadingId.value = null;
+		}
 	}
 }
 
