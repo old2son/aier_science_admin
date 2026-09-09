@@ -21,7 +21,11 @@
 				class="admin-menu border-0"
 			>
 				<template v-for="item in menuRoutes" :key="item.path">
-					<el-sub-menu v-if="getVisibleChildren(item).length" :index="normalizeMenuPath(item.path)">
+					<el-sub-menu
+						v-if="getVisibleChildren(item).length"
+						:index="normalizeMenuPath(item.path)"
+						:class="{ 'admin-sub-menu--active': isParentMenuActive(item) }"
+					>
 						<template #title>
 							<el-icon>
 								<component :is="iconMap[item.meta?.icon as keyof typeof iconMap] ?? Calendar" />
@@ -274,6 +278,23 @@ function resolveChildMenuPath(parentPath = '', childPath = '') {
 	return `${normalizedParentPath}/${childPath}`.replace(/\/+/g, '/');
 }
 
+function isMenuPathActive(targetPath = '') {
+	const normalizedPath = normalizeMenuPath(targetPath).replace(/\/$/, '');
+	const currentPath = route.path.replace(/\/$/, '');
+
+	if (!normalizedPath) {
+		return currentPath === '';
+	}
+
+	return currentPath === normalizedPath || currentPath.startsWith(`${normalizedPath}/`);
+}
+
+function isParentMenuActive(routeItem: RouteRecordRaw) {
+	return getVisibleChildren(routeItem).some((child) =>
+		isMenuPathActive(resolveChildMenuPath(routeItem.path, child.path))
+	);
+}
+
 function handleToggleTheme() {
 	themeMode.value = toggleTheme(themeMode.value);
 }
@@ -300,10 +321,10 @@ async function handleConfirmUpdatePassword() {
 		const res = await updateAdminPasswordApi({ password: passwordForm.password });
 		ElMessage.primary(res.message);
 		passwordDialogVisible.value = false;
-        } catch (error) {
-                if (isAuthInvalidatedRequestError(error) || isRequestCanceledError(error)) {
-                        return;
-                }
+	} catch (error) {
+		if (isAuthInvalidatedRequestError(error) || isRequestCanceledError(error)) {
+			return;
+		}
 	} finally {
 		passwordSubmitting.value = false;
 	}
@@ -365,6 +386,15 @@ onMounted(() => {
 
 .admin-menu {
 	--el-menu-item-height: 48px;
+}
+
+.admin-menu :deep(.admin-sub-menu--active > .el-sub-menu__title) {
+	color: var(--el-menu-active-color);
+	background-color: var(--el-color-primary-light-9);
+}
+
+.admin-menu :deep(.admin-sub-menu--active > .el-sub-menu__title .el-icon) {
+	color: var(--el-menu-active-color);
 }
 
 .page-fade-slide-enter-active,
