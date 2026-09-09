@@ -29,29 +29,31 @@
 			</el-form-item>
 		</el-form>
 
-		<div class="feedback-overview">
-			<div class="feedback-stat-card">
-				<div class="feedback-stat-card__label">反馈总数</div>
-				<div ref="totalEl" class="feedback-stat-card__value"></div>
+		<div v-loading="tableLoading">
+			<div class="feedback-overview">
+				<div class="feedback-stat-card">
+					<div class="feedback-stat-card__label">反馈总数</div>
+					<div ref="totalEl" class="feedback-stat-card__value"></div>
+				</div>
+				<div class="feedback-stat-card">
+					<div class="feedback-stat-card__label">平均满意度</div>
+					<div ref="avgEl" class="feedback-stat-card__value"></div>
+				</div>
+				<div class="feedback-stat-card">
+					<div class="feedback-stat-card__label">正向推荐率</div>
+					<div ref="rateEl" class="feedback-stat-card__value"></div>
+				</div>
 			</div>
-			<div class="feedback-stat-card">
-				<div class="feedback-stat-card__label">平均满意度</div>
-				<div ref="avgEl" class="feedback-stat-card__value"></div>
-			</div>
-			<div class="feedback-stat-card">
-				<div class="feedback-stat-card__label">正向推荐率</div>
-				<div ref="rateEl" class="feedback-stat-card__value"></div>
-			</div>
-		</div>
 
-		<div class="feedback-chart-grid">
-			<div class="feedback-chart-card">
-				<div class="feedback-chart-card__title">满意度概览</div>
-				<div ref="satisfactionChartRef" class="feedback-chart"></div>
-			</div>
-			<div class="feedback-chart-card">
-				<div class="feedback-chart-card__title">推荐率分布</div>
-				<div ref="recommendChartRef" class="feedback-chart"></div>
+			<div class="feedback-chart-grid">
+				<div class="feedback-chart-card">
+					<div class="feedback-chart-card__title">满意度概览</div>
+					<div ref="satisfactionChartRef" class="feedback-chart"></div>
+				</div>
+				<div class="feedback-chart-card">
+					<div class="feedback-chart-card__title">推荐率分布</div>
+					<div ref="recommendChartRef" class="feedback-chart"></div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -364,13 +366,13 @@ async function fetchFeedbackList(params?: { startDate?: string; endDate?: string
 		const { data = [] } = response;
 		tableData.value = data.filter((item) => Number(item.status ?? 0) !== 1);
 	} catch (error) {
-                if (isAuthInvalidatedRequestError(error)) {
-                        return;
-                }
+		if (isAuthInvalidatedRequestError(error)) {
+			return;
+		}
 
-                if (isRequestCanceledError(error)) {
-                        return;
-                }
+		if (isRequestCanceledError(error)) {
+			return;
+		}
 
 		ElMessage.error((error as Error).message || '获取意见反馈失败');
 	} finally {
