@@ -7,7 +7,7 @@ export interface BookingMember {
 	reId: number;
 	userAge: number;
 	userName: string;
-	userPhone: string;
+	userPhone: string | null;
 }
 
 export interface BookingRow {

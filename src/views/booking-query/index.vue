@@ -266,7 +266,6 @@ import { exportExcel } from '@/utils/excel';
 import { isAuthInvalidatedRequestError } from '@/utils/requestAuth';
 import { isRequestCanceledError } from '@/utils/requestCancel';
 
-
 /** 查看附件开始 */
 // import { OpenFileViewer } from '@open-file-viewer/vue';
 // import { officePlugin } from '@open-file-viewer/core';
@@ -276,7 +275,6 @@ import { isRequestCanceledError } from '@/utils/requestCancel';
 // const fileData = ref<File>();
 // const theme = ref<'light' | 'dark' | 'auto'>('auto');
 // const plugins = [officePlugin()];
-
 
 // const toolbarConfig = {
 // 	zoom: true,
@@ -320,6 +318,17 @@ type BookingViewRow = BookingRow & {
 	groupType: string;
 	startTime: string;
 	endTime: string;
+};
+
+type BookingExportRow = BookingRow & {
+	visitLabel: string;
+	groupType: string;
+	reId: number;
+	name: string;
+	phone: string | null;
+	age: number | null;
+	idCard: string | null;
+	groupCount: number;
 };
 
 const columns: TableColumn[] = [
@@ -463,7 +472,7 @@ function hasMembers(row: BookingRow) {
 function getBookingGroupType(row: BookingRow) {
 	if (row.type === 1) {
 		return '个人预约';
-	} 
+	}
 
 	if (row.type === 2) {
 		return '团队预约';
@@ -511,13 +520,13 @@ function getBookingDisplayPhone(row: BookingRow) {
 // 	return getPrimaryCompanion(row)?.idNumber || '-';
 // }
 
-function getExportRows(row: BookingRow) {
+function getExportRows(row: BookingRow): BookingExportRow[] {
 	if (!hasMembers(row)) {
 		return [
 			{
 				...row,
-				visitLabel: getBookingVisitLabel(row),
-				groupType: getBookingGroupType(row),
+				visitLabel: getBookingVisitLabel(row) || '-',
+				groupType: getBookingGroupType(row) || '-',
 				name: getBookingDisplayName(row),
 				phone: getBookingDisplayPhone(row),
 				idCard: '-',
@@ -528,13 +537,13 @@ function getExportRows(row: BookingRow) {
 
 	return row.members.map((companion) => ({
 		...row,
-		visitLabel: getBookingVisitLabel(row),
-		groupType: getBookingGroupType(row),
+		visitLabel: getBookingVisitLabel(row) || '-',
+		groupType: getBookingGroupType(row) || '-',
 		reId: companion.reId || row.reId,
-		name: companion.userName,
-		phone: companion.userPhone,
+		name: companion.userName || '-',
+		phone: companion.userPhone || row.phone || '-',
 		age: companion.userAge,
-		idCard: companion.idNumber,
+		idCard: companion.idNumber || '-',
 		groupCount: getBookingMemberCount(row)
 	}));
 }
@@ -743,16 +752,16 @@ async function fetchBookings(params = queryForm.value, useSearch = false) {
 			return;
 		}
 		await loadAllBookings();
-        } catch (error) {
-                if (isAuthInvalidatedRequestError(error)) {
-                        return;
-                }
+	} catch (error) {
+		if (isAuthInvalidatedRequestError(error)) {
+			return;
+		}
 
-                if (isRequestCanceledError(error)) {
-                        return;
-                }
+		if (isRequestCanceledError(error)) {
+			return;
+		}
 
-                ElMessage.error((error as Error).message || '获取预约数据失败');
+		ElMessage.error((error as Error).message || '获取预约数据失败');
 	} finally {
 		nextTick(() => {
 			tableLoading.value = false;
@@ -763,6 +772,7 @@ async function fetchBookings(params = queryForm.value, useSearch = false) {
 /** 点击查询：多条件组合过滤 */
 function handleSearch() {
 	const { startDate, endDate, customStartTime, customEndTime } = queryForm.value;
+	const searchParams = buildSearchParams(queryForm.value);
 
 	if (startDate && endDate && parseDateString(startDate).getTime() > parseDateString(endDate).getTime()) {
 		ElMessage.warning('开始日期不可大于结束日期');
@@ -776,6 +786,11 @@ function handleSearch() {
 
 	if (customStartTime && customEndTime && parseTimeString(customStartTime) > parseTimeString(customEndTime)) {
 		ElMessage.warning('开始时间不可大于结束时间');
+		return;
+	}
+
+	if (!Object.keys(searchParams).length) {
+		fetchBookings();
 		return;
 	}
 
