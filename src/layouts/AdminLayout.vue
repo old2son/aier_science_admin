@@ -1,24 +1,30 @@
 <template>
 	<div class="admin-layout flex min-h-screen">
-		<aside
-			class="admin-layout__aside hidden transition-all duration-200 md:block"
-			:class="collapsed ? 'w-16' : 'w-60'"
-		>
+		<div
+			v-if="isMobileViewport && mobileMenuVisible"
+			class="admin-layout__mask md:hidden"
+			@click="mobileMenuVisible = false"
+		></div>
+
+		<aside class="admin-layout__aside transition-all duration-200" :class="asideClassName">
 			<div class="admin-layout__brand flex h-16 items-center gap-3 px-4">
 				<div
 					class="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-brand-600 text-sm font-bold text-white"
 				>
 					爱
 				</div>
-				<span v-show="!collapsed" class="admin-layout__title text-base font-semibold">爱尔科普馆管理后台</span>
+				<span v-show="!menuCollapsed" class="admin-layout__title text-base font-semibold"
+					>爱尔科普馆管理后台</span
+				>
 			</div>
 
 			<el-menu
-				:collapse="collapsed"
+				:collapse="menuCollapsed"
 				:default-active="activeMenuPath"
 				:default-openeds="openedMenuPaths"
 				:router="true"
 				class="admin-menu border-0"
+				@select="handleMenuSelect"
 			>
 				<template v-for="item in menuRoutes" :key="item.path">
 					<el-sub-menu
@@ -175,7 +181,7 @@ import {
 	List,
 	TrendCharts
 } from '@element-plus/icons-vue';
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter, type RouteRecordRaw } from 'vue-router';
 
 import { routes } from '@/router';
@@ -191,6 +197,8 @@ const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 const collapsed = ref(false);
+const isMobileViewport = ref(false);
+const mobileMenuVisible = ref(false);
 const themeMode = ref<ThemeMode>(getTheme());
 const passwordDialogVisible = ref(false);
 const passwordSubmitting = ref(false);
@@ -202,6 +210,16 @@ const openedMenuPaths = computed(() =>
 
 const menuRoutes = computed(() => routes.find((item) => item.path === '/')?.children ?? []);
 const userInitial = computed(() => (userStore.userInfo?.nickName?.slice(0, 1) || 'A').toUpperCase());
+const menuCollapsed = computed(() => (isMobileViewport.value ? false : collapsed.value));
+const asideClassName = computed(() => {
+	if (isMobileViewport.value) {
+		return mobileMenuVisible.value
+			? 'fixed inset-y-0 left-0 z-50 block w-60 translate-x-0 shadow-lg'
+			: 'fixed inset-y-0 left-0 z-50 block w-60 -translate-x-full';
+	}
+
+	return collapsed.value ? 'hidden w-16 md:block' : 'hidden w-60 md:block';
+});
 const passwordForm = reactive({
 	password: '',
 	confirmPassword: ''
@@ -261,6 +279,11 @@ const iconMap = {
 };
 
 function toggleCollapse() {
+	if (isMobileViewport.value) {
+		mobileMenuVisible.value = !mobileMenuVisible.value;
+		return;
+	}
+
 	collapsed.value = !collapsed.value;
 }
 
@@ -297,6 +320,12 @@ function isParentMenuActive(routeItem: RouteRecordRaw) {
 
 function handleToggleTheme() {
 	themeMode.value = toggleTheme(themeMode.value);
+}
+
+function handleMenuSelect() {
+	if (isMobileViewport.value) {
+		mobileMenuVisible.value = false;
+	}
 }
 
 function handleUpdatePassword() {
@@ -340,14 +369,35 @@ function getAdminInfo() {
 	!userStore.userInfo && userStore.getAdminInfo();
 }
 
+function syncViewportState() {
+	isMobileViewport.value = window.innerWidth < 768;
+
+	if (!isMobileViewport.value) {
+		mobileMenuVisible.value = false;
+	}
+}
+
 onMounted(() => {
+	syncViewportState();
+	window.addEventListener('resize', syncViewportState);
 	getAdminInfo();
+});
+
+onBeforeUnmount(() => {
+	window.removeEventListener('resize', syncViewportState);
 });
 </script>
 
 <style scoped>
 .admin-layout {
 	background: var(--app-bg);
+}
+
+.admin-layout__mask {
+	position: fixed;
+	inset: 0;
+	z-index: 40;
+	background: rgb(15 23 42 / 0.45);
 }
 
 .admin-layout__aside {
